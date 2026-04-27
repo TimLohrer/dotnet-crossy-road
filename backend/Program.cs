@@ -1,14 +1,13 @@
+using System.Numerics;
+using CrossyRoadApi.Map;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -19,5 +18,14 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+var lane = new CrossyMapLane(CrossyModelPart.PLAINS, Vector3.Zero, CrossyModel.PixelSize, CrossyTheme.DEFAULT);
+var tree_1 = new CrossyStaticMapElement(CrossyModelPart.TREE_1, lane, Vector3.Zero, CrossyTheme.DEFAULT);
+
+Console.WriteLine(lane.Uuid);
+Console.WriteLine(lane.GetModelPath());
+Console.WriteLine(tree_1.Uuid);
+Console.WriteLine(tree_1.GetModelPath());
+
 
 app.Run();
