@@ -102,6 +102,9 @@
 		}
 
 		await loadModel('lanes/plains.gltf', new THREE.Vector3(), false);
+		await loadModel('lanes/water.gltf', new THREE.Vector3(0,0,-1), false);
+		await loadModel('lanes/water.gltf', new THREE.Vector3(0,0,-2), false);
+		await loadModel("elements/log_0.gltf", new THREE.Vector3(-5,-PIXEL,-2), false);
 		await loadModel('elements/stone_1.gltf', new THREE.Vector3(-1, PIXEL, 0), true);
 		await loadModel('elements/tree_1.gltf', new THREE.Vector3(2, PIXEL, 0), true);
 
