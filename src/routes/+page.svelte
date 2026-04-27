@@ -1,37 +1,122 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
+	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+	import type { Position } from 'three/examples/jsm/Addons.js';
 
-	onMount(() => {
-		
+	const PIXEL = 0.05;
+	const gameLoop: boolean = true;
+	const objectList: THREE.Object3D[] = [];
+
+	onMount(async () => {
+		document.body.innerHTML = '';
 		const width = window.innerWidth,
 			height = window.innerHeight;
 
-		// init
-
-		const camera = new THREE.PerspectiveCamera(70, width / height, 0.01, 10);
-		camera.position.z = 1;
-
 		const scene = new THREE.Scene();
 
-		const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-		const material = new THREE.MeshNormalMaterial();
+		const frustrumSize = 8;
+		let aspect = width / height;
 
-		const mesh = new THREE.Mesh(geometry, material);
-		scene.add(mesh);
+		const camera = new THREE.OrthographicCamera(
+			(-frustrumSize * aspect) / 2,
+			(frustrumSize * aspect) / 2,
+			frustrumSize / 2,
+			-frustrumSize / 2,
+			0.01,
+			1000
+		);
+		camera.position.z = 2;
+		camera.position.y = 4;
+		camera.position.x = 1;
+		camera.rotateY(0.269);
+		camera.rotateX(-Math.PI / 4);
 
-		const renderer = new THREE.WebGLRenderer({ antialias: true });
-		renderer.setSize(width, height);
-		renderer.setAnimationLoop(animate);
+		const renderer = new THREE.WebGLRenderer({ antialias: false });
+		renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild(renderer.domElement);
 
-		// animation
+		const light = new THREE.HemisphereLight(0xffffff, 0x444444);
+		light.position.set(-20, 20, 0);
+		scene.add(light);
 
-		function animate(time: number) {
-			mesh.rotation.x = time / 2000;
-			mesh.rotation.y = time / 1000;
+		const loader = new GLTFLoader();
 
+		let model: THREE.Object3D;
+		async function loadModel(path: string, pos: THREE.Vector3, isObject: boolean) {
+			const gltf = await loader.loadAsync(
+				`/models/${path.startsWith('/') ? path.replace('/', '') : path}`
+			);
+			model = gltf.scene;
+			model.position.x = pos.x;
+			model.position.y = pos.y;
+			model.position.z = pos.z;
+			model.rotateY(Math.PI);
+			scene.add(model);
+
+			if (isObject) {
+				objectList.push(model);
+			}
+		}
+
+		renderer.render(scene, camera);
+
+		let player: THREE.Object3D;
+		async function playerInit(pos: THREE.Vector3) {
+			const gltf = await loader.loadAsync(`/models/elements/tree_2.gltf`);
+			player = gltf.scene;
+			player.rotateY(Math.PI);
+			scene.add(player);
+		}
+
+		playerInit(new THREE.Vector3());
+
+		document.addEventListener('keydown', (event) => {
+			const moveDistance = 1;
+			switch (event.key.toLowerCase()) {
+				case 'w':
+					player.position.z -= moveDistance;
+					break;
+				case 's':
+					player.position.z += moveDistance;
+					break;
+				case 'a':
+					player.position.x -= moveDistance;
+					break;
+				case 'd':
+					player.position.x += moveDistance;
+					break;
+			}
+			isPlayerColliding();
+		});
+
+		function isPlayerColliding(): boolean {
+
+			for (const object of objectList) {
+				if (object.position.x == player.position.x && object.position.z == player.position.z) {
+					scene.clear();
+					return true;
+				}
+			}
+			return false;
+		}
+
+		await loadModel('lanes/plains.gltf', new THREE.Vector3(), false);
+		await loadModel('elements/stone_1.gltf', new THREE.Vector3(-1, PIXEL, 0), true);
+		await loadModel('elements/tree_1.gltf', new THREE.Vector3(2, PIXEL, 0), true);
+
+		function animate() {
+			requestAnimationFrame(animate);
 			renderer.render(scene, camera);
 		}
-	})
+		animate();
+
+		window.addEventListener('resize', () => {
+			aspect = window.innerWidth / window.innerHeight;
+			camera.left = (-frustrumSize * aspect) / 2;
+			camera.right = (frustrumSize * aspect) / 2;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		});
+	});
 </script>
