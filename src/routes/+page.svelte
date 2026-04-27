@@ -77,13 +77,25 @@
 				case 'w':
 					player.position.z -= moveDistance;
 					break;
+				case 'arrowup':
+					player.position.z -= moveDistance;
+					break;
 				case 's':
+					player.position.z += moveDistance;
+					break;
+				case 'arrowdown':
 					player.position.z += moveDistance;
 					break;
 				case 'a':
 					player.position.x -= moveDistance;
 					break;
+				case 'arrowleft':
+					player.position.x -= moveDistance;
+					break;
 				case 'd':
+					player.position.x += moveDistance;
+					break;
+				case 'arrowright':
 					player.position.x += moveDistance;
 					break;
 			}
@@ -91,7 +103,6 @@
 		});
 
 		function isPlayerColliding(): boolean {
-
 			for (const object of objectList) {
 				if (object.position.x == player.position.x && object.position.z == player.position.z) {
 					scene.clear();
