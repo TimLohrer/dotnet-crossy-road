@@ -1,0 +1,7 @@
+﻿services:
+  crossyroadapi:
+    image: crossyroadapi
+    build:
+      context: .
+      dockerfile: Dockerfile
+
