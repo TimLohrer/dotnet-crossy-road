@@ -1,12 +1,14 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using CrossyRoadApi.Models.Game;
 using CrossyRoadApi.Models.Game.Map;
 
 namespace CrossyRoadApi.Models.Database;
 
-public class CrossyGame
+public class CrossyGame(CrossyPlayer host, CrossyTheme theme, int? seed = null)
 {
     public Guid Id { get; set; }
-    [NotMapped] public List<CrossyMapLane> Map { get; set; } = new();
-
+    public int Seed { get; set; } = seed ?? new Random().Next();
+    public CrossyPlayer Host { get; set; } = host;
+    public List<CrossyPlayer> Players { get; set; } = [host];
+    public int Score { get; set; }
+    public int Taler { get; set; }
+    public CrossyTheme Theme { get; set; } = theme;
 }

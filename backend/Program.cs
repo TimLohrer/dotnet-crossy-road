@@ -1,9 +1,7 @@
-using System.Numerics;
 using CrossyRoadApi.Config;
 using CrossyRoadApi.Database;
 using CrossyRoadApi.Models.Game.Map.Elements;
 using CrossyRoadApi.Models.Game.Map.Lanes;
-using CrossyRoadApi.Utils;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,8 +15,6 @@ builder.Services.AddSingleton(appConfig);
 builder.Services.AddDbContext<CrossyDbContext>(options => options.UseNpgsql(appConfig.Database.ConnectionString).UseSnakeCaseNamingConvention());
 
 var app = builder.Build();
-
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -41,6 +37,6 @@ Console.WriteLine(lane.GetElements());
 
 Console.WriteLine(stone0.Id);
 Console.WriteLine(stone0.GetModelPath());
-stone0.GetPositions().ForEach(v => Console.WriteLine(v.ToConsoleString()));
+stone0.GetPositions().ForEach(v => Console.WriteLine(v));
 
 app.Run();

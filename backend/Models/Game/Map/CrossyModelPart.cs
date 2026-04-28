@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace CrossyRoadApi.Models.Game.Map;
@@ -6,35 +5,35 @@ namespace CrossyRoadApi.Models.Game.Map;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum CrossyModelPart
 {
-    [JsonPropertyName("plains")]
+    [JsonPropertyName("PLAINS")]
     Plains,
-    [JsonPropertyName("water")]
+    [JsonPropertyName("WATER")]
     Water,
-    [JsonPropertyName("street")]
+    [JsonPropertyName("STREET")]
     Street,
-    [JsonPropertyName("street_bottom")]
+    [JsonPropertyName("STREET_BOTTOM")]
     StreetBottom,
-    [JsonPropertyName("street_middle")]
+    [JsonPropertyName("STREET_MIDDLE")]
     StreetMiddle,
-    [JsonPropertyName("street_top")]
+    [JsonPropertyName("STREET_TOP")]
     StreetTop,
     
-    [JsonPropertyName("tree_0")]
+    [JsonPropertyName("TREE_0")]
     Tree0,
-    [JsonPropertyName("tree_1")]
+    [JsonPropertyName("TREE_1")]
     Tree1,
-    [JsonPropertyName("tree_2")]
+    [JsonPropertyName("TREE_2")]
     Tree2,
-    [JsonPropertyName("tree_3")]
+    [JsonPropertyName("TREE_3")]
     Tree3,
-    [JsonPropertyName("tree_4")]
+    [JsonPropertyName("TREE_4")]
     Tree4,
     
-    [JsonPropertyName("stone_0")]
+    [JsonPropertyName("STONE_0")]
     Stone0,
-    [JsonPropertyName("stone_1")]
+    [JsonPropertyName("STONE_1")]
     Stone1,
     
-    [JsonPropertyName("log_0")]
+    [JsonPropertyName("LOG_0")]
     Log0
 }

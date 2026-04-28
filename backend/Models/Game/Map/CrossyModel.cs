@@ -18,7 +18,7 @@ public abstract class CrossyModel
     protected CrossyModel(CrossyModelPart modelPart, Vector3 position)
     {
         Id = Guid.NewGuid();
-        Position = Position;
+        Position = position;
         ModelPart = modelPart;
         Theme = CrossyTheme.Default;
     }

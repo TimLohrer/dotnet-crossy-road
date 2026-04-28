@@ -118,9 +118,9 @@
 		await loadModel("elements/log_0.gltf", new THREE.Vector3(-5,-PIXEL,-2), false);
 		await loadModel('elements/stone_1.gltf', new THREE.Vector3(-1, PIXEL, 0), true);
 		await loadModel('elements/tree_1.gltf', new THREE.Vector3(2, PIXEL, 0), true);
-		await loadModel('lanes/street_end.gltf', new THREE.Vector3(0,0,1), false);
+		await loadModel('lanes/street_top.gltf', new THREE.Vector3(0,0,1), false);
 		await loadModel('lanes/street_middle.gltf', new THREE.Vector3(0,0,2), false);
-		await loadModel('lanes/street_start.gltf', new THREE.Vector3(0,0,3), false);
+		await loadModel('lanes/street_bottom.gltf', new THREE.Vector3(0,0,3), false);
 		await loadModel('lanes/plains.gltf', new THREE.Vector3(0,0,4), false);
 		await loadModel('lanes/plains.gltf', new THREE.Vector3(0,0,-3), false);
 		await loadModel('lanes/plains.gltf', new THREE.Vector3(0,0,-4), false);
