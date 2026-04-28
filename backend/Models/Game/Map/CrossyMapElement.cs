@@ -1,23 +1,14 @@
 using System.Numerics;
-using System.Reflection;
 using CrossyRoadApi.Dto;
-using CrossyRoadApi.Models.Game.Map.Elements;
 
 namespace CrossyRoadApi.Models.Game.Map;
 
-public abstract class CrossyMapElement : CrossyModel
+public abstract class CrossyMapElement(CrossyModelPart modelPart, CrossyMapLane lane, int xPosition, int modelWidth)
+    : CrossyModel(modelPart, new Vector3(xPosition, lane.BaseYOffset, lane.Position.Z))
 {
-    public CrossyMapLane Lane { get; }
-    public int ModelWidth { get; }
+    public int ModelWidth { get; } = modelWidth;
     public CrossyDirection Direction { get; protected set; } = CrossyDirection.Left;
-    
-    public CrossyMapElement(CrossyModelPart modelPart, CrossyMapLane lane, int xPosition, int modelWidth) : base(modelPart, new Vector3(xPosition, lane.BaseYOffset, lane.Position.Z))
-    {
-        Lane = lane;
-        ModelWidth = modelWidth;
-        Lane.AddElement(this);
-    }
-    
+
     public override string GetModelPath() => GetModelPath("elements");
     public override void SetPosition(int xPosition) => Position = Position with { X = xPosition };
 

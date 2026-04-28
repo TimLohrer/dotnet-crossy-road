@@ -1,13 +1,24 @@
 using CrossyRoadApi.Config;
 using CrossyRoadApi.Database;
-using CrossyRoadApi.Models.Game.Map.Elements;
-using CrossyRoadApi.Models.Game.Map.Lanes;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.IncludeFields = true;
+});
 builder.Services.AddOpenApi();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 
 var appConfig = new AppConfig();
 builder.Configuration.Bind(appConfig);
@@ -25,12 +36,9 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseCors("AllowAll");
+
 app.UsePathBase("/api/v1");
 app.MapControllers();
-
-var lane = new PlainsLane(0);
-lane.GenerateElements(666);
-
-Console.WriteLine(lane.ToDto());
 
 app.Run();

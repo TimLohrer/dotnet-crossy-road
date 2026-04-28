@@ -24,7 +24,7 @@ public abstract class CrossyModel
     }
 
     public abstract string GetModelPath();
-    protected string GetModelPath(string modelType) => $"/models/{Theme.ToString().ToLower()}/{modelType}/{ModelPart.GetAttributeOfType<JsonPropertyNameAttribute>()!.Name}.gltf";
+    protected string GetModelPath(string modelType) => $"/models/{Theme.ToString().ToLower()}/{modelType}/{ModelPart.ToString().ToLower()}.gltf";
 
     public abstract void SetPosition(int position);
     public void SetTheme(CrossyTheme theme) => Theme = theme;
