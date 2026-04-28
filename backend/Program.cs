@@ -1,6 +1,8 @@
 using System.Numerics;
 using CrossyRoadApi.Config;
 using CrossyRoadApi.Models.Map;
+using CrossyRoadApi.Models.Map.Elements;
+using CrossyRoadApi.Models.Map.Lanes;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,13 +26,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-var lane = new CrossyMapLane(CrossyModelPart.PLAINS, Vector3.Zero, CrossyModel.PixelSize, CrossyTheme.Default);
-var tree_1 = new CrossyStaticMapElement(CrossyModelPart.TREE_1, lane, Vector3.Zero, CrossyTheme.Default);
+var lane = new PlainsLane(Vector3.Zero);
+var stone0 = new Stone0(lane, Vector3.Zero);
 
-Console.WriteLine(lane.Uuid);
+Console.WriteLine(lane.Id);
 Console.WriteLine(lane.GetModelPath());
-Console.WriteLine(tree_1.Uuid);
-Console.WriteLine(tree_1.GetModelPath());
-
+Console.WriteLine(lane.GetElements());
+Console.WriteLine(stone0.Id);
+Console.WriteLine(stone0.GetModelPath());
 
 app.Run();

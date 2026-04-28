@@ -11,11 +11,11 @@ public enum CrossyModelPart
     [Description("street")]
     STREET,
     [Description("street_start")]
-    STREET_START,
+    STREET_BOTTOM,
     [Description("street_middle")]
     STREET_MIDDLE,
     [Description("street_end")]
-    STREET_END,
+    STREET_TOP,
     
     [Description("tree_0")]
     TREE_0,

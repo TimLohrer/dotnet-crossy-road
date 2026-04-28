@@ -6,7 +6,7 @@ namespace CrossyRoadApi.Models.Map;
 
 public abstract class CrossyModel
 {
-    public Guid Uuid { get; }
+    public Guid Id { get; }
     public CrossyModelPart ModelPart { get; }
     public Vector3 Position { get; protected set; }
     public CrossyTheme Theme { get; protected set; }
@@ -14,12 +14,12 @@ public abstract class CrossyModel
     // Size of one pixel in a model (constant is used to provide position offsets)
     public static readonly float PixelSize = 0.05f;
     
-    protected CrossyModel(CrossyModelPart modelPart, Vector3 position, CrossyTheme? theme)
+    protected CrossyModel(CrossyModelPart modelPart, Vector3 position)
     {
-        Uuid = Guid.NewGuid();
+        Id = Guid.NewGuid();
         Position = position;
         ModelPart = modelPart;
-        Theme = theme.GetValueOrDefault(CrossyTheme.Default);
+        Theme = CrossyTheme.Default;
     }
 
     public abstract string GetModelPath();
