@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace CrossyRoadApi.Map;
+namespace CrossyRoadApi.Models.Map;
 
 public abstract class CrossyMapElement : CrossyModel
 {

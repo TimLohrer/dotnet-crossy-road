@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace CrossyRoadApi.Map;
+namespace CrossyRoadApi.Models.Map;
 
 public enum CrossyModelPart
 {
