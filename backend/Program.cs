@@ -1,7 +1,6 @@
 using System.Numerics;
 using CrossyRoadApi.Config;
 using CrossyRoadApi.Database;
-using CrossyRoadApi.Models.Map;
 using CrossyRoadApi.Models.Map.Elements;
 using CrossyRoadApi.Models.Map.Lanes;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +28,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UsePathBase("/api/v1");
 app.MapControllers();
 
 var lane = new PlainsLane(Vector3.Zero);
