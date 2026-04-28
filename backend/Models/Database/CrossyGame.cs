@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using CrossyRoadApi.Models.Map;
+using CrossyRoadApi.Models.Game;
+using CrossyRoadApi.Models.Game.Map;
 
 namespace CrossyRoadApi.Models.Database;
 

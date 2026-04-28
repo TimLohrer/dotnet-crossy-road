@@ -1,8 +1,9 @@
 using System.Numerics;
 using CrossyRoadApi.Config;
 using CrossyRoadApi.Database;
-using CrossyRoadApi.Models.Map.Elements;
-using CrossyRoadApi.Models.Map.Lanes;
+using CrossyRoadApi.Models.Game.Map.Elements;
+using CrossyRoadApi.Models.Game.Map.Lanes;
+using CrossyRoadApi.Utils;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,13 +32,15 @@ app.UseAuthorization();
 app.UsePathBase("/api/v1");
 app.MapControllers();
 
-var lane = new PlainsLane(Vector3.Zero);
-var stone0 = new Stone0(lane, Vector3.Zero);
+var lane = new PlainsLane(0);
+var stone0 = new Stone0(lane, 3);
 
 Console.WriteLine(lane.Id);
 Console.WriteLine(lane.GetModelPath());
 Console.WriteLine(lane.GetElements());
+
 Console.WriteLine(stone0.Id);
 Console.WriteLine(stone0.GetModelPath());
+stone0.GetPositions().ForEach(v => Console.WriteLine(v.ToConsoleString()));
 
 app.Run();

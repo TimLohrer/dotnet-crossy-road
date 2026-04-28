@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Numerics;
 using Microsoft.OpenApi;
 
-namespace CrossyRoadApi.Models.Map;
+namespace CrossyRoadApi.Models.Game.Map;
 
 public abstract class CrossyModel
 {
@@ -17,7 +17,7 @@ public abstract class CrossyModel
     protected CrossyModel(CrossyModelPart modelPart, Vector3 position)
     {
         Id = Guid.NewGuid();
-        Position = position;
+        Position = Position;
         ModelPart = modelPart;
         Theme = CrossyTheme.Default;
     }
@@ -25,6 +25,6 @@ public abstract class CrossyModel
     public abstract string GetModelPath();
     protected string GetModelPath(string modelType) => $"/models/{Theme.ToString().ToLower()}/{modelType}/{ModelPart.GetAttributeOfType<DescriptionAttribute>().Description}.gltf";
 
-    public void SetPosition(Vector3 position) => Position = position;
+    public abstract void SetPosition(int position);
     public void SetTheme(CrossyTheme theme) => Theme = theme;
 }
