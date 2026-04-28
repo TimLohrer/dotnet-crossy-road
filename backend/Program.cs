@@ -1,10 +1,15 @@
 using System.Numerics;
+using CrossyRoadApi.Config;
 using CrossyRoadApi.Map;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+var appConfig = new AppConfig();
+builder.Configuration.Bind(appConfig);
+builder.Services.AddSingleton(appConfig);
 
 var app = builder.Build();
 
