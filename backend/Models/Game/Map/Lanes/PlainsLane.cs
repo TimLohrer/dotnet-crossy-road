@@ -2,23 +2,16 @@ using CrossyRoadApi.Models.Game.Map.Elements;
 
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
 
-public class PlainsLane(int zPosition) : CrossyMapLane(CrossyModelPart.Plains, zPosition, PixelSize)
+public class PlainsLane(int zPosition, int seed) : CrossyMapLane(CrossyModelPart.Plains, seed, zPosition, PixelSize)
 {
     private static List<CrossyModelPart> AvailableElements = [CrossyModelPart.Stone_0, CrossyModelPart.Stone_1, CrossyModelPart.Tree_0, CrossyModelPart.Tree_1, CrossyModelPart.Tree_2, CrossyModelPart.Tree_3, CrossyModelPart.Tree_4];
     
-    public override void GenerateElements(int seed)
+    protected override void GenerateElements()
     {
-        var zRandom = new Random(zPosition);
-        var zRandomizer1 = zRandom.Next(99);
-        var zRandomizer2 = zRandom.Next(99);
-        var zBasedSeed = zRandomizer1 < seed ? seed / zRandomizer1 * zRandomizer2 : seed * zRandomizer2 + zRandomizer2;
-        
-        var random = new Random(zBasedSeed);
-        
-        var blockedSlots = GenerateBlockedSlotsLocations(random);
+        var blockedSlots = GenerateBlockedSlotsLocations();
         foreach (var blockedSlot in blockedSlots)
         {
-            var elementIndex = random.Next(0, AvailableElements.Count);
+            var elementIndex = Randomizer.Next(0, AvailableElements.Count);
             var elementType = AvailableElements[elementIndex];
             switch (elementType)
             {
@@ -49,13 +42,13 @@ public class PlainsLane(int zPosition) : CrossyMapLane(CrossyModelPart.Plains, z
         }
     }
     
-    protected List<int> GenerateBlockedSlotsLocations(Random random)
+    protected List<int> GenerateBlockedSlotsLocations()
     {
         string binary;
 
         do
         {
-            int value = random.Next(0, 1 << 25);
+            int value = Randomizer.Next(0, 1 << 25);
             binary = Convert.ToString(value, 2).PadLeft(24, '0');
         }
         // at least 9 of the inner 12 locations have to be empty

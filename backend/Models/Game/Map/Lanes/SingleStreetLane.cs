@@ -1,6 +1,6 @@
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
 
-public class SingleStreetLane(int zPosition) : CrossyMapLane(CrossyModelPart.Street, zPosition, 0)
+public class SingleStreetLane(int zPosition, int seed) : CrossyMapLane(CrossyModelPart.Street, seed, zPosition, 0)
 {
-    public override void GenerateElements(int seed) {}
+    protected override void GenerateElements() {}
 }

@@ -1,6 +1,6 @@
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
 
-public class WaterLane(int zPosition) : CrossyMapLane(CrossyModelPart.Water, zPosition, -PixelSize)
+public class WaterLane(int zPosition, int seed) : CrossyMapLane(CrossyModelPart.Water, seed, zPosition, -PixelSize)
 {
-    public override void GenerateElements(int seed) {}
+    protected override void GenerateElements() {}
 }

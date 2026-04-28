@@ -3,15 +3,30 @@ using CrossyRoadApi.Dto;
 
 namespace CrossyRoadApi.Models.Game.Map;
 
-public abstract class CrossyMapLane(CrossyModelPart modelPart, int zPosition, float baseYOffset)
-    : CrossyModel(modelPart, new Vector3(0, 0, zPosition))
+public abstract class CrossyMapLane : CrossyModel
 {
     // The base Y offset applied to all map elements on this lane
     // to make sure they appear on the ground when supplied with the Y coordinate 0
-    public float BaseYOffset { get; } = baseYOffset;
+    public float BaseYOffset { get; }
     public List<CrossyMapElement> Elements = [];
+    protected Random Randomizer { get; }
 
-    public abstract void GenerateElements(int seed);
+    public CrossyMapLane(CrossyModelPart modelPart, int seed, int zPosition, float baseYOffset) : base(modelPart, new Vector3(0, 0, zPosition))
+    {
+        BaseYOffset = baseYOffset;
+        
+        var zRandom = new Random(zPosition);
+        var zRandomizer1 = zRandom.Next(1, 99);
+        var zRandomizer2 = zRandom.Next(1, 99);
+        var zBasedSeed = zRandomizer1 < seed ? seed / zRandomizer1 * zRandomizer2 : seed * zRandomizer2 + zRandomizer2;
+        
+        Randomizer = new Random(zBasedSeed);
+        
+        // Generate Map
+        GenerateElements();
+    }
+
+    protected abstract void GenerateElements();
     public override string GetModelPath() => GetModelPath("lanes");
     public override void SetPosition(int zPosition) => Position = Position with { Z = zPosition };
 
