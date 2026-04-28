@@ -1,4 +1,7 @@
 using System.Numerics;
+using System.Reflection;
+using CrossyRoadApi.Dto;
+using CrossyRoadApi.Models.Game.Map.Elements;
 
 namespace CrossyRoadApi.Models.Game.Map;
 
@@ -19,7 +22,6 @@ public abstract class CrossyMapElement : CrossyModel
     public override void SetPosition(int xPosition) => Position = Position with { X = xPosition };
 
     public void SetDirection(CrossyDirection direction) => Direction = direction;
-
     public List<Vector3> GetPositions()
     {
         var positions = new List<Vector3>();
@@ -37,4 +39,13 @@ public abstract class CrossyMapElement : CrossyModel
         }
         return positions;
     }
+
+    public CrossyMapElementDto ToDto() => new()
+    {
+        Id = Id,
+        Type = ModelPart,
+        BasePosition = Position,
+        Positions = GetPositions(),
+        ModelLocation = GetModelPath(),
+    };
 }

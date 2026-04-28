@@ -29,14 +29,8 @@ app.UsePathBase("/api/v1");
 app.MapControllers();
 
 var lane = new PlainsLane(0);
-var stone0 = new Stone0(lane, 3);
+lane.GenerateElements(666);
 
-Console.WriteLine(lane.Id);
-Console.WriteLine(lane.GetModelPath());
-Console.WriteLine(lane.GetElements());
-
-Console.WriteLine(stone0.Id);
-Console.WriteLine(stone0.GetModelPath());
-stone0.GetPositions().ForEach(v => Console.WriteLine(v));
+Console.WriteLine(lane.ToDto());
 
 app.Run();

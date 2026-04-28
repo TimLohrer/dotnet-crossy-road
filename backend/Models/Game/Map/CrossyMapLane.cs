@@ -1,4 +1,5 @@
 using System.Numerics;
+using CrossyRoadApi.Dto;
 
 namespace CrossyRoadApi.Models.Game.Map;
 
@@ -10,13 +11,23 @@ public abstract class CrossyMapLane(CrossyModelPart modelPart, int zPosition, fl
     public float BaseYOffset { get; } = baseYOffset;
     public List<CrossyMapElement> Elements = [];
 
-    public abstract List<CrossyMapElement> GenerateElements();
-
+    public abstract void GenerateElements(int seed);
     public override string GetModelPath() => GetModelPath("lanes");
     public override void SetPosition(int zPosition) => Position = Position with { Z = zPosition };
-    
+
+    // lane is 24 * 16 long, one field is 16x16
+    public int GetMapPositionFromLanePositionIndex(int lanePositionIndex) => lanePositionIndex - 12;
     public List<CrossyMapElement> GetElements() => Elements;
     public void AddElement(CrossyMapElement element) => Elements.Add(element);
     public void RemoveElementById(Guid elementId) => Elements.RemoveAll(e => e.Id == elementId);
     public void ClearElements() => Elements.Clear();
+
+    public CrossyMapLaneDto ToDto() => new()
+    {
+        Id = Id,
+        Type = ModelPart,
+        Position = Position,
+        ModelLocation = GetModelPath(),
+        Elements = Elements.Select(e => e.ToDto()).ToList()
+    };
 }

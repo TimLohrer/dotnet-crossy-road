@@ -5,6 +5,9 @@ namespace CrossyRoadApi.Models.Game.Map;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum CrossyModelPart
 {
+    [JsonPropertyName("EMPTY")]
+    Empty,
+    
     [JsonPropertyName("PLAINS")]
     Plains,
     [JsonPropertyName("WATER")]
