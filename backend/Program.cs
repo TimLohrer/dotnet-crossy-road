@@ -18,6 +18,8 @@ builder.Services.AddDbContext<CrossyDbContext>(options => options.UseNpgsql(appC
 
 var app = builder.Build();
 
+
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

@@ -11,9 +11,11 @@
     environment:
       - POSTGRES_USER=crossy-road
       - POSTGRES_PASSWORD=development
-      - POSTGRES_DATABASE=crossy_road
+      - POSTGRES_DB=crossy-road
     volumes:
       - crossy_road_data:/var/lib/postgresql
+    ports:
+      - "4444:5432"
 
 volumes:
   crossy_road_data:
