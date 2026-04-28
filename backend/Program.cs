@@ -1,8 +1,10 @@
 using System.Numerics;
 using CrossyRoadApi.Config;
+using CrossyRoadApi.Database;
 using CrossyRoadApi.Models.Map;
 using CrossyRoadApi.Models.Map.Elements;
 using CrossyRoadApi.Models.Map.Lanes;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,7 @@ builder.Services.AddOpenApi();
 var appConfig = new AppConfig();
 builder.Configuration.Bind(appConfig);
 builder.Services.AddSingleton(appConfig);
+builder.Services.AddDbContext<CrossyDbContext>(options => options.UseNpgsql(appConfig.Database.ConnectionString).UseSnakeCaseNamingConvention());
 
 var app = builder.Build();
 
