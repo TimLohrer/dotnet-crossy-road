@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Lane } from '$lib/models/Lane';
-	import { cameraState, isPlaying } from '$lib/stores/gameStore';
+	import { isPlaying, cameraState } from '$lib/stores/gameStore';
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -16,8 +16,8 @@
 	const GLTF_CACHE: { [key: string]: GLTF } = {};
 
 	onMount(async () => {
-		const width = window.innerWidth,
-			height = window.innerHeight;
+		const width = container.clientWidth,
+			height = container.clientHeight;
 
 		const scene = new THREE.Scene();
 
@@ -32,15 +32,15 @@
 			0.001,
 			1000
 		);
-		camera.position.z = -4;
-		camera.position.y = 6;
-		camera.position.x = -1;
+		camera.position.z = -6;
+		camera.position.y = 8;
+		camera.position.x = -2;
 		camera.rotateY(Math.PI + 0.269);
 		camera.rotateX(-Math.PI / 4);
 
 		const renderer = new THREE.WebGLRenderer({ antialias: false });
 		renderer.setSize(window.innerWidth, window.innerHeight);
-		document.body.appendChild(renderer.domElement);
+		container.appendChild(renderer.domElement);
 
 		const light = new THREE.HemisphereLight(0xffffff, 0x444444);
 		light.position.set(-20, 20, 0);
@@ -111,12 +111,15 @@
 		scene.add(player);
 		renderer.render(scene, camera);
 
-		document.addEventListener('keydown', (event) => {
+		document.addEventListener('keydown', handleKeyDown);
+		function handleKeyDown(event: KeyboardEvent) {
+		
 			const moveDistance = 1;
 			let newPosition = player.position.clone();
 			switch (event.key.toLowerCase()) {
 				case 'w':
 					newPosition.z += moveDistance;
+					increaseCameraSpeed();
 					break;
 				case 'arrowup':
 					newPosition.z += moveDistance;
@@ -149,7 +152,7 @@
 				renderer.render(scene, camera);
 				cleanUpLanes();
 			}
-		});
+		}
 
 		function isPlayerColliding(targetPosition: THREE.Vector3): boolean {
 			for (const object of objectList) {
@@ -212,3 +215,13 @@
 		});
 	});
 </script>
+
+<div bind:this={container} class="three"></div>
+
+<style>
+	.three {
+		position: absolute;
+		inset: 0;
+		z-index: 0; /* background */
+	}
+</style>
