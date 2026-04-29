@@ -50,7 +50,7 @@ public class PlainsLane(int zPosition, int seed) : CrossyMapLane(CrossyModelPart
     private List<CrossyModelPart> GenerateBlockedSlots()
     {
         var left = GenerateBlockedSlotsWithConstraints(LeftMask, 5, 7, LeftElements);
-        var middle = GenerateBlockedSlotsWithConstraints(MiddleMask, 0, 3, MiddleElements);
+        var middle = GenerateBlockedSlotsWithConstraints(MiddleMask, 0, 2, MiddleElements);
         var right = GenerateBlockedSlotsWithConstraints(RightMask, 5, 6, RightElements);
         
         // Combine generated sections (numbers already represent the model part enum)
