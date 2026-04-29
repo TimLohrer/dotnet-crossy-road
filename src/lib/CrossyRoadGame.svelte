@@ -4,12 +4,11 @@
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-	import type { GLTF, Position } from 'three/examples/jsm/Addons.js';
+	import type { GLTF } from 'three/examples/jsm/Addons.js';
 
 	let container: HTMLDivElement;
 	let cameraSpeedTimeoutId: number;
-	const PIXEL = 0.05;
-	const gameLoop: boolean = true;
+	let currentLaneZ = 0;
 	const objectList: THREE.Object3D[] = [];
 	const renderedObjects: THREE.Object3D[] = [];
 
@@ -85,14 +84,18 @@
 		renderer.render(scene, camera);
 
 		const seed = Math.floor(Math.random() * 1000000);
+		// const seed = 660895;
 
-		async function loadLane(z: number) {
-			const res = await fetch(`http://localhost:5016/api/v1/game/${z}?seed=${seed}`);
-			const lane = await res.json() as Lane;
+		async function loadSection() {
+			const res = await fetch(`http://localhost:5016/api/v1/game/${currentLaneZ}?seed=${seed}`);
+			const lanes = await res.json() as Lane[];
+			currentLaneZ += lanes.length;
 			
-			loadModel(lane.modelLocation, lane.position, false);
-			lane.elements.forEach((element) => {
-				loadModel(element.modelLocation, element.basePosition, true);
+			lanes.forEach((lane) => {
+				loadModel(lane.modelLocation, lane.position, false);
+				lane.elements.forEach((element) => {
+					loadModel(element.modelLocation, element.basePosition, true);
+				});
 			});
 			renderer.render(scene, camera);
 		}
@@ -101,7 +104,7 @@
 			if (i < 0) {
 				loadModel('/models/default/lanes/plains.gltf', new THREE.Vector3(0, 0, i), false);
 			} else {
-				loadLane(i);
+				await loadSection();
 			}
 		}
 
@@ -113,7 +116,7 @@
 
 		let speed: number = 0.008
 		document.addEventListener('keydown', handleKeyDown);
-		function handleKeyDown(event: KeyboardEvent) {
+		async function handleKeyDown(event: KeyboardEvent) {
 		
 			const moveDistance = 1;
 			let newPosition = player.position.clone();
@@ -164,7 +167,9 @@
 
 			if (!isPlayerColliding(newPosition)) {
 				if (player.position.z < newPosition.z) {
-					loadLane(newPosition.z + 15);
+					if (currentLaneZ < Math.ceil(newPosition.z) + 15) {
+						await loadSection();
+					}
 				}
 				player.position.copy(newPosition);
 				renderer.render(scene, camera);
@@ -184,7 +189,7 @@
 		function cleanUpLanes() {
 			for (let i = renderedObjects.length - 1; i >= 0; i--) {
 				const obj = renderedObjects[i];
-				if (obj.position.z < player.position.z - 10) {
+				if (obj.position.z < player.position.z - 15) {
 					scene.remove(obj);
 					renderedObjects.splice(i, 1);
 					console.log(`Removed object at z=${obj.position.z}`);
