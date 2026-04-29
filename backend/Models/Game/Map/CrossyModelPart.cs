@@ -2,6 +2,8 @@ namespace CrossyRoadApi.Models.Game.Map;
 
 public enum CrossyModelPart
 {
+    Empty,
+    
     Plains,
     Water,
     Street,

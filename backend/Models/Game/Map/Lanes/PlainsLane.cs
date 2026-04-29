@@ -1,67 +1,129 @@
+using System.Text;
 using CrossyRoadApi.Models.Game.Map.Elements;
 
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
 
 public class PlainsLane(int zPosition, int seed) : CrossyMapLane(CrossyModelPart.Plains, seed, zPosition, PixelSize)
 {
-    private static List<CrossyModelPart> AvailableElements = [CrossyModelPart.Stone_0, CrossyModelPart.Stone_1, CrossyModelPart.Tree_0, CrossyModelPart.Tree_1, CrossyModelPart.Tree_2, CrossyModelPart.Tree_3, CrossyModelPart.Tree_4];
+    private static int LeftMask = 0b1111111000000000000000000;
+    private static int MiddleMask = 0b0000000111111111111000000;
+    private static int RightMask = 0b0000000000000000000111111;
+    private static List<CrossyModelPart> LeftElements = [CrossyModelPart.Tree_1, CrossyModelPart.Tree_2, CrossyModelPart.Tree_3, CrossyModelPart.Tree_4];
+    private static List<CrossyModelPart> MiddleElements = [CrossyModelPart.Stone_0, CrossyModelPart.Stone_1, CrossyModelPart.Tree_0, CrossyModelPart.Tree_1, CrossyModelPart.Tree_2, CrossyModelPart.Tree_3, CrossyModelPart.Tree_4];
+    private static List<CrossyModelPart> RightElements = [CrossyModelPart.Tree_1, CrossyModelPart.Tree_2, CrossyModelPart.Tree_3, CrossyModelPart.Tree_4];
     
     protected override void GenerateElements()
     {
-        var blockedSlots = GenerateBlockedSlotsLocations();
-        foreach (var blockedSlot in blockedSlots)
+        var blockedSlots = GenerateBlockedSlots();
+        for (var i =  0; i < blockedSlots.Count; i++)
         {
-            var elementIndex = Randomizer.Next(0, AvailableElements.Count);
-            var elementType = AvailableElements[elementIndex];
-            switch (elementType)
+            var mapX = GetMapPositionFromLanePositionIndex(i);
+            switch (blockedSlots[i])
             {
                 case CrossyModelPart.Stone_1:
-                    AddElement(new Stone1(this, blockedSlot));
+                    AddElement(new Stone1(this, mapX));
                     break;
                 case CrossyModelPart.Stone_0:
-                    AddElement(new Stone0(this, blockedSlot));
+                    AddElement(new Stone0(this, mapX));
                     break;
                 case CrossyModelPart.Tree_0:
-                    AddElement(new Tree0(this, blockedSlot));
+                    AddElement(new Tree0(this, mapX));
                     break;
                 case CrossyModelPart.Tree_1:
-                    AddElement(new Tree1(this, blockedSlot));
+                    AddElement(new Tree1(this, mapX));
                     break;
                 case CrossyModelPart.Tree_2:
-                    AddElement(new Tree2(this, blockedSlot));
+                    AddElement(new Tree2(this, mapX));
                     break;
                 case CrossyModelPart.Tree_3:
-                    AddElement(new Tree3(this, blockedSlot));
+                    AddElement(new Tree3(this, mapX));
                     break;
                 case CrossyModelPart.Tree_4:
-                    AddElement(new Tree4(this, blockedSlot));
+                    AddElement(new Tree4(this, mapX));
                     break;
                 default:
-                    return;
+                    continue;
             }
         }
     }
     
-    protected List<int> GenerateBlockedSlotsLocations()
+    private List<CrossyModelPart> GenerateBlockedSlots()
     {
-        string binary;
+        var left = GenerateBlockedSlotsWithConstraints(LeftMask, 5, 7, LeftElements);
+        var middle = GenerateBlockedSlotsWithConstraints(MiddleMask, 0, 3, MiddleElements);
+        var right = GenerateBlockedSlotsWithConstraints(RightMask, 5, 6, RightElements);
+        
+        // Combine generated sections (numbers already represent the model part enum)
+        // Input:  0243951 000000000000 000000
+        //         0000000 340050080000 000000
+        //         0000000 000000000000 285609
+        // Output: 0243951 340050080000 285609
+        List<CrossyModelPart> blockedSlots = [];
+        for (var i = 0; i < LaneLength; i++)
+        {
+            blockedSlots.Add(left[i] != CrossyModelPart.Empty ? left[i] : middle[i] != CrossyModelPart.Empty ? middle[i] : right[i]);
+        }
+        
+        // Console.WriteLine($"Map: {string.Join(" ", blockedSlots.Select(b => b.ToString()))}");
+        
+        return blockedSlots;
+    }
 
+    private List<CrossyModelPart> GenerateBlockedSlotsWithConstraints(int mask, int minFlags, int maxFlags, List<CrossyModelPart> availableParts)
+    {
+        minFlags = Math.Max(minFlags, 0);
+        minFlags = Math.Min(minFlags, LaneLength);
+        maxFlags = Math.Max(maxFlags, 0);
+        maxFlags = Math.Min(maxFlags, LaneLength);
+        if (availableParts.Count < 1 || availableParts.Count > 9)
+        {
+            throw new IndexOutOfRangeException("'availableParts' has to be between 1 and 9 long");
+        }
+        
+        bool IsBinaryWithinContraints(string binary, int minFlags, int maxFlags)
+        {
+            var flagsRegion = string.Join("", binary.Where(c => c == '1').ToList());
+            var hasMinFlags = flagsRegion.Length >= minFlags;
+            var hasMaxFlags = flagsRegion.Length <= maxFlags;
+            
+            return hasMinFlags && hasMaxFlags;
+        }
+        
+        string binary;
         do
         {
-            int value = Randomizer.Next(0, 1 << 25);
-            binary = Convert.ToString(value, 2).PadLeft(24, '0');
-        }
-        // at least 9 of the inner 12 locations have to be empty
-        while (binary.Substring(6, 12).Count(c => c == '0') < 9);
-        
-        var locations = new List<int>();
+            int value = Randomizer.Next(0, 1 << LaneLength);
+            // Mask 25 bits to only generate a section of the map
+            // Binary: 0101101 110010010000 101011
+            // Mask:   0000000 111111111111 000000
+            // Result: 0000000 110010010000 000000
+            // => Only generate the middle section of the map
+            value &= mask;
+            binary = Convert.ToString(value, 2).PadLeft(LaneLength, '0');
+        } while(!IsBinaryWithinContraints(binary, minFlags, maxFlags));
+
+        // Set indexes of available elements to occupied slots in the generated map
+        // Input:  0000000 110010010000 000000
+        // Output: 0000000 340050080000 000000
+        // => Fill parts of the map with different sets of elements
+        List<CrossyModelPart> blockedSlots = [];
         for (var i = 0; i < binary.Length; i++)
         {
             if (binary[i] == '1')
             {
-                locations.Add(GetMapPositionFromLanePositionIndex(i));
+                var modelPartIndex = Randomizer.Next(1, availableParts.Count) - 1;
+                blockedSlots.Add(availableParts[modelPartIndex]);
+            }
+            else
+            {
+                blockedSlots.Add(CrossyModelPart.Empty);
             }
         }
-        return locations;
+        
+        // Console.WriteLine($"Mask: {Convert.ToString(mask, 2).PadLeft(LaneLength, '0')}");
+        // Console.WriteLine($"Binary: {binary}");
+        // Console.WriteLine($"Map Section: {string.Join("", blockedSlots.Select(b => availableParts.IndexOf(b) + 1))}");
+        
+        return blockedSlots;
     }
 }

@@ -4,7 +4,7 @@ using CrossyRoadApi.Dto;
 namespace CrossyRoadApi.Models.Game.Map;
 
 public abstract class CrossyMapElement(CrossyModelPart modelPart, CrossyMapLane lane, int xPosition, int modelWidth)
-    : CrossyModel(modelPart, new Vector3(xPosition, lane.BaseYOffset, lane.Position.Z))
+    : CrossyModel(modelPart, lane.Position with { X = xPosition })
 {
     public int ModelWidth { get; } = modelWidth;
     public CrossyDirection Direction { get; protected set; } = CrossyDirection.Left;
