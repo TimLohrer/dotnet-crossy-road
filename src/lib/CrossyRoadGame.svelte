@@ -1,10 +1,11 @@
 <script lang="ts">
 	import type { Lane } from '$lib/models/Lane';
-	import { isPlaying, cameraState } from '$lib/stores/gameStore';
+	import { isPlaying } from '$lib/stores/gameStore';
 	import { onMount } from 'svelte';
 	import * as THREE from 'three';
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 	import type { GLTF } from 'three/examples/jsm/Addons.js';
+	import { lightTargetPosition } from 'three/src/nodes/TSL.js';
 
 	let container: HTMLDivElement;
 	let cameraSpeedTimeoutId: number;
@@ -114,7 +115,6 @@
 		scene.add(player);
 		renderer.render(scene, camera);
 
-		let speed: number = 0.008
 		document.addEventListener('keydown', handleKeyDown);
 		async function handleKeyDown(event: KeyboardEvent) {
 		
@@ -125,25 +125,9 @@
 					newPosition.z += moveDistance;
 					console.log(newPosition.z)
 					console.log(camera.position.z)
-					if(newPosition.z > camera.position.z + 8) {
-						if(newPosition.z > camera.position.z + 10) {
-							speed = 0.05
-							increaseCameraSpeed();
-						} else {
-							speed = 0.032
-							increaseCameraSpeed();
-						}
-					}
-					
 					break;
 				case 'arrowup':
 					newPosition.z += moveDistance;
-					if(newPosition.z > camera.position.z + 8) {
-						if(newPosition.z > camera.position.z + 11) {
-						speed = 0.05
-						}
-						speed = 0.032
-					}
 					break;
 				case 's':
 					newPosition.z -= moveDistance;
@@ -197,25 +181,24 @@
 			}
 		}
 
+		
+
+		const cameraOffsetZ = 10; 
+
 		function cameraMovement() {
-			if (!$cameraState) {
-				camera.position.z += 0.008;
-			}
-			else {
-				camera.position.z += speed;
-			}
+			const targetZ = player.position.z -14 + cameraOffsetZ;
+
+			const distanceZ = Math.abs(camera.position.z - targetZ);
+
+			const baseSpeed = 0.02;
+			const sensitivity = 0.1;
+
+			const distanceFactor = distanceZ * sensitivity;
+			const lerpAlpha = Math.min(baseSpeed + distanceFactor, 1.0);
+
+			camera.position.z += (targetZ - camera.position.z) * lerpAlpha;
+
 		}
-
-		function increaseCameraSpeed() {
-			clearTimeout(cameraSpeedTimeoutId);
-
-			$cameraState = true;
-
-			cameraSpeedTimeoutId = setTimeout(() => {
-				$cameraState = false;
-			}, 200)
-		}
-
 		function animate() {
 			requestAnimationFrame(animate);
 			if (!$isPlaying) {
