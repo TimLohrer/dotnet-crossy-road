@@ -27,7 +27,7 @@ public class GameHub : Hub
         var game = ActiveGames.Games.FirstOrDefault(x => x.Id == gameId);
         if (game == null)
         {
-            Disconnect();
+            await Disconnect();
             return;
         }
         
@@ -41,7 +41,7 @@ public class GameHub : Hub
 
     public async Task Disconnect()
     {
-        Context.Abort();
+        await Clients.User(Context.ConnectionId).SendAsync("disconnected");
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -51,7 +51,7 @@ public class GameHub : Hub
         {
             game.Players.Where(p => p.Username != Context.ConnectionId).Select(async p =>
                 await Clients.User(p.Username).SendAsync("host-disconnected"));
-            Disconnect();
+            await Disconnect();
             ActiveGames.Games.Remove(game);
         }
         await base.OnDisconnectedAsync(exception);

@@ -3,7 +3,7 @@ using CrossyRoadApi.Models.Game.Map.Elements;
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
 
 public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed) : CrossyMapLane(
-    type == PlainsType.Light ? CrossyModelPart.Plains : CrossyModelPart.PlainsDark, seed, zPosition, PixelSize)
+    type == PlainsType.Light ? CrossyModelPart.Plains : CrossyModelPart.PlainsDark, seed, zPosition)
 {
     public enum PlainsType
     {

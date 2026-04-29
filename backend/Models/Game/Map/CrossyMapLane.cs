@@ -9,7 +9,7 @@ public abstract class CrossyMapLane : CrossyModel
     protected static int LaneLength = 25;
     public List<CrossyMapElement> Elements = [];
 
-    public CrossyMapLane(CrossyModelPart modelPart, int seed, int zPosition, float baseYOffset) : base(modelPart,
+    public CrossyMapLane(CrossyModelPart modelPart, int seed, int zPosition) : base(modelPart,
         new Vector3(0, 0, zPosition))
     {
         Randomizer = CrossyRandomizer.Get(seed, zPosition);
