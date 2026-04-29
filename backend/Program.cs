@@ -1,13 +1,11 @@
 using CrossyRoadApi.Config;
+using CrossyRoadApi.Controllers;
 using CrossyRoadApi.Database;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.IncludeFields = true;
-});
+builder.Services.AddControllers().AddJsonOptions(options => { options.JsonSerializerOptions.IncludeFields = true; });
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
@@ -23,14 +21,13 @@ builder.Services.AddCors(options =>
 var appConfig = new AppConfig();
 builder.Configuration.Bind(appConfig);
 builder.Services.AddSingleton(appConfig);
-builder.Services.AddDbContext<CrossyDbContext>(options => options.UseNpgsql(appConfig.Database.ConnectionString).UseSnakeCaseNamingConvention());
+builder.Services.AddDbContext<CrossyDbContext>(options =>
+    options.UseNpgsql(appConfig.Database.ConnectionString).UseSnakeCaseNamingConvention());
+builder.Services.AddSignalR().AddJsonProtocol();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseHttpsRedirection();
 
@@ -38,7 +35,11 @@ app.UseAuthorization();
 
 app.UseCors("AllowAll");
 
+app.UseWebSockets();
+
 app.UsePathBase("/api/v1");
 app.MapControllers();
+
+app.MapHub<GameHub>("/game/ws");
 
 app.Run();

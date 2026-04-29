@@ -9,6 +9,6 @@ public class CrossyDbContext : DbContext
         : base(options)
     {
     }
-    
+
     public DbSet<CrossyGame> CrossyGames { get; set; }
 }
