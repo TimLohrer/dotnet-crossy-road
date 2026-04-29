@@ -102,7 +102,7 @@
 
 		for (let i = -10; i < 15; i++) {
 			if (i < 0) {
-				loadModel('/models/default/lanes/plains.gltf', new THREE.Vector3(0, 0, i), false);
+				loadModel(`/models/default/lanes/plains_${i % 2 != 0 ? 'light' : 'dark'}.gltf`, new THREE.Vector3(0, 0, i), false);
 			} else {
 				await loadSection();
 			}

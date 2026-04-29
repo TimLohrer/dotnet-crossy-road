@@ -9,15 +9,25 @@ public abstract class CrossyMapElement(CrossyModelPart modelPart, CrossyMapLane 
     public int ModelWidth { get; } = modelWidth;
     public CrossyDirection Direction { get; protected set; } = CrossyDirection.Left;
 
-    public override string GetModelPath() => GetModelPath("elements");
-    public override void SetPosition(int xPosition) => Position = Position with { X = xPosition };
+    public override string GetModelPath()
+    {
+        return GetModelPath("elements");
+    }
 
-    public void SetDirection(CrossyDirection direction) => Direction = direction;
+    public override void SetPosition(int xPosition)
+    {
+        Position = Position with { X = xPosition };
+    }
+
+    public void SetDirection(CrossyDirection direction)
+    {
+        Direction = direction;
+    }
+
     public List<Vector3> GetPositions()
     {
         var positions = new List<Vector3>();
         for (var x = 0; x < ModelWidth; x++)
-        {
             switch (Direction)
             {
                 case CrossyDirection.Left:
@@ -27,16 +37,19 @@ public abstract class CrossyMapElement(CrossyModelPart modelPart, CrossyMapLane 
                     positions.Add(Position + new Vector3(x, 0, 0));
                     break;
             }
-        }
+
         return positions;
     }
 
-    public CrossyMapElementDto ToDto() => new()
+    public CrossyMapElementDto ToDto()
     {
-        Id = Id,
-        Type = ModelPart,
-        BasePosition = Position,
-        Positions = GetPositions(),
-        ModelLocation = GetModelPath(),
-    };
+        return new CrossyMapElementDto
+        {
+            Id = Id,
+            Type = ModelPart,
+            BasePosition = Position,
+            Positions = GetPositions(),
+            ModelLocation = GetModelPath()
+        };
+    }
 }
