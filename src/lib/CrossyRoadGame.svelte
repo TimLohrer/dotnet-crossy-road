@@ -42,8 +42,8 @@
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		container.appendChild(renderer.domElement);
 
-		const light = new THREE.HemisphereLight(0xffffff, 0x444444);
-		light.position.set(-20, 20, 0);
+		const light = new THREE.DirectionalLight(0xfffffff, 3);
+		light.position.set(-20, 20, -3);
 		scene.add(light);
 
 		const loader = new GLTFLoader();
@@ -111,6 +111,7 @@
 		scene.add(player);
 		renderer.render(scene, camera);
 
+		let speed: number = 0.008
 		document.addEventListener('keydown', handleKeyDown);
 		function handleKeyDown(event: KeyboardEvent) {
 		
@@ -119,10 +120,27 @@
 			switch (event.key.toLowerCase()) {
 				case 'w':
 					newPosition.z += moveDistance;
-					increaseCameraSpeed();
+					console.log(newPosition.z)
+					console.log(camera.position.z)
+					if(newPosition.z > camera.position.z + 8) {
+						if(newPosition.z > camera.position.z + 10) {
+							speed = 0.05
+							increaseCameraSpeed();
+						} else {
+							speed = 0.032
+							increaseCameraSpeed();
+						}
+					}
+					
 					break;
 				case 'arrowup':
 					newPosition.z += moveDistance;
+					if(newPosition.z > camera.position.z + 8) {
+						if(newPosition.z > camera.position.z + 11) {
+						speed = 0.05
+						}
+						speed = 0.032
+					}
 					break;
 				case 's':
 					newPosition.z -= moveDistance;
@@ -179,7 +197,7 @@
 				camera.position.z += 0.008;
 			}
 			else {
-				camera.position.z += 0.016;
+				camera.position.z += speed;
 			}
 		}
 
