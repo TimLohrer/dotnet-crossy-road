@@ -9,11 +9,12 @@ builder.Services.AddControllers().AddJsonOptions(options => { options.JsonSerial
 builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
+    options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.WithOrigins("http://localhost:5173")
                 .AllowAnyHeader()
+                .AllowCredentials()
                 .AllowAnyMethod();
         });
 });
@@ -33,7 +34,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 
 app.UseWebSockets();
 
