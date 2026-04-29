@@ -1,5 +1,5 @@
 using CrossyRoadApi.Dto;
-using CrossyRoadApi.Models.Game.Map.Lanes;
+using CrossyRoadApi.Models.Game.Map;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CrossyRoadApi.Controllers;
@@ -9,8 +9,9 @@ namespace CrossyRoadApi.Controllers;
 public class GameController : ControllerBase
 {
     [HttpGet("{z}")]
-    public CrossyMapLaneDto Get([FromRoute] int z, [FromQuery] int seed)
+    public List<CrossyMapLaneDto> Get([FromRoute] int z, [FromQuery] int seed)
     {
-        return new PlainsLane(int.Max(0, z), seed).ToDto();
+        var lanes = CrossyMapGenerator.GenerateMapSection(seed, int.Max(0, z));
+        return lanes.Select(l => l.ToDto()).ToList();
     }
 }

@@ -1,4 +1,3 @@
-using System.Text;
 using CrossyRoadApi.Models.Game.Map.Elements;
 
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
@@ -8,10 +7,12 @@ public class PlainsLane(int zPosition, int seed) : CrossyMapLane(CrossyModelPart
     private static int LeftMask = 0b1111111000000000000000000;
     private static int MiddleMask = 0b0000000111111111111000000;
     private static int RightMask = 0b0000000000000000000111111;
-    private static List<CrossyModelPart> LeftElements = [CrossyModelPart.Tree_1, CrossyModelPart.Tree_2, CrossyModelPart.Tree_3, CrossyModelPart.Tree_4];
-    private static List<CrossyModelPart> MiddleElements = [CrossyModelPart.Stone_0, CrossyModelPart.Stone_1, CrossyModelPart.Tree_0, CrossyModelPart.Tree_1, CrossyModelPart.Tree_2, CrossyModelPart.Tree_3, CrossyModelPart.Tree_4];
-    private static List<CrossyModelPart> RightElements = [CrossyModelPart.Tree_1, CrossyModelPart.Tree_2, CrossyModelPart.Tree_3, CrossyModelPart.Tree_4];
-    
+    private static List<CrossyModelPart> LeftElements = [CrossyModelPart.Tree1, CrossyModelPart.Tree2, CrossyModelPart.Tree3, CrossyModelPart.Tree4];
+    private static List<CrossyModelPart> MiddleElements = [CrossyModelPart.Stone0, CrossyModelPart.Stone1, CrossyModelPart.Tree0, CrossyModelPart.Tree1, CrossyModelPart.Tree2, CrossyModelPart.Tree3, CrossyModelPart.Tree4];
+    private static List<CrossyModelPart> RightElements = [CrossyModelPart.Tree1, CrossyModelPart.Tree2, CrossyModelPart.Tree3, CrossyModelPart.Tree4];
+
+    public override CrossyModelPart LaneType => CrossyModelPart.Plains;
+
     protected override void GenerateElements()
     {
         var blockedSlots = GenerateBlockedSlots();
@@ -20,25 +21,25 @@ public class PlainsLane(int zPosition, int seed) : CrossyMapLane(CrossyModelPart
             var mapX = GetMapPositionFromLanePositionIndex(i);
             switch (blockedSlots[i])
             {
-                case CrossyModelPart.Stone_1:
+                case CrossyModelPart.Stone1:
                     AddElement(new Stone1(this, mapX));
                     break;
-                case CrossyModelPart.Stone_0:
+                case CrossyModelPart.Stone0:
                     AddElement(new Stone0(this, mapX));
                     break;
-                case CrossyModelPart.Tree_0:
+                case CrossyModelPart.Tree0:
                     AddElement(new Tree0(this, mapX));
                     break;
-                case CrossyModelPart.Tree_1:
+                case CrossyModelPart.Tree1:
                     AddElement(new Tree1(this, mapX));
                     break;
-                case CrossyModelPart.Tree_2:
+                case CrossyModelPart.Tree2:
                     AddElement(new Tree2(this, mapX));
                     break;
-                case CrossyModelPart.Tree_3:
+                case CrossyModelPart.Tree3:
                     AddElement(new Tree3(this, mapX));
                     break;
-                case CrossyModelPart.Tree_4:
+                case CrossyModelPart.Tree4:
                     AddElement(new Tree4(this, mapX));
                     break;
                 default:

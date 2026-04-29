@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Numerics;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using Microsoft.OpenApi;
 
@@ -24,7 +25,7 @@ public abstract class CrossyModel
     }
 
     public abstract string GetModelPath();
-    protected string GetModelPath(string modelType) => $"/models/{Theme.ToString().ToLower()}/{modelType}/{ModelPart.ToString().ToLower()}.gltf";
+    protected string GetModelPath(string modelType) => $"/models/{Theme.ToString().ToLower()}/{modelType}/{ModelPart.GetAttributeOfType<EnumMemberAttribute>()!.Value}.gltf";
 
     public abstract void SetPosition(int position);
     public void SetTheme(CrossyTheme theme) => Theme = theme;
