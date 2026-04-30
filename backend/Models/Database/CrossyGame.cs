@@ -9,7 +9,8 @@ public class CrossyGame
     public int Seed { get; set; }
     public int Score { get; set; }
     public int Taler { get; set; }
+
     public CrossyTheme Theme { get; set; }
     // TODO: Create Dictionary<int, char> to string converter => "msSinceStart:char;msSinceLast:char;msSinceLast:char;..."
-    public string Keystrokes { get; set; }
+    // public string Keystrokes { get; set; }
 }
