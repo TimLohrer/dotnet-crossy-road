@@ -69,9 +69,16 @@ public class GameHub(CrossyDbContext context) : Hub
             await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.PlayerLeft, "Game does not exist");
 
         var wsPlayer = wsGame!.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
-        wsPlayer.UpdatePosition(newPosition);
+        var shouldGenerateNewSection = wsPlayer.UpdatePosition(newPosition);
 
         await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.UpdatePlayerPosition, wsPlayer);
+
+        if (shouldGenerateNewSection)
+        {
+            var section = CrossyMapGenerator.GenerateMapSection(wsGame.Seed, wsPlayer.FurthestGeneratedZPosition + 1);
+            wsPlayer.FurthestGeneratedZPosition += section.Count;
+            await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.NewSection, section.Select(l => l.ToDto()).ToList());
+        }
     }
 
     public async Task LeaveGame(Guid gameId)
