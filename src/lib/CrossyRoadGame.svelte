@@ -1,12 +1,13 @@
 <script lang="ts">
 	import type { Lane } from '$lib/models/Lane';
-	import { isPlaying } from '$lib/stores/gameStore';
+	import { isPlaying, gameState } from '$lib/stores/gameStore';
 	import { onDestroy, onMount } from 'svelte';
 	import * as THREE from 'three';
 	import * as SignalR from '@microsoft/signalr';
 	import { WebsocketEvent } from '$lib/models/WebsocketEvent';
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 	import type { GLTF } from 'three/examples/jsm/Addons.js';
+	import { GameState } from './models/GameState';
 
 	let container: HTMLDivElement;
 	let currentLaneZ = 0;
@@ -57,9 +58,9 @@
 			1000
 		);
 		camera.position.z = -6;
-		camera.position.y = 8;
-		camera.position.x = -3;
-		camera.rotateY(Math.PI + 0.4);
+		camera.position.y = 7;
+		camera.position.x = -1.7;
+		camera.rotateY(Math.PI + 0.385);
 		camera.rotateX(-Math.PI / 4.5);
 
 		const renderer = new THREE.WebGLRenderer({ antialias: false });
@@ -182,45 +183,47 @@
 
 		document.addEventListener('keyup', handleKeyUp);
 		async function handleKeyUp(event: KeyboardEvent) {
-		
-			const moveDistance = 1;
-			let newPosition = player.position.clone();
-			switch (event.key.toLowerCase()) {
-				case 'w':
-					newPosition.z += moveDistance;
-					break;
-				case 'arrowup':
-					newPosition.z += moveDistance;
-					break;
-				case 's':
-					newPosition.z -= moveDistance;
-					break;
-				case 'arrowdown':
-					newPosition.z -= moveDistance;
-					break;
-				case 'a':
-					newPosition.x += moveDistance;
-					break;
-				case 'arrowleft':
-					newPosition.x += moveDistance;
-					break;
-				case 'd':
-					newPosition.x -= moveDistance;
-					break;
-				case 'arrowright':
-					newPosition.x -= moveDistance;
-					break;
-			}
-
-			if (!isPlayerColliding(newPosition)) {
-				if (player.position.z < newPosition.z) {
-					if (currentLaneZ < Math.ceil(newPosition.z) + 15) {
-						await loadSection();
-					}
+			if ($gameState === GameState.Singleplayer) {
+				const moveDistance = 1;
+				let newPosition = player.position.clone();
+				switch (event.key.toLowerCase()) {
+					case 'w':
+						$isPlaying = true; 
+						newPosition.z += moveDistance;
+						break;
+					case 'arrowup':
+						newPosition.z += moveDistance;
+						break;
+					case 's':
+						newPosition.z -= moveDistance;
+						break;
+					case 'arrowdown':
+						newPosition.z -= moveDistance;
+						break;
+					case 'a':
+						newPosition.x += moveDistance;
+						break;
+					case 'arrowleft':
+						newPosition.x += moveDistance;
+						break;
+					case 'd':
+						newPosition.x -= moveDistance;
+						break;
+					case 'arrowright':
+						newPosition.x -= moveDistance;
+						break;
 				}
-				player.position.copy(newPosition);
-				renderer.render(scene, camera);
-				cleanUpLanes();
+	
+				if (!isPlayerColliding(newPosition)) {
+					if (player.position.z < newPosition.z) {
+						if (currentLaneZ < Math.ceil(newPosition.z) + 15) {
+							await loadSection();
+						}
+					}
+					player.position.copy(newPosition);
+					renderer.render(scene, camera);
+					cleanUpLanes();
+				}
 			}
 		}
 
@@ -249,7 +252,7 @@
 		const cameraOffsetZ = 10; 
 
 		function cameraMovement() {
-			const targetZ = player.position.z -16 + cameraOffsetZ;
+			const targetZ = player.position.z -16+ cameraOffsetZ;
 
 			const distanceZ = Math.abs(camera.position.z - targetZ);
 
@@ -274,15 +277,14 @@
 
 		function animate() {
 			requestAnimationFrame(animate);
-			if (!$isPlaying) {
-				renderer.render(scene, camera);
-				return;
-			}
-			
-			cameraMovement();
-			updateLight();
+			if ($gameState === GameState.Singleplayer && $isPlaying) {
+				cameraMovement();
+				updateLight();
 
+				renderer.render(scene, camera);
+			}
 			renderer.render(scene, camera);
+			return;
 		}
 
 		animate();
