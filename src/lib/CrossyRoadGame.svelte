@@ -271,7 +271,6 @@
 				if (obj.position.z < player.position.z - 15) {
 					scene.remove(obj);
 					renderedObjects.splice(i, 1);
-					console.log(`Removed object at z=${obj.position.z}`);
 				}
 			}
 		}
