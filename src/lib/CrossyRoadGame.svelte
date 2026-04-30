@@ -15,7 +15,7 @@
 	let connection: SignalR.HubConnection | undefined;
 	let game: Game | undefined;
 	const getPlayer = (id: string) => game?.players.find(p => p.user.id === id) as Player | undefined;
-	let userId: string | undefined;
+	let userId: string = crypto.randomUUID();
 
 	let container: HTMLDivElement;
 	const objectList: THREE.Object3D[] = [];
@@ -24,6 +24,8 @@
 	const GLTF_CACHE: { [key: string]: GLTF } = {};
 
 	onMount(async () => {
+		const otherGameId = window.location.search.split('?').find(param => param.startsWith('gameId='))?.split('=')[1];
+
 		connection = new SignalR.HubConnectionBuilder()
 			.withUrl("http://localhost:5016/api/v1/game/ws")
 			.configureLogging(SignalR.LogLevel.Information)
@@ -31,15 +33,31 @@
 
 		connection.on(WebsocketEvent.Ready, async () => {
 			console.log("Connected to CrossyWS");
-			await connection?.invoke(WebsocketEvent.CreateGame);
+			if (otherGameId) {
+				await connection?.invoke(WebsocketEvent.JoinGame, otherGameId, userId);
+			} else {
+				await connection?.invoke(WebsocketEvent.CreateGame);
+			}
 		});
 		
 		connection.on(WebsocketEvent.GameJoined, async (joinedGame: Game) => {
-			// currently only for the host implementation, userid later comes from the auth token
-			userId = joinedGame.hostId;
 			game = joinedGame;
+			if (game.players.length == 1) {
+				userId = game.hostId;
+				console.log("YOU ARE HOST!");
+			}
+			game.players.forEach(p => {
+				p.position = Vec3.fromObject(p.position);
+				loadPlayer(p);
+			});
+			console.log(game);
+		});
+
+		connection.on(WebsocketEvent.PlayerJoined, async (newGame: Game, newPlayerId: string) => {
+			game = newGame;
 			game.players.forEach(p => p.position = Vec3.fromObject(p.position));
-			loadPlayer(getPlayer(userId)!);
+			const newPlayer = getPlayer(newPlayerId)!;
+			loadPlayer(newPlayer);
 		});
 
 		connection.on(WebsocketEvent.NewSection, async (lanes: Lane[]) => {
@@ -51,6 +69,11 @@
 			let player = getPlayer(newPlayer.user.id)!;
 			player = newPlayer;
 			renderedObjects.find(obj => obj.name === player.user.id)!.position.copy(player.position.toVector3());
+		});
+
+		connection.on(WebsocketEvent.PlayerLeft, (playerId: string) => {
+			scene.remove(scene.getObjectByName(playerId)!);
+			renderedObjects.splice(renderedObjects.findIndex(obj => obj.name === playerId), 1);
 		});
 
 		function sendPlayerPositionUpdate() {
@@ -179,7 +202,7 @@
 		async function loadPlayer(player: Player) {
 			const gltf = await loader.loadAsync(`/models/skins/chicken.gltf`);
 			const playerModel = gltf.scene as THREE.Object3D;
-			playerModel.position.z = -2;
+			playerModel.position.copy(player.position.toVector3());
 			playerModel.name = player.user.id;
 			scene.add(playerModel);
 			renderer.render(scene, camera);
