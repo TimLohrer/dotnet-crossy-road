@@ -12,8 +12,8 @@ public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, boo
     }
 
     private static readonly int LeftMask = 0b1111111000000000000000000;
-    private static readonly int MiddleMask = 0b0000000111111111111000000;
-    private static readonly int RightMask = 0b0000000000000000000111111;
+    private static readonly int MiddleMask = 0b0000000111111111110000000;
+    private static readonly int RightMask = 0b0000000000000000001111111;
 
     private static readonly List<CrossyModelPart> LeftElements =
         [CrossyModelPart.Tree1, CrossyModelPart.Tree2, CrossyModelPart.Tree3, CrossyModelPart.Tree4];
@@ -71,10 +71,10 @@ public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, boo
         var right = GenerateBlockedSlotsWithConstraints(RightMask, 5, 6, RightElements);
 
         // Combine generated sections (numbers already represent the model part enum)
-        // Input:  0243951 000000000000 000000
-        //         0000000 340050080000 000000
-        //         0000000 000000000000 285609
-        // Output: 0243951 340050080000 285609
+        // Input:  0243951 00000000000 0000000
+        //         0000000 34005008000 0000000
+        //         0000000 00000000000 0285649
+        // Output: 0243951 34005008000 0285649
         List<CrossyModelPart> blockedSlots = [];
         for (var i = 0; i < LaneLength; i++)
             blockedSlots.Add(left[i] != CrossyModelPart.Empty ? left[i] :
@@ -109,17 +109,17 @@ public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, boo
         {
             var value = Randomizer.Next(0, 1 << LaneLength);
             // Mask 25 bits to only generate a section of the map
-            // Binary: 0101101 110010010000 101011
-            // Mask:   0000000 111111111111 000000
-            // Result: 0000000 110010010000 000000
+            // Binary: 0101101 11001001000 0101011
+            // Mask:   0000000 11111111111 0000000
+            // Result: 0000000 11001001000 0000000
             // => Only generate the middle section of the map
             value &= mask;
             binary = Convert.ToString(value, 2).PadLeft(LaneLength, '0');
         } while (!IsBinaryWithinContraints(binary, minFlags, maxFlags));
 
         // Set indexes of available elements to occupied slots in the generated map
-        // Input:  0000000 110010010000 000000
-        // Output: 0000000 340050080000 000000
+        // Input:  0000000 11001001000 0000000
+        // Output: 0000000 34005008000 0000000
         // => Fill parts of the map with different sets of elements
         List<CrossyModelPart> blockedSlots = [];
         for (var i = 0; i < binary.Length; i++)
