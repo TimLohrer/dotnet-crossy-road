@@ -115,8 +115,8 @@
 		scene.add(player);
 		renderer.render(scene, camera);
 
-		document.addEventListener('keydown', handleKeyDown);
-		async function handleKeyDown(event: KeyboardEvent) {
+		document.addEventListener('keyup', handleKeyUp);
+		async function handleKeyUp(event: KeyboardEvent) {
 		
 			const moveDistance = 1;
 			let newPosition = player.position.clone();
