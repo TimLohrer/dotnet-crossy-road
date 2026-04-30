@@ -3,7 +3,7 @@ namespace CrossyRoadApi.Models.Game.Map.Lanes;
 public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : CrossyMapLane(
     type == StreetType.Single ? CrossyModelPart.Street :
     type == StreetType.Top ? CrossyModelPart.StreetTop :
-    type == StreetType.Middle ? CrossyModelPart.StreetMiddle : CrossyModelPart.StreetBottom, seed, zPosition, 0)
+    type == StreetType.Middle ? CrossyModelPart.StreetMiddle : CrossyModelPart.StreetBottom, seed, zPosition)
 {
     public enum StreetType
     {

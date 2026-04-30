@@ -1,8 +1,10 @@
 <script lang="ts">
 	import type { Lane } from '$lib/models/Lane';
 	import { isPlaying } from '$lib/stores/gameStore';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import * as THREE from 'three';
+	import * as SignalR from '@microsoft/signalr';
+	import { WebsocketEvent } from '$lib/models/WebsocketEvent';
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 	import type { GLTF } from 'three/examples/jsm/Addons.js';
 	import { lightTargetPosition } from 'three/src/nodes/TSL.js';
@@ -10,12 +12,36 @@
 	let container: HTMLDivElement;
 	let cameraSpeedTimeoutId: number;
 	let currentLaneZ = 0;
+	let connection: SignalR.HubConnection | undefined;
 	const objectList: THREE.Object3D[] = [];
 	const renderedObjects: THREE.Object3D[] = [];
 
 	const GLTF_CACHE: { [key: string]: GLTF } = {};
 
 	onMount(async () => {
+		connection = new SignalR.HubConnectionBuilder()
+			.withUrl("http://localhost:5016/api/v1/game/ws")
+			.configureLogging(SignalR.LogLevel.Information)
+			.build();
+
+		connection.on("Ready", async () => {
+			console.log("Conneccted to CrossyWS");
+			await connection?.invoke(WebsocketEvent.CreateGame);
+		});
+		
+		connection.on(WebsocketEvent.GameJoined, (game) => {
+			console.log(game);
+		});
+		
+		try {
+			await connection.start();
+		} catch (err) {
+			console.error("SignalR Connection Error: ", err);
+			return;
+		}
+
+		// await connection?.invoke(WebsocketEvent.CreateGame);		
+
 		const width = container.clientWidth,
 			height = container.clientHeight;
 
@@ -219,6 +245,12 @@
 			camera.updateProjectionMatrix();
 			renderer.setSize(window.innerWidth, window.innerHeight);
 		});
+	});
+
+	onDestroy(async () => {
+		if (connection) {
+			await connection.stop();
+		}
 	});
 </script>
 
