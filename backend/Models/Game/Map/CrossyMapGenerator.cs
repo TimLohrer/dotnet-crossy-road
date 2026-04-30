@@ -89,4 +89,13 @@ public static class CrossyMapGenerator
 
         return lanes;
     }
+
+    public static List<CrossyMapLane> GenerateMapStart()
+    {
+        List<CrossyMapLane> lanes = [];
+        for (var i = -1; i > -10; i--)
+            lanes.Add(new PlainsLane(i % 2 == 0 ? PlainsLane.PlainsType.Light : PlainsLane.PlainsType.Dark, i, 0,
+                true));
+        return lanes;
+    }
 }

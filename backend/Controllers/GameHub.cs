@@ -5,14 +5,13 @@ using CrossyRoadApi.Models.Game;
 using CrossyRoadApi.Models.Game.Map;
 using CrossyRoadApi.Utils;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 
 namespace CrossyRoadApi.Controllers;
 
 public class GameHub(CrossyDbContext context) : Hub
 {
     private CrossyDbContext _context = context;
-    
+
     public override async Task OnConnectedAsync()
     {
         await base.OnConnectedAsync();
@@ -28,8 +27,17 @@ public class GameHub(CrossyDbContext context) : Hub
         var wsGame = new CrossyWsGame(host, CrossyTheme.Default, 0);
         ActiveGames.Games.Add(wsGame);
 
-        await Clients.Client(host.Id).SendAsync(CrossyWsEvent.GameJoined, wsGame);
-        await Groups.AddToGroupAsync(host.Id, wsGame.Id.ToString());
+        await Clients.Client(host.ConnectionId).SendAsync(CrossyWsEvent.GameJoined, wsGame);
+        await Groups.AddToGroupAsync(host.ConnectionId, wsGame.Id.ToString());
+
+        var startSections = CrossyMapGenerator.GenerateMapStart().Select(l => l.ToDto()).ToList();
+        for (var i = 0; i < 15; i++)
+        {
+            var section = CrossyMapGenerator.GenerateMapSection(wsGame.Seed, i).Select(l => l.ToDto()).ToList();
+            startSections.AddRange(section);
+        }
+
+        await Clients.Client(host.ConnectionId).SendAsync(CrossyWsEvent.NewSection, startSections);
     }
 
     public async Task JoinGame(Guid gameId)
@@ -42,9 +50,7 @@ public class GameHub(CrossyDbContext context) : Hub
         }
 
         if (wsGame.GamePhase != CrossyWsGame.Phase.Created)
-        {
             await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.GameJoinError, "Game does not exist");
-        }
 
         var user = new CrossyPlayer(Context.ConnectionId);
         var player = new CrossyWsPlayer(Context.ConnectionId, user, new Vector3(0, 0, -2));
@@ -55,24 +61,35 @@ public class GameHub(CrossyDbContext context) : Hub
         await Clients.OthersInGroup(gameId.ToString()).SendAsync(CrossyWsEvent.PlayerJoined, wsGame);
     }
 
+    public async Task UpdatePlayerPosition(Guid gameId, Vector3 newPosition)
+    {
+        var wsGame = ActiveGames.Games.FirstOrDefault(g =>
+            g.Id == gameId && g.Players.Any(p => p.ConnectionId == Context.ConnectionId));
+        if (wsGame == null)
+            await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.PlayerLeft, "Game does not exist");
+
+        var wsPlayer = wsGame!.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
+        wsPlayer.UpdatePosition(newPosition);
+
+        await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.UpdatePlayerPosition, wsPlayer);
+    }
+
     public async Task LeaveGame(Guid gameId)
     {
         var wsGame = ActiveGames.Games.FirstOrDefault(x => x.Id == gameId);
         if (wsGame != null)
         {
             await Clients.OthersInGroup(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.PlayerLeft);
-            wsGame.Players.RemoveAll(p => p.Id == Context.ConnectionId);
-            if (wsGame.Players.Count == 0)
-            {
-                ActiveGames.Games.Remove(wsGame);
-            }
+            wsGame.Players.RemoveAll(p => p.ConnectionId == Context.ConnectionId);
+            if (wsGame.Players.Count == 0) ActiveGames.Games.Remove(wsGame);
         }
+
         await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.GameLeft);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var wsGames = ActiveGames.Games.Where(g => g.Players.Any(p => p.Id == Context.ConnectionId)).ToList();
+        var wsGames = ActiveGames.Games.Where(g => g.Players.Any(p => p.ConnectionId == Context.ConnectionId)).ToList();
         wsGames.ForEach(g => _ = LeaveGame(g.Id));
         await base.OnDisconnectedAsync(exception);
     }

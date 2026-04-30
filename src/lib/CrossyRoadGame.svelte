@@ -8,10 +8,16 @@
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 	import type { GLTF } from 'three/examples/jsm/Addons.js';
 	import { lightTargetPosition } from 'three/src/nodes/TSL.js';
+	import type { Game } from './models/Game';
+	import { Player } from './models/Player';
+
+	// let currentLaneZ = 0;
+	let connection: SignalR.HubConnection | undefined;
+	let game: Game | undefined;
+	const getPlayer = (id: string) => game?.players.find(p => p.user.id === id) as Player | undefined;
+	let userId: string | undefined;
 
 	let container: HTMLDivElement;
-	let currentLaneZ = 0;
-	let connection: SignalR.HubConnection | undefined;
 	const objectList: THREE.Object3D[] = [];
 	const renderedObjects: THREE.Object3D[] = [];
 
@@ -23,14 +29,40 @@
 			.configureLogging(SignalR.LogLevel.Information)
 			.build();
 
-		connection.on("Ready", async () => {
+		connection.on(WebsocketEvent.Ready, async () => {
 			console.log("Connected to CrossyWS");
 			await connection?.invoke(WebsocketEvent.CreateGame);
 		});
 		
-		connection.on(WebsocketEvent.GameJoined, (game) => {
-			console.log(game);
+		connection.on(WebsocketEvent.GameJoined, async (joinedGame: Game) => {
+			// currently only for the host implementation, userid later comes from the auth token
+			userId = joinedGame.hostId;
+			game = joinedGame;
+			// FIXME
+			game.players.forEach(p => {
+				p.position = new THREE.Vector3(p.position.x, p.position.y, p.position.z);
+			});
+			console.log(getPlayer(userId));
+			loadPlayer(getPlayer(userId)!);
 		});
+
+		connection.on(WebsocketEvent.NewSection, async (lanes: Lane[]) => {
+			console.log(lanes);
+			loadSection(lanes);
+		});
+
+		connection.on(WebsocketEvent.UpdatePlayerPosition, (newPlayerJson: any) => {
+			// FIXME
+			const newPlayer = Player.fromJson(newPlayerJson);
+			console.log(newPlayer.position);
+			let player = getPlayer(newPlayer.user.id)!;
+			player = newPlayer;
+		});
+
+		function sendPlayerPositionUpdate() {
+			const player = getPlayer(userId!)!;
+			connection?.invoke(WebsocketEvent.UpdatePlayerPosition, game!.id, player.position);
+		}
 		
 		try {
 			await connection.start();
@@ -38,8 +70,6 @@
 			console.error("SignalR Connection Error: ", err);
 			return;
 		}
-
-		// await connection?.invoke(WebsocketEvent.CreateGame);		
 
 		const width = container.clientWidth,
 			height = container.clientHeight;
@@ -65,16 +95,12 @@
 
 		const renderer = new THREE.WebGLRenderer({ antialias: false });
 		renderer.setSize(window.innerWidth, window.innerHeight);
-		container.appendChild(renderer.domElement);
-
 		renderer.shadowMap.enabled = true;
 		renderer.shadowMap.type = THREE.PCFShadowMap;
+		container.appendChild(renderer.domElement);
 
 		const ambLight = new THREE.AmbientLight(0xffffff, 0.3)
-
 		scene.add(ambLight)
-		
-
 
 		const dirLight = new THREE.DirectionalLight(0xfffffff, 3);
 		dirLight.castShadow = true;
@@ -120,12 +146,8 @@
 					}
 				});
 			}
-		
-
 			
-			model.position.x = pos.x;
-			model.position.y = pos.y;
-			model.position.z = pos.z;
+			model.position.copy(pos);
 			
 			if (hasCollision) {
 				// debugging: show collision boxes
@@ -150,14 +172,7 @@
 
 		renderer.render(scene, camera);
 
-		const seed = Math.floor(Math.random() * 1000000);
-		// const seed = 660895;
-
-		async function loadSection() {
-			const res = await fetch(`http://localhost:5016/api/v1/game/${currentLaneZ}?seed=${seed}`);
-			const lanes = await res.json() as Lane[];
-			currentLaneZ += lanes.length;
-			
+		function loadSection(lanes: Lane[]) {
 			lanes.forEach((lane) => {
 				loadModel(lane.modelLocation, lane.position, false);
 				lane.elements.forEach((element) => {
@@ -167,23 +182,18 @@
 			renderer.render(scene, camera);
 		}
 
-		for (let i = -10; i < 15; i++) {
-			if (i < 0) {
-				loadModel(`/models/default/lanes/plains_${i % 2 == 0 ? 'light' : 'dark'}.gltf`, new THREE.Vector3(0, 0, i), false);
-			} else {
-				await loadSection();
-			}
+		async function loadPlayer(player: Player) {
+			const gltf = await loader.loadAsync(`/models/skins/chicken.gltf`);
+			const playerModel = gltf.scene as THREE.Object3D;
+			playerModel.position.z = -2;
+			playerModel.name = player.user.id;
+			scene.add(playerModel);
+			renderer.render(scene, camera);
 		}
-
-		const gltf = await loader.loadAsync(`/models/skins/chicken.gltf`);
-		const player = gltf.scene as THREE.Object3D;
-		player.position.z = -2;
-		scene.add(player);
-		renderer.render(scene, camera);
 
 		document.addEventListener('keyup', handleKeyUp);
 		async function handleKeyUp(event: KeyboardEvent) {
-		
+			const player = getPlayer(userId!)!;
 			const moveDistance = 1;
 			let newPosition = player.position.clone();
 			switch (event.key.toLowerCase()) {
@@ -213,14 +223,10 @@
 					break;
 			}
 
-			if (!isPlayerColliding(newPosition)) {
-				if (player.position.z < newPosition.z) {
-					if (currentLaneZ < Math.ceil(newPosition.z) + 15) {
-						await loadSection();
-					}
-				}
+			if (!isPlayerColliding(newPosition)) {				
 				player.position.copy(newPosition);
 				renderer.render(scene, camera);
+				sendPlayerPositionUpdate();
 				cleanUpLanes();
 			}
 		}
@@ -235,6 +241,7 @@
 		}
 
 		function cleanUpLanes() {
+			const player = getPlayer(userId!)!;
 			for (let i = renderedObjects.length - 1; i >= 0; i--) {
 				const obj = renderedObjects[i];
 				if (obj.position.z < player.position.z - 15) {
@@ -245,11 +252,10 @@
 			}
 		}
 
-		
-
 		const cameraOffsetZ = 10; 
 
 		function cameraMovement() {
+			const player = getPlayer(userId!)!;
 			const targetZ = player.position.z -16 + cameraOffsetZ;
 
 			const distanceZ = Math.abs(camera.position.z - targetZ);
@@ -268,6 +274,7 @@
 		}
 
 		function updateLight() {
+			const player = getPlayer(userId!)!;
 			dirLight.position.z = player.position.z -3;
 			dirLight.target.position.copy(new THREE.Vector3(0,0, player.position.z));
 			dirLight.target.updateMatrix();

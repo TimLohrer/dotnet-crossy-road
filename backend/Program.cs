@@ -24,7 +24,7 @@ builder.Configuration.Bind(appConfig);
 builder.Services.AddSingleton(appConfig);
 builder.Services.AddDbContext<CrossyDbContext>(options =>
     options.UseNpgsql(appConfig.Database.ConnectionString).UseSnakeCaseNamingConvention());
-builder.Services.AddSignalR().AddJsonProtocol();
+builder.Services.AddSignalR().AddJsonProtocol(options => { options.PayloadSerializerOptions.IncludeFields = true; });
 
 var app = builder.Build();
 
