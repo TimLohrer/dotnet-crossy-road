@@ -7,7 +7,6 @@
 	import { WebsocketEvent } from '$lib/models/WebsocketEvent';
 	import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 	import type { GLTF } from 'three/examples/jsm/Addons.js';
-	import { lightTargetPosition } from 'three/src/nodes/TSL.js';
 
 	let container: HTMLDivElement;
 	let currentLaneZ = 0;
