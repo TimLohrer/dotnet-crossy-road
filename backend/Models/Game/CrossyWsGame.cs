@@ -1,4 +1,3 @@
-using CrossyRoadApi.Dto;
 using CrossyRoadApi.Models.Game.Map;
 
 namespace CrossyRoadApi.Models.Game;
@@ -13,7 +12,7 @@ public class CrossyWsGame(CrossyWsPlayer host, CrossyTheme theme, int? seed = nu
     }
 
     public Guid Id { get; } = Guid.NewGuid();
-    public Guid Host { get; } = host.User.Id;
+    public Guid HostId { get; } = host.User.Id;
     public List<CrossyWsPlayer> Players { get; set; } = [host];
     public int Seed { get; } = seed ?? new Random().Next();
     public CrossyTheme Theme { get; } = theme;

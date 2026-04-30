@@ -6,12 +6,23 @@ namespace CrossyRoadApi.Models.Game;
 
 public class CrossyWsPlayer(string connectionId, CrossyPlayer user, Vector3 spawnPosition)
 {
-    public string Id { get; set; } = connectionId;
+    public string ConnectionId { get; } = connectionId;
     public CrossyPlayerMinimalDto User { get; set; } = user.ToMinimalDto();
-    public Vector3 Position { get; set; } = spawnPosition;
-    public int FurthestZPosition { get; set; } = 0;
-    public int Score { get; set; } = 0;
+    public Vector3 Position { get; private set; } = spawnPosition;
+    public int FurthestZPosition { get; private set; }
+    public int Score { get; private set; }
 
-    public int Taler { get; set; } = 0;
+    public int Taler { get; private set; } = 0;
     // public Dictionary<int, char> Keystrokes { get; set; }
+
+    public void UpdatePosition(Vector3 newPosition)
+    {
+        if (newPosition.Z > Position.Z && newPosition.Z > 0)
+        {
+            FurthestZPosition = (int)newPosition.Z;
+            Score++;
+        }
+
+        Position = newPosition;
+    }
 }

@@ -9,13 +9,13 @@ public abstract class CrossyMapLane : CrossyModel
     protected static int LaneLength = 25;
     public List<CrossyMapElement> Elements = [];
 
-    public CrossyMapLane(CrossyModelPart modelPart, int seed, int zPosition) : base(modelPart,
+    public CrossyMapLane(CrossyModelPart modelPart, int seed, int zPosition, bool empty = false) : base(modelPart,
         new Vector3(0, 0, zPosition))
     {
         Randomizer = CrossyRandomizer.Get(seed, zPosition);
 
         // Generate Map
-        GenerateElements();
+        if (!empty) GenerateElements();
     }
 
     protected Random Randomizer { get; }
