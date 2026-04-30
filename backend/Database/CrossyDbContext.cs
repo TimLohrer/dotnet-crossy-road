@@ -10,5 +10,6 @@ public class CrossyDbContext : DbContext
     {
     }
 
+    public DbSet<CrossyPlayer> CrossyPlayers { get; set; }
     public DbSet<CrossyGame> CrossyGames { get; set; }
 }
