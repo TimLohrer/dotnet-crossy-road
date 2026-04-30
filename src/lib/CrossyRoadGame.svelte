@@ -10,8 +10,8 @@
 	import { GameState } from './models/GameState';
 	import type { Game } from './models/Game';
 	import { Player } from './models/Player';
+	import { Vec3 } from './models/Vec3';
 
-	// let currentLaneZ = 0;
 	let connection: SignalR.HubConnection | undefined;
 	let game: Game | undefined;
 	const getPlayer = (id: string) => game?.players.find(p => p.user.id === id) as Player | undefined;
@@ -38,25 +38,19 @@
 			// currently only for the host implementation, userid later comes from the auth token
 			userId = joinedGame.hostId;
 			game = joinedGame;
-			// FIXME
-			game.players.forEach(p => {
-				p.position = new THREE.Vector3(p.position.x, p.position.y, p.position.z);
-			});
-			console.log(getPlayer(userId));
+			game.players.forEach(p => p.position = Vec3.fromObject(p.position));
 			loadPlayer(getPlayer(userId)!);
 		});
 
 		connection.on(WebsocketEvent.NewSection, async (lanes: Lane[]) => {
-			console.log(lanes);
 			loadSection(lanes);
 		});
 
-		connection.on(WebsocketEvent.UpdatePlayerPosition, (newPlayerJson: any) => {
-			// FIXME
-			const newPlayer = Player.fromJson(newPlayerJson);
-			console.log(newPlayer.position);
+		connection.on(WebsocketEvent.UpdatePlayerPosition, (newPlayer: Player) => {
+			newPlayer.position = Vec3.fromObject(newPlayer.position);
 			let player = getPlayer(newPlayer.user.id)!;
 			player = newPlayer;
+			renderedObjects.find(obj => obj.name === player.user.id)!.position.copy(player.position.toVector3());
 		});
 
 		function sendPlayerPositionUpdate() {
@@ -102,9 +96,9 @@
 		const ambLight = new THREE.AmbientLight(0xffffff, 0.3)
 		scene.add(ambLight)
 
-		const dirLight = new THREE.DirectionalLight(0xfffffff, 3);
+		const dirLight = new THREE.DirectionalLight(0xfffffff, 2);
 		dirLight.castShadow = true;
-		dirLight.position.set(20, 15, -3);
+		dirLight.position.set(20, 55, -3);
 		scene.add(dirLight);
 		scene.add(dirLight.target);
 
@@ -189,6 +183,7 @@
 			playerModel.name = player.user.id;
 			scene.add(playerModel);
 			renderer.render(scene, camera);
+			renderedObjects.push(playerModel);
 		}
 
 		document.addEventListener('keyup', handleKeyUp);
@@ -227,8 +222,9 @@
 				}
 				$isPlaying = true; 
 
-				if (!isPlayerColliding(newPosition)) {				
-					player.position.copy(newPosition);
+				if (!isPlayerColliding(newPosition.toVector3())) {				
+					player.position = newPosition;
+					renderedObjects.find(obj => obj.name === player.user.id)!.position.copy(player.position.toVector3());
 					renderer.render(scene, camera);
 					sendPlayerPositionUpdate();
 					cleanUpLanes();
