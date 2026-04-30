@@ -26,8 +26,9 @@ public class CrossyWsPlayer(string connectionId, CrossyPlayer user, Vector3 spaw
                 shouldGenerateNewSection = true;
             Score++;
         }
+
         Position = newPosition;
-        
+
         return shouldGenerateNewSection;
     }
 }

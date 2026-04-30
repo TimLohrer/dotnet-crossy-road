@@ -56,7 +56,7 @@ public class GameHub(CrossyDbContext context) : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, wsGame.Id.ToString());
         await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.GameJoined, wsGame);
         await Clients.OthersInGroup(gameId.ToString()).SendAsync(CrossyWsEvent.PlayerJoined, wsGame, player.User.Id);
-        
+
         var startSections = CrossyMapGenerator.GenerateMapStart(wsGame.Seed).Select(l => l.ToDto()).ToList();
         await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.NewSection, startSections);
     }
@@ -75,9 +75,10 @@ public class GameHub(CrossyDbContext context) : Hub
 
         if (shouldGenerateNewSection)
         {
-            var section = CrossyMapGenerator.GenerateMapSection(wsGame.Seed, wsPlayer.FurthestGeneratedZPosition + 1);
+            var section = CrossyMapGenerator.GenerateMapSection(wsGame.Seed, wsPlayer.FurthestGeneratedZPosition);
             wsPlayer.FurthestGeneratedZPosition += section.Count;
-            await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.NewSection, section.Select(l => l.ToDto()).ToList());
+            await Clients.Client(Context.ConnectionId)
+                .SendAsync(CrossyWsEvent.NewSection, section.Select(l => l.ToDto()).ToList());
         }
     }
 

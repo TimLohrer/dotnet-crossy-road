@@ -8,7 +8,7 @@ public static class CrossyRandomizer
         var zRandomizer1 = zRandom.Next(1, 99);
         var zRandomizer2 = zRandom.Next(1, 99);
         var zBasedSeed = zRandomizer1 < seed ? seed / zRandomizer1 * zRandomizer2 : seed * zRandomizer2 + zRandomizer2;
-        
+
         return new Random(zBasedSeed);
     }
 }

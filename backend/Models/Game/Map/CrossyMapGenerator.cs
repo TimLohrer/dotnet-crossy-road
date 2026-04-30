@@ -98,10 +98,11 @@ public static class CrossyMapGenerator
                 true));
         for (var i = 0; i < 15;)
         {
-            var section = CrossyMapGenerator.GenerateMapSection(seed, i);
+            var section = GenerateMapSection(seed, i);
             lanes.AddRange(section);
             i += section.Count;
         }
+
         return lanes;
     }
 }
