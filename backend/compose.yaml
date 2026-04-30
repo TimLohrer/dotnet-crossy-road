@@ -1,7 +1,21 @@
 ﻿services:
-  crossyroadapi:
-    image: crossyroadapi
-    build:
-      context: .
-      dockerfile: Dockerfile
+  #crossyroadapi:
+  #  image: crossyroadapi
+  #  build:
+  #    context: .
+  #    dockerfile: Dockerfile
 
+  db:
+    image: postgres:17
+    container_name: crossy-road-db
+    environment:
+      - POSTGRES_USER=crossy-road
+      - POSTGRES_PASSWORD=development
+      - POSTGRES_DB=crossy-road
+    volumes:
+      - crossy_road_data:/var/lib/postgresql
+    ports:
+      - "4444:5432"
+
+volumes:
+  crossy_road_data:
