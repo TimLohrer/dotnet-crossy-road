@@ -10,7 +10,6 @@
 	import { lightTargetPosition } from 'three/src/nodes/TSL.js';
 
 	let container: HTMLDivElement;
-	let cameraSpeedTimeoutId: number;
 	let currentLaneZ = 0;
 	let connection: SignalR.HubConnection | undefined;
 	const objectList: THREE.Object3D[] = [];
@@ -25,7 +24,7 @@
 			.build();
 
 		connection.on("Ready", async () => {
-			console.log("Conneccted to CrossyWS");
+			console.log("Connected to CrossyWS");
 			await connection?.invoke(WebsocketEvent.CreateGame);
 		});
 		
@@ -60,17 +59,40 @@
 		);
 		camera.position.z = -6;
 		camera.position.y = 8;
-		camera.position.x = -2;
-		camera.rotateY(Math.PI + 0.269);
-		camera.rotateX(-Math.PI / 4);
+		camera.position.x = -3;
+		camera.rotateY(Math.PI + 0.4);
+		camera.rotateX(-Math.PI / 4.5);
 
 		const renderer = new THREE.WebGLRenderer({ antialias: false });
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		container.appendChild(renderer.domElement);
 
-		const light = new THREE.DirectionalLight(0xfffffff, 3);
-		light.position.set(-20, 20, -3);
-		scene.add(light);
+		renderer.shadowMap.enabled = true;
+		renderer.shadowMap.type = THREE.PCFShadowMap;
+
+		const ambLight = new THREE.AmbientLight(0xffffff, 0.3)
+
+		scene.add(ambLight)
+		
+
+
+		const dirLight = new THREE.DirectionalLight(0xfffffff, 3);
+		dirLight.castShadow = true;
+		dirLight.position.set(20, 15, -3);
+		scene.add(dirLight);
+		scene.add(dirLight.target);
+
+		dirLight.shadow.normalBias = 0.05;
+		dirLight.shadow.camera.top = 18;
+		dirLight.shadow.camera.bottom = -18;
+		dirLight.shadow.camera.left = -18;
+		dirLight.shadow.camera.right = 18;
+		dirLight.shadow.camera.near = 0.1;
+		dirLight.shadow.camera.far = 100;
+		dirLight.shadow.mapSize.width = 4096; // Higher resolution for better quality
+		dirLight.shadow.mapSize.height = 4096;
+
+		dirLight.shadow.intensity = 0.8;
 
 		const loader = new GLTFLoader();
 
@@ -82,6 +104,24 @@
 				console.log(`Loaded and cached: ${fileName}`);
 			}
 			let model = gltf.scene.clone() as THREE.Object3D;
+
+
+			if (path.includes("lane")) {
+				model.traverse((child) => {
+					if (child.isObject3D) {
+						child.receiveShadow = true;
+					}
+				});
+			} else {
+				model.traverse((child) => {
+					if (child.isObject3D) {
+						child.castShadow = true;
+						child.receiveShadow = true;
+					}
+				});
+			}
+		
+
 			
 			model.position.x = pos.x;
 			model.position.y = pos.y;
@@ -129,7 +169,7 @@
 
 		for (let i = -10; i < 15; i++) {
 			if (i < 0) {
-				loadModel(`/models/default/lanes/plains_${i % 2 != 0 ? 'light' : 'dark'}.gltf`, new THREE.Vector3(0, 0, i), false);
+				loadModel(`/models/default/lanes/plains_${i % 2 == 0 ? 'light' : 'dark'}.gltf`, new THREE.Vector3(0, 0, i), false);
 			} else {
 				await loadSection();
 			}
@@ -149,8 +189,6 @@
 			switch (event.key.toLowerCase()) {
 				case 'w':
 					newPosition.z += moveDistance;
-					console.log(newPosition.z)
-					console.log(camera.position.z)
 					break;
 				case 'arrowup':
 					newPosition.z += moveDistance;
@@ -212,7 +250,7 @@
 		const cameraOffsetZ = 10; 
 
 		function cameraMovement() {
-			const targetZ = player.position.z -14 + cameraOffsetZ;
+			const targetZ = player.position.z -16 + cameraOffsetZ;
 
 			const distanceZ = Math.abs(camera.position.z - targetZ);
 
@@ -222,9 +260,19 @@
 			const distanceFactor = distanceZ * sensitivity;
 			const lerpAlpha = Math.min(baseSpeed + distanceFactor, 1.0);
 
-			camera.position.z += (targetZ - camera.position.z) * lerpAlpha;
+			let tempCamPos = camera.position;
 
+			if (tempCamPos.z < camera.position.z + (targetZ - camera.position.z) * lerpAlpha) {
+				camera.position.z += (targetZ - camera.position.z) * lerpAlpha;
+			}
 		}
+
+		function updateLight() {
+			dirLight.position.z = player.position.z -3;
+			dirLight.target.position.copy(new THREE.Vector3(0,0, player.position.z));
+			dirLight.target.updateMatrix();
+		}
+
 		function animate() {
 			requestAnimationFrame(animate);
 			if (!$isPlaying) {
@@ -233,6 +281,8 @@
 			}
 			
 			cameraMovement();
+			updateLight();
+
 			renderer.render(scene, camera);
 		}
 
