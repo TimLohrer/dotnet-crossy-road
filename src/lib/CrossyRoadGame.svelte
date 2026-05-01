@@ -207,6 +207,12 @@
 			scene.add(playerModel);
 			renderer.render(scene, camera);
 			renderedObjects.push(playerModel);
+			playerModel.traverse((child) => {
+					if (child.isObject3D) {
+						child.castShadow = true;
+						child.receiveShadow = true;
+					}
+				});
 		}
 
 		document.addEventListener('keyup', handleKeyUp);
