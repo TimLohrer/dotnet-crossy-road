@@ -93,7 +93,7 @@ public static class CrossyMapGenerator
     public static List<CrossyMapLane> GenerateMapStart(int seed)
     {
         List<CrossyMapLane> lanes = [];
-        for (var i = -1; i > -10; i--)
+        for (var i = -10; i < 0; i++)
             lanes.Add(new PlainsLane(i % 2 == 0 ? PlainsLane.PlainsType.Light : PlainsLane.PlainsType.Dark, i, 0,
                 true));
         for (var i = 0; i < 15;)
