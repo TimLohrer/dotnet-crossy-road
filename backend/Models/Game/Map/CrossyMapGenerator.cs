@@ -8,9 +8,9 @@ public static class CrossyMapGenerator
     private static readonly List<CrossyModelPart> AvailableLanes =
         [CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Water];
 
-    private static readonly int MaxPlainsLength = 3;
-    private static readonly int MaxStreetLength = 4;
-    private static readonly int MaxWaterLenth = 4;
+    private static readonly int MaxPlainsLength = 5;
+    private static readonly int MaxStreetLength = 6;
+    private static readonly int MaxWaterLenth = 5;
 
     // TODO: Move this into game instance later
     private static CrossyModelPart lastSectionType;
