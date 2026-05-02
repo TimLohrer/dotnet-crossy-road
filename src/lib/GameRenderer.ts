@@ -114,14 +114,17 @@ export class GameRenderer {
 			if (hasCollision) {
 				// debugging: show collision boxes
 				// (model as THREE.Group).children.forEach((child) => {
-				// 	(child as THREE.Mesh).material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
+				// 	(child as THREE.Mesh).material = new THREE.MeshBasicMaterial({
+				// 		color: 0xffffff,
+				// 		wireframe: true
+				// 	});
 				// });
 				// const cube = new THREE.Mesh(
-				// 	new THREE.BoxGeometry(1, .05, 1),
+				// 	new THREE.BoxGeometry(1, 0.05, 1),
 				// 	new THREE.MeshBasicMaterial({ color: 0xff0000 })
 				// );
 				// cube.position.copy(model.position);
-				// scene.add(cube);
+				// this.scene.add(cube);
 
 				this.objectList.push(model);
 			}
