@@ -4,5 +4,6 @@ public abstract class CrossyMovingMapElement(
     CrossyModelPart modelPart,
     CrossyMapLane lane,
     int xPosition,
-    int modelWidth)
-    : CrossyMapElement(modelPart, lane, xPosition, modelWidth);
+    int modelWidth,
+    bool hasCollision)
+    : CrossyMapElement(modelPart, lane, xPosition, modelWidth, hasCollision);

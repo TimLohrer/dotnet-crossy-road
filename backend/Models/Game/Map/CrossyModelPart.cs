@@ -13,6 +13,7 @@ public enum CrossyModelPart
     [EnumMember(Value = "street_bottom")] StreetBottom,
     [EnumMember(Value = "street_middle")] StreetMiddle,
     [EnumMember(Value = "street_top")] StreetTop,
+    [EnumMember(Value = "rail")] Rail,
 
     [EnumMember(Value = "tree_0")] Tree0,
     [EnumMember(Value = "tree_1")] Tree1,
@@ -23,5 +24,9 @@ public enum CrossyModelPart
     [EnumMember(Value = "stone_0")] Stone0,
     [EnumMember(Value = "stone_1")] Stone1,
 
-    [EnumMember(Value = "log_0")] Log0
+    [EnumMember(Value = "log_0")] Log0,
+    [EnumMember(Value = "log_1")] Log1,
+    [EnumMember(Value = "log_2")] Log2,
+
+    [EnumMember(Value = "lillypad")] Lillypad
 }

@@ -3,6 +3,7 @@
 	import CrossyRoadGame from "$lib/CrossyRoadGame.svelte";
 	import { user } from "$lib/stores/stateStore";
 	import { Skin } from "$lib/models/Skin";
+	import GameHud from "$lib/GameHud.svelte";
 
 	$user = {
 		id: crypto.randomUUID(),
@@ -16,3 +17,4 @@
 
 <Menu />
 <CrossyRoadGame />
+<GameHud />

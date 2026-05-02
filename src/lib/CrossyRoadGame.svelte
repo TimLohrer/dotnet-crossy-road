@@ -23,48 +23,8 @@
 
 		$gameSocket!.connect();
 
-		document.addEventListener('keyup', handleKeyUp);
-		async function handleKeyUp(event: KeyboardEvent) {
-			const player = Game.getPlayer($wsGame!, $user!.id)!;
-			const moveDistance = 1;
-			let newPosition = player.position.clone();
-			if ($gameState != GameState.Skins) {
-				switch (event.key.toLowerCase()) {
-					case 'w':
-						newPosition.z += moveDistance;
-						break;
-					case 'arrowup':
-						newPosition.z += moveDistance;
-						break;
-					case 's':
-						newPosition.z -= moveDistance;
-						break;
-					case 'arrowdown':
-						newPosition.z -= moveDistance;
-						break;
-					case 'a':
-						newPosition.x += moveDistance;
-						break;
-					case 'arrowleft':
-						newPosition.x += moveDistance;
-						break;
-					case 'd':
-						newPosition.x -= moveDistance;
-						break;
-					case 'arrowright':
-						newPosition.x -= moveDistance;
-						break;
-					default:
-						return;
-				}
-				$isPlaying = true; 
-
-				if (!$gameRenderer!.isPlayerColliding(newPosition.toVector3())) {
-					player.position = newPosition;
-					$gameRenderer!.updatePlayerPosition(player);
-				}
-			}
-		}
+		window.addEventListener('keypress', (e: KeyboardEvent) => $gameRenderer!.onKeyUp(e));
+		window.addEventListener('resize', () => $gameRenderer!.resize());
 	});
 
 	onDestroy(async () => {

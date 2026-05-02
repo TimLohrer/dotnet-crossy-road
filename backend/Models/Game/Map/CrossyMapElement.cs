@@ -3,9 +3,15 @@ using CrossyRoadApi.Dto;
 
 namespace CrossyRoadApi.Models.Game.Map;
 
-public abstract class CrossyMapElement(CrossyModelPart modelPart, CrossyMapLane lane, int xPosition, int modelWidth)
+public abstract class CrossyMapElement(
+    CrossyModelPart modelPart,
+    CrossyMapLane lane,
+    int xPosition,
+    int modelWidth,
+    bool hasCollision)
     : CrossyModel(modelPart, lane.Position with { X = xPosition })
 {
+    public bool HasCollision { get; } = hasCollision;
     public int ModelWidth { get; } = modelWidth;
     public CrossyDirection Direction { get; protected set; } = CrossyDirection.Left;
 

@@ -14,22 +14,24 @@ export class GameRenderer {
 	private static gltfLoader = new GLTFLoader();
 
 	window: Window;
-    container: HTMLDivElement;
+	container: HTMLDivElement;
 
-    scene: THREE.Scene;
-    camera: THREE.OrthographicCamera;
-    renderer: THREE.WebGLRenderer;
-    ambLight: THREE.AmbientLight;
-    dirLight: THREE.DirectionalLight;
+	scene: THREE.Scene;
+	camera: THREE.OrthographicCamera;
+	renderer: THREE.WebGLRenderer;
+	ambLight: THREE.AmbientLight;
+	dirLight: THREE.DirectionalLight;
+	mixers: THREE.AnimationMixer[] = [];
+	timer: THREE.Timer = new THREE.Timer();
 
 	objectList: THREE.Object3D[] = [];
 	renderedObjects: THREE.Object3D[] = [];
 
-    constructor(window: Window, container: HTMLDivElement) {
+	constructor(window: Window, container: HTMLDivElement) {
 		this.window = window;
-        this.container = container;
+		this.container = container;
 
-        const width = this.container.clientWidth,
+		const width = this.container.clientWidth,
 			height = this.container.clientHeight;
 
 		this.scene = new THREE.Scene();
@@ -57,13 +59,13 @@ export class GameRenderer {
 		this.renderer.shadowMap.type = THREE.PCFShadowMap;
 		this.container.appendChild(this.renderer.domElement);
 
-		this.ambLight = new THREE.AmbientLight(0xffffff, 0.3)
-		this.scene.add(this.ambLight)
+		this.ambLight = new THREE.AmbientLight(0xffffff, 0.3);
+		this.scene.add(this.ambLight);
 
 		this.dirLight = new THREE.DirectionalLight(0xfffffff, 2);
 		this.dirLight.castShadow = true;
 		this.dirLight.position.set(20, 55, -3);
-        
+
 		this.dirLight.shadow.normalBias = 0.05;
 		this.dirLight.shadow.camera.top = 18;
 		this.dirLight.shadow.camera.bottom = -18;
@@ -79,154 +81,212 @@ export class GameRenderer {
 		this.scene.add(this.dirLight.target);
 
 		this.animate();
-
-		window.addEventListener('resize', () => this.resize());
-    }
+	}
 
 	private render = () => this.renderer.render(this.scene, this.camera);
 
 	private async loadModel(path: string, pos: THREE.Vector3, hasCollision: boolean) {
-			const fileName = path.split('/').pop() as string;
-			const gltf = GameRenderer.GLTF_CACHE[fileName] ?? await GameRenderer.gltfLoader.loadAsync(path);
-			if (!GameRenderer.GLTF_CACHE[fileName]) {
-				GameRenderer.GLTF_CACHE[fileName] = gltf;
-				console.log(`Loaded and cached: ${fileName}`);
-			}
-			let model = gltf.scene.clone() as THREE.Object3D;
-
-			if (path.includes("lane")) {
-				model.traverse((child) => {
-					if (child.isObject3D) {
-						child.receiveShadow = true;
-					}
-				});
-			} else {
-				model.traverse((child) => {
-					if (child.isObject3D) {
-						child.castShadow = true;
-						child.receiveShadow = true;
-					}
-				});
-			}
-			
-			model.position.copy(pos);
-			
-			if (hasCollision) {
-				// debugging: show collision boxes
-				// (model as THREE.Group).children.forEach((child) => {
-				// 	(child as THREE.Mesh).material = new THREE.MeshBasicMaterial({
-				// 		color: 0xffffff,
-				// 		wireframe: true
-				// 	});
-				// });
-				// const cube = new THREE.Mesh(
-				// 	new THREE.BoxGeometry(1, 0.05, 1),
-				// 	new THREE.MeshBasicMaterial({ color: 0xff0000 })
-				// );
-				// cube.position.copy(model.position);
-				// this.scene.add(cube);
-
-				this.objectList.push(model);
-			}
-
-			this.scene.add(model);
-			this.renderedObjects.push(model);
+		const fileName = path.split('/').pop() as string;
+		const gltf =
+			GameRenderer.GLTF_CACHE[fileName] ?? (await GameRenderer.gltfLoader.loadAsync(path));
+		if (!GameRenderer.GLTF_CACHE[fileName]) {
+			GameRenderer.GLTF_CACHE[fileName] = gltf;
+			console.log(`Loaded and cached: ${fileName}`);
 		}
+		let model = gltf.scene.clone() as THREE.Object3D;
 
-		public loadSection(lanes: Lane[]) {
-			lanes.forEach((lane) => {
-				this.loadModel(lane.modelLocation, lane.position, false);
-				lane.elements.forEach((element) => {
-					this.loadModel(element.modelLocation, element.basePosition, true);
-				});
+		if (path.includes('lane')) {
+			model.traverse((child) => {
+				if (child.isObject3D) {
+					child.receiveShadow = true;
+				}
 			});
-			this.render();
-		}
-
-		public async loadPlayer(player: Player) {
-			const gltf = await GameRenderer.gltfLoader.loadAsync(`/models/skins/chicken.gltf`);
-			const playerModel = gltf.scene as THREE.Object3D;
-			playerModel.position.copy(player.position.toVector3());
-			playerModel.name = player.user.id;
-			playerModel.traverse((child) => {
+		} else {
+			model.traverse((child) => {
 				if (child.isObject3D) {
 					child.castShadow = true;
 					child.receiveShadow = true;
 				}
 			});
-			this.scene.add(playerModel);
+		}
+
+		model.position.copy(pos);
+
+		if (hasCollision) {
+			// debugging: show collision boxes
+			// (model as THREE.Group).children.forEach((child) => {
+			// 	(child as THREE.Mesh).material = new THREE.MeshBasicMaterial({
+			// 		color: 0xffffff,
+			// 		wireframe: true
+			// 	});
+			// });
+			// const cube = new THREE.Mesh(
+			// 	new THREE.BoxGeometry(1, 0.05, 1),
+			// 	new THREE.MeshBasicMaterial({ color: 0xff0000 })
+			// );
+			// cube.position.copy(model.position);
+			// this.scene.add(cube);
+
+			this.objectList.push(model);
+		}
+
+		const idleAnimation = model.animations.find((a) => a.name.toLowerCase() == 'idle');
+		if (idleAnimation) {
+			const mixer = new THREE.AnimationMixer(model);
+			mixer.clipAction(idleAnimation).play();
+			this.mixers.push(mixer);
+		}
+
+		this.scene.add(model);
+		this.renderedObjects.push(model);
+	}
+
+	public loadSection(lanes: Lane[]) {
+		lanes.forEach((lane) => {
+			this.loadModel(lane.modelLocation, lane.position, false);
+			lane.elements.forEach((element) => {
+				this.loadModel(element.modelLocation, element.basePosition, true);
+			});
+		});
+		this.render();
+	}
+
+	public async loadPlayer(player: Player) {
+		const gltf = await GameRenderer.gltfLoader.loadAsync(`/models/skins/chicken.gltf`);
+		const playerModel = gltf.scene as THREE.Object3D;
+		playerModel.position.copy(player.position.toVector3());
+		playerModel.name = player.user.id;
+		playerModel.traverse((child) => {
+			if (child.isObject3D) {
+				child.castShadow = true;
+				child.receiveShadow = true;
+			}
+		});
+		this.scene.add(playerModel);
+		this.render();
+		this.renderedObjects.push(playerModel);
+	}
+
+	private updatePlayerPosition(player: Player) {
+		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
+		if (playerObj) {
+			playerObj.position.copy(player.position.toVector3());
 			this.render();
-			this.renderedObjects.push(playerModel);
+			get(gameSocket)!.sendPlayerPositionUpdate();
+			this.cleanUpLanes(player, playerObj);
 		}
+	}
 
-		public updatePlayerPosition(player: Player) {
-			const playerObj = this.renderedObjects.find(obj => obj.name === player.user.id);
-			if (playerObj) {
-				playerObj.position.copy(player.position.toVector3());
-				this.render();
-				get(gameSocket)!.sendPlayerPositionUpdate();
-				this.cleanUpLanes(player, playerObj);
+	private isPlayerColliding(targetPosition: THREE.Vector3): boolean {
+		return (
+			this.objectList.find(
+				(obj) => obj.position.x == targetPosition.x && obj.position.z == targetPosition.z
+			) !== undefined
+		);
+	}
+
+	public removePlayer(playerId: string) {
+		const playerObj = this.renderedObjects.find((obj) => obj.name === playerId);
+		if (playerObj) {
+			this.scene.remove(playerObj);
+			this.renderedObjects = this.renderedObjects.filter((obj) => obj.name !== playerId);
+		}
+	}
+
+	private cleanUpLanes(player: Player, playerObj: THREE.Object3D) {
+		if (playerObj.position.z < player.position.z - 15) {
+			this.scene.remove(playerObj);
+			this.renderedObjects.filter((obj) => obj.name === player.user.id);
+		}
+	}
+
+	private cameraMovement(player: Player) {
+		const targetZ = player.position.z - 16 + GameRenderer.cameraOffsetZ;
+
+		const distanceZ = Math.abs(this.camera.position.z - targetZ);
+
+		const baseSpeed = 0.02;
+		const sensitivity = 0.1;
+
+		const distanceFactor = distanceZ * sensitivity;
+		const lerpAlpha = Math.min(baseSpeed + distanceFactor, 1.0);
+
+		let tempCamPos = this.camera.position;
+
+		if (tempCamPos.z < this.camera.position.z + (targetZ - this.camera.position.z) * lerpAlpha) {
+			this.camera.position.z += (targetZ - this.camera.position.z) * lerpAlpha;
+		}
+	}
+
+	private updateLight(player: Player) {
+		this.dirLight.position.z = player.position.z - 3;
+		this.dirLight.target.position.copy(new THREE.Vector3(0, 0, player.position.z));
+		this.dirLight.target.updateMatrix();
+	}
+
+	private updateAnimations() {
+		const delta = this.timer.getDelta();
+		this.mixers.forEach((mixer) => mixer.update(delta));
+	}
+
+	private animate() {
+		requestAnimationFrame(() => this.animate());
+		if (get(gameState) != GameState.Skins && get(isPlaying)) {
+			const player = Game.getPlayer(get(wsGame)!, get(user)!.id)!;
+			this.cameraMovement(player);
+			this.updateLight(player);
+			this.updateAnimations();
+		}
+		this.render();
+	}
+
+	public onKeyUp(e: KeyboardEvent) {
+		const player = Game.getPlayer(get(wsGame)!, get(user)!.id)!;
+		const moveDistance = 1;
+		let newPosition = player.position.clone();
+		if (get(gameState) != GameState.Skins) {
+			switch (e.key.toLowerCase()) {
+				case 'w':
+					newPosition.z += moveDistance;
+					break;
+				case 'arrowup':
+					newPosition.z += moveDistance;
+					break;
+				case 's':
+					newPosition.z -= moveDistance;
+					break;
+				case 'arrowdown':
+					newPosition.z -= moveDistance;
+					break;
+				case 'a':
+					newPosition.x += moveDistance;
+					break;
+				case 'arrowleft':
+					newPosition.x += moveDistance;
+					break;
+				case 'd':
+					newPosition.x -= moveDistance;
+					break;
+				case 'arrowright':
+					newPosition.x -= moveDistance;
+					break;
+				default:
+					return;
+			}
+			isPlaying.set(true);
+
+			if (!this.isPlayerColliding(newPosition.toVector3())) {
+				player.position = newPosition;
+				this.updatePlayerPosition(player);
 			}
 		}
+	}
 
-		public isPlayerColliding(targetPosition: THREE.Vector3): boolean {
-			return this.objectList.find(obj => obj.position.x == targetPosition.x && obj.position.z == targetPosition.z) !== undefined;
-		}
-
-		public removePlayer(playerId: string) {
-			const playerObj = this.renderedObjects.find(obj => obj.name === playerId);
-			if (playerObj) {
-				this.scene.remove(playerObj);
-				this.renderedObjects = this.renderedObjects.filter(obj => obj.name !== playerId);
-			}
-		}
-
-		private cleanUpLanes(player: Player, playerObj: THREE.Object3D) {
-			if (playerObj.position.z < player.position.z - 15) {
-				this.scene.remove(playerObj);
-				this.renderedObjects.filter(obj => obj.name === player.user.id);
-			}
-		}
-
-		private cameraMovement(player: Player) {
-			const targetZ = player.position.z - 16 + GameRenderer.cameraOffsetZ;
-
-			const distanceZ = Math.abs(this.camera.position.z - targetZ);
-
-			const baseSpeed = 0.02;
-			const sensitivity = 0.1;
-
-			const distanceFactor = distanceZ * sensitivity;
-			const lerpAlpha = Math.min(baseSpeed + distanceFactor, 1.0);
-
-			let tempCamPos = this.camera.position;
-
-			if (tempCamPos.z < this.camera.position.z + (targetZ - this.camera.position.z) * lerpAlpha) {
-				this.camera.position.z += (targetZ - this.camera.position.z) * lerpAlpha;
-			}
-		}
-
-		private updateLight(player: Player) {
-			this.dirLight.position.z = player.position.z -3;
-			this.dirLight.target.position.copy(new THREE.Vector3(0,0, player.position.z));
-			this.dirLight.target.updateMatrix();
-		}
-
-		public animate() {
-			requestAnimationFrame(() => this.animate());
-			if (get(gameState) != GameState.Skins && get(isPlaying)) {
-				const player = Game.getPlayer(get(wsGame)!, get(user)!.id)!;
-				this.cameraMovement(player);
-				this.updateLight(player);
-			}
-			this.render();
-		}
-
-		public resize() {
-			const aspect = this.window.innerWidth / this.window.innerHeight;
-			this.camera.left = (-GameRenderer.frustrumSize * aspect) / 2;
-			this.camera.right = (GameRenderer.frustrumSize * aspect) / 2;
-			this.camera.updateProjectionMatrix();
-			this.renderer.setSize(this.window.innerWidth, this.window.innerHeight);
-		}
+	public resize() {
+		const aspect = this.window.innerWidth / this.window.innerHeight;
+		this.camera.left = (-GameRenderer.frustrumSize * aspect) / 2;
+		this.camera.right = (GameRenderer.frustrumSize * aspect) / 2;
+		this.camera.updateProjectionMatrix();
+		this.renderer.setSize(this.window.innerWidth, this.window.innerHeight);
+	}
 }
