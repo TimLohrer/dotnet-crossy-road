@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { GameState } from "./models/GameState";
-    import { gameState, isPlaying } from "./stores/gameStore";
-    import { onMount, type Snippet } from "svelte";
+    import { gameState, isPlaying } from "./stores/stateStore";
+    import { type Snippet } from "svelte";
 
     interface Props {
         children?: Snippet;
@@ -13,9 +13,7 @@
         isPlaying.set(true);
     }
 
-    let activeButton = $state()
-
-    activeButton = "START"
+    let activeButton = $state("START");
 
 </script>
 
