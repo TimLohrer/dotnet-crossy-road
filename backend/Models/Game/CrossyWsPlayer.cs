@@ -19,7 +19,7 @@ public class CrossyWsPlayer(string connectionId, CrossyPlayer user, Vector3 spaw
     public bool UpdatePosition(Vector3 newPosition)
     {
         var shouldGenerateNewSection = false;
-        if (newPosition.Z > Position.Z && newPosition.Z > 0)
+        if (newPosition.Z > FurthestZPosition && newPosition.Z > 0)
         {
             FurthestZPosition = (int)newPosition.Z;
             if (FurthestZPosition + 15 > FurthestGeneratedZPosition)
