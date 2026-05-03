@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { isPlaying, gameState, user, wsGame, gameRenderer, gameSocket } from '$lib/stores/stateStore';
+	import { gameRenderer, gameSocket } from '$lib/stores/stateStore';
 	import { onDestroy, onMount } from 'svelte';
-	import { GameState } from './models/GameState';
 	import { GameRenderer } from './GameRenderer';
-	import { Game } from './models/Game';
 	import { GameSocket } from './GameSocket';
 
 	let container: HTMLDivElement;

@@ -19,8 +19,8 @@
 
 {#if !$isPlaying}
     <div class="logo_container">
-            {@render children?.()}
-            <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
+        {@render children?.()}
+        <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
     </div>
 
     <div class="menu_container">

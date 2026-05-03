@@ -30,7 +30,7 @@ public class GameHub(CrossyDbContext context) : Hub
         await Clients.Client(host.ConnectionId).SendAsync(CrossyWsEvent.GameJoined, wsGame);
         await Groups.AddToGroupAsync(host.ConnectionId, wsGame.Id.ToString());
 
-        var startSections = CrossyMapGenerator.GenerateMapStart(wsGame.Seed).Select(l => l.ToDto()).ToList();
+        var startSections = new CrossyMapGenerator(wsGame).GenerateMapStart(host).Select(l => l.ToDto()).ToList();
         await Clients.Client(host.ConnectionId).SendAsync(CrossyWsEvent.NewSection, startSections);
     }
 
@@ -50,14 +50,14 @@ public class GameHub(CrossyDbContext context) : Hub
         {
             Id = playerId
         };
-        var player = new CrossyWsPlayer(Context.ConnectionId, user, new Vector3(0, 0, -2));
-        wsGame.Players.Add(player);
+        var wsPlayer = new CrossyWsPlayer(Context.ConnectionId, user, new Vector3(0, 0, -2));
+        wsGame.Players.Add(wsPlayer);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, wsGame.Id.ToString());
         await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.GameJoined, wsGame);
-        await Clients.OthersInGroup(gameId.ToString()).SendAsync(CrossyWsEvent.PlayerJoined, wsGame, player.User.Id);
+        await Clients.OthersInGroup(gameId.ToString()).SendAsync(CrossyWsEvent.PlayerJoined, wsGame, wsPlayer.User.Id);
 
-        var startSections = CrossyMapGenerator.GenerateMapStart(wsGame.Seed).Select(l => l.ToDto()).ToList();
+        var startSections = new CrossyMapGenerator(wsGame).GenerateMapStart(wsPlayer).Select(l => l.ToDto()).ToList();
         await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.NewSection, startSections);
     }
 
@@ -75,8 +75,9 @@ public class GameHub(CrossyDbContext context) : Hub
 
         if (shouldGenerateNewSection)
         {
-            var section = CrossyMapGenerator.GenerateMapSection(wsGame.Seed, wsPlayer.FurthestGeneratedZPosition);
+            var section = new CrossyMapGenerator(wsGame).GenerateMapSection(wsPlayer.FurthestGeneratedZPosition, wsPlayer);
             wsPlayer.FurthestGeneratedZPosition += section.Count;
+            Console.WriteLine($"{wsPlayer.User.Username} -> {section[0].LaneType.ToString()}");
             await Clients.Client(Context.ConnectionId)
                 .SendAsync(CrossyWsEvent.NewSection, section.Select(l => l.ToDto()).ToList());
         }

@@ -1,27 +1,32 @@
 <script lang="ts">
-	import type { Player } from "./models/Player";
 	import { user, wsGame } from "./stores/stateStore";
 
-    let player: Player | undefined = $state();
-    wsGame.subscribe(game => {
-        player = game?.players.find(p => p.user.id === $user?.id);
-    });
 </script>
 
-{#if player}
+{#if $wsGame}
     <div class="hud">
-        <h1>Score: {player.score}</h1>
+        <h1>Score: {$wsGame?.players.find(p => p.user.id === $user?.id)?.score} Seed: {$wsGame?.seed}</h1>
+        <button onclick={() => window.open(`/?gameId=${$wsGame.id}`)}>Join as new player</button>
     </div>
 {/if}
 
 <style>
     .hud {
+        display: flex;
+        flex-direction: row;
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
+        gap: 1rem;
         padding: 1rem;
+        z-index: 1000;
         pointer-events: none;
+    }
+
+    .hud > button {
+        pointer-events: all;
+        height: min-content;
     }
 </style>

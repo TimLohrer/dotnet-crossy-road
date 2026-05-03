@@ -3,7 +3,7 @@ using CrossyRoadApi.Utils;
 
 namespace CrossyRoadApi.Models.Game.Map;
 
-public static class CrossyMapGenerator
+public class CrossyMapGenerator(CrossyWsGame wsGame)
 {
     private static readonly List<CrossyModelPart> AvailableLanes =
         [CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Water, CrossyModelPart.Rail];
@@ -13,38 +13,37 @@ public static class CrossyMapGenerator
     private static readonly int MaxWaterLenth = 5;
     private static readonly int MaxRailLenth = 4;
 
-    // TODO: Move this into game instance later
-    private static CrossyModelPart lastSectionType;
+    private readonly int _seed = wsGame.Seed;
 
-    public static List<CrossyMapLane> GenerateMapSection(int seed, int zPosition)
+    public List<CrossyMapLane> GenerateMapSection(int zPosition, CrossyWsPlayer wsPlayer)
     {
-        var randomizer = CrossyRandomizer.Get(seed, zPosition);
+        var randomizer = CrossyRandomizer.Get(_seed, zPosition);
 
         CrossyModelPart laneType;
         do
         {
             laneType = AvailableLanes[randomizer.Next(0, AvailableLanes.Count)];
-        } while (laneType == lastSectionType);
+        } while (laneType == wsPlayer.lastGeneratedSectionType);
 
-        lastSectionType = laneType;
+        wsPlayer.lastGeneratedSectionType = laneType;
 
         List<CrossyMapLane> lanes;
         switch (laneType)
         {
             case CrossyModelPart.Plains:
-                lanes = GeneratePlainsLanes(randomizer, seed, zPosition);
+                lanes = GeneratePlainsLanes(randomizer, _seed, zPosition);
                 break;
             case CrossyModelPart.Street:
-                lanes = GenerateStreetLanes(randomizer, seed, zPosition);
+                lanes = GenerateStreetLanes(randomizer, _seed, zPosition);
                 break;
             case CrossyModelPart.Water:
-                lanes = GenerateWaterLanes(randomizer, seed, zPosition);
+                lanes = GenerateWaterLanes(randomizer, _seed, zPosition);
                 break;
             case CrossyModelPart.Rail:
-                lanes = GenerateRailLanes(randomizer, seed, zPosition);
+                lanes = GenerateRailLanes(randomizer, _seed, zPosition);
                 break;
             default:
-                lanes = GeneratePlainsLanes(randomizer, seed, zPosition);
+                lanes = GeneratePlainsLanes(randomizer, _seed, zPosition);
                 break;
         }
 
@@ -104,7 +103,7 @@ public static class CrossyMapGenerator
         return lanes;
     }
 
-    public static List<CrossyMapLane> GenerateMapStart(int seed)
+    public List<CrossyMapLane> GenerateMapStart(CrossyWsPlayer wsPlayer)
     {
         List<CrossyMapLane> lanes = [];
         for (var i = -10; i < 0; i++)
@@ -112,7 +111,7 @@ public static class CrossyMapGenerator
                 true));
         for (var i = 0; i < 15;)
         {
-            var section = GenerateMapSection(seed, i);
+            var section = GenerateMapSection(i, wsPlayer);
             lanes.AddRange(section);
             i += section.Count;
         }

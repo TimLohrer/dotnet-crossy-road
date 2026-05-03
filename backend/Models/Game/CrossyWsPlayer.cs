@@ -1,6 +1,7 @@
 using System.Numerics;
 using CrossyRoadApi.Dto;
 using CrossyRoadApi.Models.Database;
+using CrossyRoadApi.Models.Game.Map;
 
 namespace CrossyRoadApi.Models.Game;
 
@@ -11,6 +12,7 @@ public class CrossyWsPlayer(string connectionId, CrossyPlayer user, Vector3 spaw
     public Vector3 Position { get; private set; } = spawnPosition;
     public int FurthestZPosition { get; private set; }
     public int FurthestGeneratedZPosition { get; set; } = 14; // See GenerateMapStart function
+    public CrossyModelPart lastGeneratedSectionType { get; set; }
     public int Score { get; private set; }
 
     public int Taler { get; private set; } = 0;
