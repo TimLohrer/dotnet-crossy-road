@@ -6,4 +6,5 @@ export interface MapElement {
     basePosition: Vector3;
     positions: Vector3[];
     modelLocation: string;
+    hasCollision: boolean;
 }

@@ -10,4 +10,5 @@ public class CrossyMapElementDto
     public Vector3 BasePosition { get; set; }
     public List<Vector3> Positions { get; set; }
     public string ModelLocation { get; set; }
+    public bool HasCollision { get; set; }
 }

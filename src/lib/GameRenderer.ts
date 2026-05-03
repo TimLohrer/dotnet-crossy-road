@@ -85,7 +85,7 @@ export class GameRenderer {
 
 	private render = () => this.renderer.render(this.scene, this.camera);
 
-	private async loadModel(path: string, pos: THREE.Vector3, hasCollision: boolean) {
+	private async loadModel(path: string, pos: THREE.Vector3, hasCollision: boolean, name?: string) {
 		const fileName = path.split('/').pop() as string;
 		const gltf =
 			GameRenderer.GLTF_CACHE[fileName] ?? (await GameRenderer.gltfLoader.loadAsync(path));
@@ -111,6 +111,10 @@ export class GameRenderer {
 		}
 
 		model.position.copy(pos);
+
+		if (name) {
+			model.name = name;
+		}
 
 		if (hasCollision) {
 			// debugging: show collision boxes
@@ -143,9 +147,9 @@ export class GameRenderer {
 
 	public loadSection(lanes: Lane[]) {
 		lanes.forEach((lane) => {
-			this.loadModel(lane.modelLocation, lane.position, false);
+			this.loadModel(lane.modelLocation, lane.position, false, lane.type);
 			lane.elements.forEach((element) => {
-				this.loadModel(element.modelLocation, element.basePosition, true);
+				this.loadModel(element.modelLocation, element.basePosition, element.hasCollision, element.type);
 			});
 		});
 		this.render();
