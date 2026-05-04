@@ -5,12 +5,13 @@ using CrossyRoadApi.Models.Game;
 using CrossyRoadApi.Models.Game.Map;
 using CrossyRoadApi.Utils;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace CrossyRoadApi.Controllers;
 
 public class GameHub(CrossyDbContext context) : Hub
 {
-    private CrossyDbContext _context = context;
+    private readonly CrossyDbContext _context = context;
 
     public override async Task OnConnectedAsync()
     {
@@ -86,9 +87,9 @@ public class GameHub(CrossyDbContext context) : Hub
             return;
         }
 
-        if (wsGame.GamePhase != CrossyWsGame.Phase.Active) return;
-
         var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
+        if (wsGame.GamePhase != CrossyWsGame.Phase.Active || !wsPlayer.IsAlive) return;
+
         var shouldGenerateNewSection = wsPlayer.UpdatePosition(newPosition);
 
         await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.UpdatePlayerPosition, wsPlayer);
@@ -103,9 +104,34 @@ public class GameHub(CrossyDbContext context) : Hub
         }
     }
 
+    public async Task PlayerDeath(Guid gameId)
+    {
+        var wsGame = ActiveGames.Games.FirstOrDefault(g =>
+            g.Id == gameId && g.Players.Any(p => p.ConnectionId == Context.ConnectionId));
+        if (wsGame == null)
+        {
+            await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.PlayerLeft, "Game does not exist");
+            return;
+        }
+
+        var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
+        if (!wsPlayer.IsAlive) return;
+        wsPlayer.DiedAt = DateTime.Now;
+
+        var player = await _context.CrossyPlayers.FirstOrDefaultAsync(p => p.Id == wsPlayer.User.Id);
+        if (player != null)
+        {
+            if (wsPlayer.Score > player.HighScore) player.HighScore = wsPlayer.Score;
+            if (wsPlayer.Taler > 0) player.Taler += wsPlayer.Taler;
+        }
+
+        await Clients.OthersInGroup(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.PlayerDeath, wsGame);
+    }
+
     public async Task LeaveGame(Guid gameId)
     {
-        var wsGame = ActiveGames.Games.FirstOrDefault(g => g.Id == gameId && g.Players.Any(p => p.ConnectionId == Context.ConnectionId));
+        var wsGame = ActiveGames.Games.FirstOrDefault(g =>
+            g.Id == gameId && g.Players.Any(p => p.ConnectionId == Context.ConnectionId));
         if (wsGame != null)
         {
             var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;

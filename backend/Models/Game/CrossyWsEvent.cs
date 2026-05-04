@@ -8,6 +8,7 @@ public static class CrossyWsEvent
     public static readonly string StartGame = "StartGame";
     public static readonly string GameLeft = "GameLeft";
     public static readonly string PlayerJoined = "PlayerJoined";
+    public static readonly string PlayerDeath = "PlayerDeath";
     public static readonly string PlayerLeft = "PlayerLeft";
 
     // Game Events:

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using CrossyRoadApi.Dto;
+using CrossyRoadApi.Models.Game;
 
 namespace CrossyRoadApi.Models.Database;
 
@@ -13,6 +14,7 @@ public class CrossyPlayer(string username)
     public int Taler { get; set; }
     public CrossySkin Skin { get; set; } = CrossySkin.Default;
     public List<CrossySkin> OwnedSkins { get; set; } = [CrossySkin.Default];
+    public List<CrossyWsGame> Games { get; set; } = [];
 
     public CrossyPlayerDto ToDto()
     {

@@ -23,9 +23,9 @@ public class CrossyMapGenerator(CrossyWsGame wsGame)
         do
         {
             laneType = AvailableLanes[randomizer.Next(0, AvailableLanes.Count)];
-        } while (laneType == wsPlayer.lastGeneratedSectionType);
+        } while (laneType == wsPlayer.LastGeneratedSectionType);
 
-        wsPlayer.lastGeneratedSectionType = laneType;
+        wsPlayer.LastGeneratedSectionType = laneType;
 
         List<CrossyMapLane> lanes;
         switch (laneType)
