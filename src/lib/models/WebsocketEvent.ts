@@ -4,11 +4,12 @@ export class WebsocketEvent {
 	static CreateGame = 'CreateGame';
 	static LeaveGame = 'LeaveGame';
 	static JoinGame = 'JoinGame';
+	static StartGame = 'StartGame';
 	static GameJoined = 'GameJoined';
 	static GameLeft = 'GameLeft';
 	static PlayerJoined = 'PlayerJoined';
 	static PlayerLeft = 'PlayerLeft';
-
+    
 	static NewSection = 'NewSection';
 	static UpdatePlayerPosition = 'UpdatePlayerPosition';
 

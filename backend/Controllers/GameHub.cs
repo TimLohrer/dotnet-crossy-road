@@ -44,7 +44,10 @@ public class GameHub(CrossyDbContext context) : Hub
         }
 
         if (wsGame.GamePhase != CrossyWsGame.Phase.Created)
+        {
             await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.GameJoinError, "Game does not exist");
+            return;
+        }
 
         var user = new CrossyPlayer(Context.ConnectionId)
         {
@@ -61,23 +64,40 @@ public class GameHub(CrossyDbContext context) : Hub
         await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.NewSection, startSections);
     }
 
+    public async Task StartGame(Guid gameId)
+    {
+        var wsGame = ActiveGames.Games.FirstOrDefault(g =>
+            g.GamePhase == CrossyWsGame.Phase.Created &&
+            g.Id == gameId && g.Players.Any(p => p.ConnectionId == Context.ConnectionId && p.User.Id == g.HostId));
+        if (wsGame != null)
+        {
+            wsGame.GamePhase = CrossyWsGame.Phase.Active;
+            await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.StartGame, wsGame);
+        }
+    }
+
     public async Task UpdatePlayerPosition(Guid gameId, Vector3 newPosition)
     {
         var wsGame = ActiveGames.Games.FirstOrDefault(g =>
             g.Id == gameId && g.Players.Any(p => p.ConnectionId == Context.ConnectionId));
         if (wsGame == null)
+        {
             await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.PlayerLeft, "Game does not exist");
+            return;
+        }
 
-        var wsPlayer = wsGame!.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
+        if (wsGame.GamePhase != CrossyWsGame.Phase.Active) return;
+
+        var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
         var shouldGenerateNewSection = wsPlayer.UpdatePosition(newPosition);
 
         await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.UpdatePlayerPosition, wsPlayer);
 
         if (shouldGenerateNewSection)
         {
-            var section = new CrossyMapGenerator(wsGame).GenerateMapSection(wsPlayer.FurthestGeneratedZPosition, wsPlayer);
+            var section =
+                new CrossyMapGenerator(wsGame).GenerateMapSection(wsPlayer.FurthestGeneratedZPosition, wsPlayer);
             wsPlayer.FurthestGeneratedZPosition += section.Count;
-            Console.WriteLine($"{wsPlayer.User.Username} -> {section[0].LaneType.ToString()}");
             await Clients.Client(Context.ConnectionId)
                 .SendAsync(CrossyWsEvent.NewSection, section.Select(l => l.ToDto()).ToList());
         }
@@ -85,7 +105,7 @@ public class GameHub(CrossyDbContext context) : Hub
 
     public async Task LeaveGame(Guid gameId)
     {
-        var wsGame = ActiveGames.Games.FirstOrDefault(x => x.Id == gameId);
+        var wsGame = ActiveGames.Games.FirstOrDefault(g => g.Id == gameId && g.Players.Any(p => p.ConnectionId == Context.ConnectionId));
         if (wsGame != null)
         {
             var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;

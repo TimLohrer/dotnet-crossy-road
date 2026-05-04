@@ -25,8 +25,6 @@ public enum CrossyModelPart
     [EnumMember(Value = "stone_1")] Stone1,
 
     [EnumMember(Value = "log_0")] Log0,
-    [EnumMember(Value = "log_1")] Log1,
-    [EnumMember(Value = "log_2")] Log2,
 
     [EnumMember(Value = "lillypad")] Lillypad
 }

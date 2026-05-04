@@ -67,6 +67,16 @@ export class GameSocket {
 			});
 		});
 
+		this.connection.on(WebsocketEvent.StartGame, (startedGame: Game) => {
+			wsGame.update((game) => {
+				game = startedGame;
+				game?.players.forEach((p) => {
+					p.position = Vec3.fromObject(p.position);
+				});
+				return game;
+			});
+		});
+
 		this.connection.on(WebsocketEvent.NewSection, (lanes: Lane[]) => this.getRenderer()!.loadSection(lanes));
 
 		this.connection.on(WebsocketEvent.UpdatePlayerPosition, (newPlayer: Player) => {
@@ -124,9 +134,16 @@ export class GameSocket {
 		await this.connection.invoke(WebsocketEvent.JoinGame, gameId, this.getUser()!.id);
 	}
 
-	public sendPlayerPositionUpdate() {
+	public async startGame() {
+		const game = this.getGame();
+		if (game && game.hostId == this.getUser()!.id) {
+			await this.connection.invoke(WebsocketEvent.StartGame, game.id);
+		}
+	}
+
+	public async sendPlayerPositionUpdate() {
 		const game = this.getGame();
 		const player = this.getPlayer();
-		this.connection?.invoke(WebsocketEvent.UpdatePlayerPosition, game?.id, player?.position);
+		await this.connection?.invoke(WebsocketEvent.UpdatePlayerPosition, game?.id, player?.position);
 	}
 }

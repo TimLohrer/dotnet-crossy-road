@@ -1,12 +1,14 @@
 <script lang="ts">
+	import { GamePhase } from "./models/GamePhase";
 	import { user, wsGame } from "./stores/stateStore";
-
 </script>
 
 {#if $wsGame}
     <div class="hud">
-        <h1>Score: {$wsGame?.players.find(p => p.user.id === $user?.id)?.score} Seed: {$wsGame?.seed}</h1>
-        <button onclick={() => window.open(`/?gameId=${$wsGame.id}`)}>Join as new player</button>
+        <h1>Score: {$wsGame?.players.find(p => p.user.id === $user?.id)?.score} Seed: {$wsGame?.seed} Phase: {$wsGame.gamePhase}</h1>
+        {#if $wsGame.gamePhase == GamePhase.Created}
+            <button onclick={() => window.open(`/?gameId=${$wsGame.id}`)}>Join as new player</button>
+        {/if}
     </div>
 {/if}
 

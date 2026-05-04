@@ -9,7 +9,7 @@ export class Game {
 		public players: Player[],
 		public seed: number,
 		public theme: Theme,
-		public phase: GamePhase
+		public gamePhase: GamePhase
 	) {}
 
 	public static getPlayer = (game: Game, playerId: string) =>

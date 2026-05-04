@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { GamePhase } from "./models/GamePhase";
 	import { GameState } from "./models/GameState";
-    import { gameState, isPlaying } from "./stores/stateStore";
+    import { gameState, wsGame } from "./stores/stateStore";
     import { type Snippet } from "svelte";
 
     interface Props {
@@ -9,15 +10,11 @@
 
     let { children }: Props = $props();
 
-    function startGame() {
-        isPlaying.set(true);
-    }
-
     let activeButton = $state("START");
 
 </script>
 
-{#if !$isPlaying}
+{#if $wsGame?.gamePhase == GamePhase.Created}
     <div class="logo_container">
         {@render children?.()}
         <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
@@ -35,7 +32,6 @@
                 <button class:active={activeButton=="START"} onclick={() => {
                     activeButton = "START";
                     $gameState = GameState.Singleplayer;
-                    
                 }}>Start</button>
             </div>
             <div class="menu_panel">

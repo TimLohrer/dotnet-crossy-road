@@ -2,10 +2,11 @@ import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/Addons.js";
 import type { Lane } from "./models/Lane";
 import type { Player } from "./models/Player";
-import { gameSocket, gameState, isPlaying, user, wsGame } from "./stores/stateStore";
+import { gameSocket, gameState, user as userStore, wsGame } from "./stores/stateStore";
 import { get } from "svelte/store";
 import { GameState } from "./models/GameState";
 import { Game } from "./models/Game";
+import { GamePhase } from "./models/GamePhase";
 
 export class GameRenderer {
 	private static frustrumSize = 9;
@@ -235,8 +236,8 @@ export class GameRenderer {
 
 	private animate() {
 		requestAnimationFrame(() => this.animate());
-		if (get(gameState) != GameState.Skins && get(isPlaying)) {
-			const player = Game.getPlayer(get(wsGame)!, get(user)!.id)!;
+		if (get(gameState) != GameState.Skins && get(wsGame)?.gamePhase == GamePhase.Active) {
+			const player = Game.getPlayer(get(wsGame)!, get(userStore)!.id)!;
 			this.cameraMovement(player);
 			this.updateLight(player);
 			this.updateAnimations();
@@ -244,8 +245,14 @@ export class GameRenderer {
 		this.render();
 	}
 
-	public onKeyUp(e: KeyboardEvent) {
-		const player = Game.getPlayer(get(wsGame)!, get(user)!.id)!;
+	public async onKeyUp(e: KeyboardEvent) {
+		const game = get(wsGame);
+		const user = get(userStore);
+		if (!game || !user) return;
+		if (game.gamePhase == GamePhase.Created && game.hostId == user.id) {
+			await get(gameSocket)?.startGame();
+		};
+		const player = Game.getPlayer(game, get(userStore)!.id)!;
 		const moveDistance = 1;
 		let newPosition = player.position.clone();
 		if (get(gameState) != GameState.Skins) {
@@ -277,9 +284,8 @@ export class GameRenderer {
 				default:
 					return;
 			}
-			isPlaying.set(true);
 
-			if (!this.isPlayerColliding(newPosition.toVector3())) {
+			if (game.gamePhase == GamePhase.Active && !this.isPlayerColliding(newPosition.toVector3())) {
 				player.position = newPosition;
 				this.updatePlayerPosition(player);
 			}

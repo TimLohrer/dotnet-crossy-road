@@ -7,7 +7,6 @@ import type { GameSocket } from '$lib/GameSocket';
 
 export const user = writable<User | null>(null);
 
-export const isPlaying = writable(false);
 export const gameState: Writable<GameState> = writable(GameState.Singleplayer);
 
 export const gameSocket = writable<GameSocket | null>(null);

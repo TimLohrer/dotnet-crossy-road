@@ -21,7 +21,7 @@
 
 		$gameSocket!.connect();
 
-		window.addEventListener('keypress', (e: KeyboardEvent) => $gameRenderer!.onKeyUp(e));
+		window.addEventListener('keyup', (e: KeyboardEvent) => $gameRenderer!.onKeyUp(e));
 		window.addEventListener('resize', () => $gameRenderer!.resize());
 	});
 
