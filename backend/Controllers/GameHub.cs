@@ -23,7 +23,10 @@ public class GameHub(CrossyDbContext context) : Hub
     {
         // TODO: fetch from DB
         // _context.CrossyPlayers.FirstAsync(p => p.Id == SOME UUID)
-        var user = new CrossyPlayer(Context.ConnectionId);
+        var user = new CrossyPlayer()
+        {
+            Username = Context.ConnectionId
+        };
         var host = new CrossyWsPlayer(Context.ConnectionId, user, new Vector3(0, 0, -2));
         var wsGame = new CrossyWsGame(host, CrossyTheme.Default);
         ActiveGames.Games.Add(wsGame);
@@ -50,9 +53,10 @@ public class GameHub(CrossyDbContext context) : Hub
             return;
         }
 
-        var user = new CrossyPlayer(Context.ConnectionId)
+        var user = new CrossyPlayer()
         {
-            Id = playerId
+            Id = playerId,
+            Username = Context.ConnectionId
         };
         var wsPlayer = new CrossyWsPlayer(Context.ConnectionId, user, new Vector3(0, 0, -2));
         wsGame.Players.Add(wsPlayer);

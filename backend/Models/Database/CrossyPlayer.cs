@@ -1,14 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 using CrossyRoadApi.Dto;
 using CrossyRoadApi.Models.Game;
+using Microsoft.AspNetCore.Identity;
 
 namespace CrossyRoadApi.Models.Database;
 
-public class CrossyPlayer(string username)
+public class CrossyPlayer() : IdentityUser<Guid>
 {
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    [StringLength(35)] public string Username { get; set; } = username;
+    [StringLength(35)] public string Username { get; set; } 
 
     public int HighScore { get; set; }
     public int Taler { get; set; }
