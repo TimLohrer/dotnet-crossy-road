@@ -4,6 +4,7 @@ using CrossyRoadApi.Controllers;
 using CrossyRoadApi.Database;
 using CrossyRoadApi.Models.Database;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,10 @@ builder.Services.AddCors(options =>
 var appConfig = new AppConfig();
 builder.Configuration.Bind(appConfig);
 builder.Services.AddSingleton(appConfig);
+var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, ".aspnet-dp-keys");
+builder.Services.AddDataProtection()
+    .SetApplicationName("CrossyRoadApi")
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 builder.Services.AddDbContext<CrossyDbContext>(options =>
     options.UseNpgsql(appConfig.Database.ConnectionString).UseSnakeCaseNamingConvention());
 builder.Services.AddSignalR().AddJsonProtocol(options => { options.PayloadSerializerOptions.IncludeFields = true; });
@@ -55,16 +60,29 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
     })
     .AddOpenIdConnect("bosch", "Bosch", opt =>
     {
-        opt.MetadataAddress = appConfig.OAuth.MetaDataAddress;
+        opt.MetadataAddress = appConfig.BoschOAuth.MetaDataAddress;
         opt.GetClaimsFromUserInfoEndpoint = true;
-        opt.ClientId = appConfig.OAuth.ClientId;
-        opt.ClientSecret = appConfig.OAuth.ClientSecret;
+        opt.ClientId = appConfig.BoschOAuth.ClientId;
+        opt.ClientSecret = appConfig.BoschOAuth.ClientSecret;
         opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
         opt.SignInScheme = IdentityConstants.ExternalScheme;
         opt.CallbackPath = "/api/v1/signin-oidc";
         opt.ResponseType = "id_token token";
         opt.SaveTokens = true;
-        foreach (var scope in appConfig.OAuth.Scopes.Split(",").Select(x => x.Trim()))
+        foreach (var scope in appConfig.BoschOAuth.Scopes.Split(",").Select(x => x.Trim()))
+            opt.Scope.Add(scope);
+    }).AddOpenIdConnect("microsoft", "Microsoft", opt =>
+    {
+        opt.MetadataAddress = appConfig.MicrosoftOAuth.MetaDataAddress;
+        opt.GetClaimsFromUserInfoEndpoint = true;
+        opt.ClientId = appConfig.MicrosoftOAuth.ClientId;
+        opt.ClientSecret = appConfig.MicrosoftOAuth.ClientSecret;
+        opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
+        opt.SignInScheme = IdentityConstants.ExternalScheme;
+        opt.CallbackPath = "/api/v1/signin-oidc";
+        opt.ResponseType = "id_token token";
+        opt.SaveTokens = true;
+        foreach (var scope in appConfig.MicrosoftOAuth.Scopes.Split(",").Select(x => x.Trim()))
             opt.Scope.Add(scope);
     }).AddCookie(IdentityConstants.ExternalScheme, opt => { opt.Cookie.Name = "Manager.External"; });
 
@@ -92,13 +110,21 @@ builder.Services.AddScoped<IUserStore<CrossyUser>, UserStore<CrossyUser, UserRol
 
 var app = builder.Build();
 
+// Apply migrations automatically
+// using (var scope = app.Services.CreateScope())
+// {
+//     var db = scope.ServiceProvider.GetRequiredService<CrossyDbContext>();
+//     db.Database.Migrate();
+// }
+
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
-
 app.UseCors("AllowFrontend");
+
+app.UseAuthorization();
+app.UseAuthentication();
 
 app.UseWebSockets();
 

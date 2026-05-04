@@ -8,8 +8,6 @@ namespace CrossyRoadApi.Models.Database;
 [PrimaryKey(nameof(Id))]
 public class CrossyUser : IdentityUser<Guid>
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-
     [StringLength(35)] public string Username { get; set; }
 
     public int HighScore { get; set; }

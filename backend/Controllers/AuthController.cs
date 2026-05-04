@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using CrossyRoadApi.Dto;
 using CrossyRoadApi.Models.Database;
 using Microsoft.AspNetCore.Authorization;
@@ -68,16 +67,16 @@ public class AuthController(
             return BadRequest();
         }
 
-        var providerKey = info.ProviderKey;
-        if (info.LoginProvider == "bosch")
-            providerKey = info.Principal.Claims.Single(x => x.Type == ClaimConstants.ObjectId).Value;
-
         var claims = info.Principal.Claims.ToList();
 
-        var idClaim = claims.SingleOrDefault(x => x.Type == ClaimConstants.ObjectId)?.Value;
-        var displayNameClaim = claims.SingleOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
+        var providerKey = info.ProviderKey;
+        if (info.LoginProvider == "bosch" || info.LoginProvider == "microsoft")
+            providerKey = claims.FirstOrDefault(x => x.Type == ClaimConstants.ObjectId)?.Value;
 
-        if (string.IsNullOrEmpty(idClaim) ||
+        var emailClaim = claims.SingleOrDefault(x => x.Type == ClaimConstants.PreferredUserName)?.Value;
+        var displayNameClaim = claims.SingleOrDefault(x => x.Type == "given_name")?.Value;
+
+        if (string.IsNullOrEmpty(emailClaim) ||
             string.IsNullOrEmpty(displayNameClaim)) return UnprocessableEntity();
 
         var result = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, providerKey, true, true);
@@ -117,7 +116,8 @@ public class AuthController(
 
         var user = new CrossyUser
         {
-            Id = Guid.Parse(idClaim),
+            UserName = emailClaim,
+            Email = emailClaim,
             Username = displayNameClaim
         };
 
@@ -129,6 +129,6 @@ public class AuthController(
         if (!addedLoginResult.Succeeded) return BadRequest();
 
         await signInManager.SignInAsync(user, true, info.LoginProvider);
-        return returnUrl != null ? Redirect(returnUrl) : NoContent();
+        return Redirect("http://localhost:5173");
     }
 }
