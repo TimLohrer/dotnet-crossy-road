@@ -3,7 +3,7 @@ using CrossyRoadApi.Utils;
 
 namespace CrossyRoadApi.Models.Game.Map;
 
-public class CrossyMapGenerator(CrossyWsGame wsGame)
+public class CrossyMapGenerator(CrossyGame game)
 {
     private static readonly List<CrossyModelPart> AvailableLanes =
         [CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Water, CrossyModelPart.Rail];
@@ -13,9 +13,9 @@ public class CrossyMapGenerator(CrossyWsGame wsGame)
     private static readonly int MaxWaterLenth = 5;
     private static readonly int MaxRailLenth = 4;
 
-    private readonly int _seed = wsGame.Seed;
+    private readonly int _seed = game.Seed;
 
-    public List<CrossyMapLane> GenerateMapSection(int zPosition, CrossyWsPlayer wsPlayer)
+    public List<CrossyMapLane> GenerateMapSection(int zPosition, CrossyPlayer player)
     {
         var randomizer = CrossyRandomizer.Get(_seed, zPosition);
 
@@ -23,9 +23,9 @@ public class CrossyMapGenerator(CrossyWsGame wsGame)
         do
         {
             laneType = AvailableLanes[randomizer.Next(0, AvailableLanes.Count)];
-        } while (laneType == wsPlayer.LastGeneratedSectionType);
+        } while (laneType == player.LastGeneratedSectionType);
 
-        wsPlayer.LastGeneratedSectionType = laneType;
+        player.LastGeneratedSectionType = laneType;
 
         List<CrossyMapLane> lanes;
         switch (laneType)
@@ -103,7 +103,7 @@ public class CrossyMapGenerator(CrossyWsGame wsGame)
         return lanes;
     }
 
-    public List<CrossyMapLane> GenerateMapStart(CrossyWsPlayer wsPlayer)
+    public List<CrossyMapLane> GenerateMapStart(CrossyPlayer player)
     {
         List<CrossyMapLane> lanes = [];
         for (var i = -10; i < 0; i++)
@@ -111,7 +111,7 @@ public class CrossyMapGenerator(CrossyWsGame wsGame)
                 true));
         for (var i = 0; i < 15;)
         {
-            var section = GenerateMapSection(i, wsPlayer);
+            var section = GenerateMapSection(i, player);
             lanes.AddRange(section);
             i += section.Count;
         }

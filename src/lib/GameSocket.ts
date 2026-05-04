@@ -146,4 +146,9 @@ export class GameSocket {
 		const player = this.getPlayer();
 		await this.connection?.invoke(WebsocketEvent.UpdatePlayerPosition, game?.id, player?.position);
 	}
+
+	public async sendPlayerDeath() {
+		const game = this.getGame();
+		await this.connection?.invoke(WebsocketEvent.PlayerDeath, game?.id);
+	}
 }

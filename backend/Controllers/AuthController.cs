@@ -11,8 +11,8 @@ namespace CrossyRoadApi.Controllers;
 [ApiController]
 [Route("[controller]")]
 public class AuthController(
-    SignInManager<CrossyPlayer> signInManager,
-    UserManager<CrossyPlayer> userManager,
+    SignInManager<CrossyUser> signInManager,
+    UserManager<CrossyUser> userManager,
     ILogger<AuthController> logger)
     : ControllerBase
 {
@@ -27,7 +27,7 @@ public class AuthController(
 
         return Ok(user.ToDto());
     }
-    
+
     [HttpGet("signin/{providerName}")]
     public IActionResult Login(string providerName, string? returnUrl = null)
     {
@@ -44,7 +44,7 @@ public class AuthController(
 
         return returnUrl != null ? Redirect(returnUrl) : NoContent();
     }
-    
+
     [AllowAnonymous]
     [HttpGet("external/callback")]
     public async Task<IActionResult> ExternalCallback(string? returnUrl = null)
@@ -61,7 +61,7 @@ public class AuthController(
             logger.LogError(e, "Error getting external login info");
             return StatusCode(500);
         }
-        
+
         if (info == null)
         {
             logger.LogInformation("Info is null");
@@ -74,7 +74,7 @@ public class AuthController(
 
         var claims = info.Principal.Claims.ToList();
 
-        var idClaim = claims.SingleOrDefault(x => x.Type == ClaimTypes.Sid)?.Value;
+        var idClaim = claims.SingleOrDefault(x => x.Type == ClaimConstants.ObjectId)?.Value;
         var displayNameClaim = claims.SingleOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
 
         if (string.IsNullOrEmpty(idClaim) ||
@@ -98,7 +98,7 @@ public class AuthController(
             {
                 logger.LogInformation("Access token not set");
             }
-            
+
             externalUser.Username = displayNameClaim;
 
             await userManager.UpdateAsync(externalUser);
@@ -113,14 +113,11 @@ public class AuthController(
         if (result.IsLockedOut) return BadRequest("Locked Out");
 
         // Check if we are already signed in (should never be the case)
-        if (User.Identity is { IsAuthenticated: true })
-        {
-            return BadRequest();
-        }
+        if (User.Identity is { IsAuthenticated: true }) return BadRequest();
 
-        var user = new CrossyPlayer
+        var user = new CrossyUser
         {
-            Id =  Guid.Parse(idClaim),
+            Id = Guid.Parse(idClaim),
             Username = displayNameClaim
         };
 

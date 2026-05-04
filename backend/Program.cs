@@ -68,27 +68,27 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
             opt.Scope.Add(scope);
     }).AddCookie(IdentityConstants.ExternalScheme, opt => { opt.Cookie.Name = "Manager.External"; });
 
-var ib = builder.Services.AddIdentityCore<CrossyPlayer>(opt =>
-{
-    opt.SignIn.RequireConfirmedAccount = false;
-    opt.User.RequireUniqueEmail = true;
-    opt.User.AllowedUserNameCharacters =
-        "@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
-    opt.Password.RequireDigit = false;
-    opt.Password.RequiredLength = 6;
-    opt.Password.RequireNonAlphanumeric = false;
-    opt.Password.RequireUppercase = false;
-    opt.Password.RequireLowercase = false;
+var ib = builder.Services.AddIdentityCore<CrossyUser>(opt =>
+    {
+        opt.SignIn.RequireConfirmedAccount = false;
+        opt.User.RequireUniqueEmail = true;
+        opt.User.AllowedUserNameCharacters =
+            "@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
+        opt.Password.RequireDigit = false;
+        opt.Password.RequiredLength = 6;
+        opt.Password.RequireNonAlphanumeric = false;
+        opt.Password.RequireUppercase = false;
+        opt.Password.RequireLowercase = false;
 
-    opt.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier;
-}).AddEntityFrameworkStores<CrossyDbContext>()
-.AddRoles<UserRole>()
-.AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<CrossyPlayer, UserRole>>()
-.AddDefaultTokenProviders()
-.AddSignInManager();
+        opt.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier;
+    }).AddEntityFrameworkStores<CrossyDbContext>()
+    .AddRoles<UserRole>()
+    .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<CrossyUser, UserRole>>()
+    .AddDefaultTokenProviders()
+    .AddSignInManager();
 
 builder.Services.AddScoped<IRoleStore<UserRole>, RoleStore<UserRole, CrossyDbContext, Guid>>();
-builder.Services.AddScoped<IUserStore<CrossyPlayer>, UserStore<CrossyPlayer, UserRole, CrossyDbContext, Guid>>();
+builder.Services.AddScoped<IUserStore<CrossyUser>, UserStore<CrossyUser, UserRole, CrossyDbContext, Guid>>();
 
 var app = builder.Build();
 
