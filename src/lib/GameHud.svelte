@@ -5,9 +5,6 @@
 
 <div class="hud">
     <p>Score: {$wsGame?.players.find(p => p.user.id === $user?.id)?.score} Seed: {$wsGame?.seed} Phase: {$wsGame?.gamePhase}</p>
-    {#if $wsGame?.gamePhase == GamePhase.Created}
-        <p>Game Code: {$wsGame?.id.split("-")[0].toUpperCase()}</p>
-    {/if}
 </div>
 
 <style>
@@ -23,10 +20,5 @@
         padding: 1rem;
         z-index: 1000;
         pointer-events: none;
-    }
-
-    .hud > button {
-        pointer-events: all;
-        height: min-content;
     }
 </style>

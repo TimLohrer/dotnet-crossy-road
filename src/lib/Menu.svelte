@@ -9,6 +9,8 @@
     <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
 </div>
 
+<div class="gamecode">Game Code: <span>{$wsGame?.id.split("-")[0].toUpperCase()}</span></div>
+
 <div class="menu_container">
     {#if $wsGame?.hostId == $user?.id}
         <div class="menu_panel">
@@ -59,6 +61,27 @@
     img {
         width: 40rem;
         padding-bottom: 250px;
+    }
+
+    .gamecode {
+        position: absolute;
+        top: 1rem;
+        justify-self: center;
+        z-index: 100;
+        font-size: 1.5rem;
+        background-color: black;
+        color: white;
+        font-size: 1.3rem;
+        border-style: solid;
+        border-width: 0.4rem;
+        border-color: white;
+        padding: 0.5rem 1rem;
+        pointer-events: none;
+    }
+
+    .gamecode span {
+        pointer-events: all;
+        margin-left: 0.5rem;
     }
 
     button {
