@@ -1,4 +1,3 @@
-using System.Numerics;
 using CrossyRoadApi.Dto;
 
 namespace CrossyRoadApi.Models.Game.Map;
@@ -11,9 +10,15 @@ public abstract class CrossyMapElement(
     bool hasCollision)
     : CrossyModel(modelPart, lane.Position with { X = xPosition })
 {
+    public enum ModelDirection
+    {
+        Right,
+        Left
+    }
+
     public bool HasCollision { get; } = hasCollision;
     public int ModelWidth { get; } = modelWidth;
-    public CrossyDirection Direction { get; protected set; } = CrossyDirection.Left;
+    public ModelDirection Direction { get; protected set; } = ModelDirection.Left;
 
     public override string GetModelPath()
     {
@@ -25,26 +30,9 @@ public abstract class CrossyMapElement(
         Position = Position with { X = xPosition };
     }
 
-    public void SetDirection(CrossyDirection direction)
+    public void SetDirection(ModelDirection direction)
     {
         Direction = direction;
-    }
-
-    public List<Vector3> GetPositions()
-    {
-        var positions = new List<Vector3>();
-        for (var x = 0; x < ModelWidth; x++)
-            switch (Direction)
-            {
-                case CrossyDirection.Left:
-                    positions.Add(Position - new Vector3(x, 0, 0));
-                    break;
-                case CrossyDirection.Right:
-                    positions.Add(Position + new Vector3(x, 0, 0));
-                    break;
-            }
-
-        return positions;
     }
 
     public CrossyMapElementDto ToDto()
@@ -54,7 +42,7 @@ public abstract class CrossyMapElement(
             Id = Id,
             Type = ModelPart,
             BasePosition = Position,
-            Positions = GetPositions(),
+            ModelWidth = ModelWidth,
             ModelLocation = GetModelPath(),
             HasCollision = HasCollision
         };

@@ -8,7 +8,8 @@ public class CrossyMapElementDto
     public Guid Id { get; set; }
     public CrossyModelPart Type { get; set; }
     public Vector3 BasePosition { get; set; }
-    public List<Vector3> Positions { get; set; }
+    public CrossyMapElement.ModelDirection Direction { get; set; }
+    public int ModelWidth { get; set; }
     public string ModelLocation { get; set; }
     public bool HasCollision { get; set; }
 }

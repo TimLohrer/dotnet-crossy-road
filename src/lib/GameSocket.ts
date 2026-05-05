@@ -85,7 +85,16 @@ export class GameSocket {
 			});
 		});
 
-		this.connection.on(WebsocketEvent.NewSection, (lanes: Lane[]) => this.getRenderer()!.loadSection(lanes));
+		this.connection.on(WebsocketEvent.NewSection, (lanes: Lane[]) => {
+			// WTF
+			lanes.forEach((lane) => {
+				lane.position = Vec3.fromObject(lane.position);
+				lane.elements.forEach((el) => {
+					el.basePosition = Vec3.fromObject(el.basePosition);
+				});
+			});
+			this.getRenderer()!.loadSection(lanes);
+		});
 
 		this.connection.on(WebsocketEvent.UpdatePlayerPosition, (newPlayer: Player) => {
 			newPlayer.position = Vec3.fromObject(newPlayer.position);

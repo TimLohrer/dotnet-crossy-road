@@ -1,12 +1,13 @@
-import * as THREE from "three";
-import { GLTFLoader, type GLTF } from "three/examples/jsm/Addons.js";
-import type { Lane } from "./models/Lane";
-import type { Player } from "./models/Player";
-import { gameSocket, menuState, user as userStore, wsGame } from "./stores/stateStore";
-import { get } from "svelte/store";
-import { MenuState } from "./models/MenuState";
-import { Game } from "./models/Game";
-import { GamePhase } from "./models/GamePhase";
+import * as THREE from 'three';
+import { GLTFLoader, type GLTF } from 'three/examples/jsm/Addons.js';
+import type { Lane } from './models/Lane';
+import type { Player } from './models/Player';
+import { gameSocket, menuState, user as userStore, wsGame } from './stores/stateStore';
+import { get } from 'svelte/store';
+import { MenuState } from './models/MenuState';
+import { Game } from './models/Game';
+import { GamePhase } from './models/GamePhase';
+import { Direction, type MapElement } from './models/MapElement';
 
 export class GameRenderer {
 	private static frustrumSize = 9;
@@ -27,6 +28,7 @@ export class GameRenderer {
 
 	objectList: THREE.Object3D[] = [];
 	renderedObjects: THREE.Object3D[] = [];
+	elements: { [key: string]: MapElement } = {};
 
 	constructor(window: Window, container: HTMLDivElement) {
 		this.window = window;
@@ -86,7 +88,12 @@ export class GameRenderer {
 
 	private render = () => this.renderer.render(this.scene, this.camera);
 
-	private async loadModel(path: string, pos: THREE.Vector3, hasCollision: boolean, name?: string) {
+	private async loadModel(
+		path: string,
+		pos: THREE.Vector3,
+		hasCollision: boolean,
+		name: string
+	): Promise<THREE.Object3D> {
 		const fileName = path.split('/').pop() as string;
 		const gltf =
 			GameRenderer.GLTF_CACHE[fileName] ?? (await GameRenderer.gltfLoader.loadAsync(path));
@@ -96,7 +103,7 @@ export class GameRenderer {
 		}
 		let model = gltf.scene.clone() as THREE.Object3D;
 
-		if (path.includes('lane')) {
+		if (name.includes('lane')) {
 			model.traverse((child) => {
 				if (child.isObject3D) {
 					child.receiveShadow = true;
@@ -112,10 +119,7 @@ export class GameRenderer {
 		}
 
 		model.position.copy(pos);
-
-		if (name) {
-			model.name = name;
-		}
+		model.name = name;
 
 		if (hasCollision) {
 			// debugging: show collision boxes
@@ -144,13 +148,25 @@ export class GameRenderer {
 
 		this.scene.add(model);
 		this.renderedObjects.push(model);
+		return model;
 	}
 
 	public loadSection(lanes: Lane[]) {
 		lanes.forEach((lane) => {
-			this.loadModel(lane.modelLocation, lane.position, false, lane.type);
-			lane.elements.forEach((element) => {
-				this.loadModel(element.modelLocation, element.basePosition, element.hasCollision, element.type);
+			this.loadModel(
+				lane.modelLocation,
+				lane.position.toVector3(),
+				false,
+				'lane_' + (lane.modelLocation.split('/').pop()?.split('.')[0] ?? lane.type)
+			);
+			lane.elements.forEach(async (element) => {
+				const { uuid } = await this.loadModel(
+					element.modelLocation,
+					element.basePosition.toVector3(),
+					element.hasCollision,
+					'element_' + (element.modelLocation.split('/').pop()?.split('.')[0] ?? element.type)
+				);
+				this.elements[uuid] = element;
 			});
 		});
 		this.render();
@@ -205,10 +221,41 @@ export class GameRenderer {
 		}
 	}
 
-	private getElementAtPosition(position: THREE.Vector3): string | undefined {
-		return this.renderedObjects.find(
-			(obj) => Math.round(obj.position.x) == position.x && Math.round(obj.position.z) == position.z
-		)?.name;
+	private getElementAtPosition(position: THREE.Vector3): THREE.Object3D | undefined {
+		const mapElement = this.renderedObjects.find(
+			(obj) => {
+				const playerPos = position.round();
+				const basePos = obj.position.clone().round();
+				const element = this.elements[obj.uuid];
+				if (!element) return false;
+				const occupiedPositions = [basePos];
+				for (let i = 1; i < element.modelWidth; i++) {
+					const offset = new THREE.Vector3();
+					switch (element.direction) {
+						case Direction.Right:
+							offset.set(i, 0, 0);
+							break;
+						case Direction.Left:
+							offset.set(-i, 0, 0);
+							break;
+					}
+					occupiedPositions.push(basePos.clone().add(offset));
+				}
+
+				return occupiedPositions.some((pos) => pos.x == playerPos.x && pos.z == playerPos.z);
+			}
+		);
+		
+
+		const lane = this.renderedObjects.find(
+			(obj) =>
+				obj.position.x == 0 &&
+				obj.position.y == 0 &&
+				obj.position.z == Math.round(position.z) &&
+				obj.name.includes('lane_')
+		);
+
+		return mapElement ?? lane;
 	}
 
 	private cameraMovement(player: Player) {
@@ -235,6 +282,32 @@ export class GameRenderer {
 		this.dirLight.target.updateMatrix();
 	}
 
+	private handlePlayerPosition(player: Player) {
+		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
+		if (!playerObj) return;
+
+		const isActiveUser = player.user.id === get(userStore)?.id;
+		const elementAtPos = this.getElementAtPosition(player.position.toVector3());
+		const socket = get(gameSocket)!;
+
+		console.log(elementAtPos);
+		
+
+		if (
+			isActiveUser &&
+			(!elementAtPos ||
+				elementAtPos.name == 'lane_water' ||
+				player.position.x > 6 ||
+				player.position.x < -6)
+		) {
+			return socket.sendPlayerDeath();
+		}
+
+		if (elementAtPos) {
+			console.log(`Moved onto element: ${elementAtPos.name}`);
+		}
+	}
+
 	private updateAnimations() {
 		const delta = this.timer.getDelta();
 		this.mixers.forEach((mixer) => mixer.update(delta));
@@ -255,14 +328,20 @@ export class GameRenderer {
 		const game = get(wsGame);
 		const user = get(userStore);
 		if (!game || !user) return;
-		
+
 		const player = Game.getPlayer(game, get(userStore)!.id)!;
 		const moveDistance = 1;
 		let newPosition = player.position.clone();
 		if (get(menuState) === MenuState.Play) {
-			if (game.gamePhase == GamePhase.Created && game.hostId == user.id && ["w","a","s","d","arrowup","arrowleft","arrowright","arrowdown"].includes(e.key.toLowerCase())) {
+			if (
+				game.gamePhase == GamePhase.Created &&
+				game.hostId == user.id &&
+				['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowright', 'arrowdown'].includes(
+					e.key.toLowerCase()
+				)
+			) {
 				await get(gameSocket)?.startGame();
-			};
+			}
 			switch (e.key.toLowerCase()) {
 				case 'w':
 					newPosition.z += moveDistance;
@@ -298,6 +377,7 @@ export class GameRenderer {
 			if (game.gamePhase == GamePhase.Active && !this.isPlayerColliding(newPosition.toVector3())) {
 				player.position = newPosition;
 				this.updatePlayerPosition(player);
+				this.handlePlayerPosition(player);
 			}
 		}
 	}
