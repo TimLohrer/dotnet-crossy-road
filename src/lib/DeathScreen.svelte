@@ -34,6 +34,7 @@
         z-index: 102;
         backdrop-filter: blur(10px);
         gap: 4rem;
+        pointer-events: none;
     }
 
     .box {
@@ -83,6 +84,7 @@
         align-items: center;
         cursor: pointer;
         transition: all 100ms;
+        pointer-events: all;
     }
 
     button:hover {

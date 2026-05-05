@@ -23,6 +23,7 @@
      $effect(() => { returnUrl = window.location.origin; });
 </script>
 
+<img src="/assets/bg.webp" alt="background" class="background" />
 <div class="root">
     <div class="container">
         <h1>Sign In</h1>
@@ -38,12 +39,21 @@
 </div>
 
 <style>
+    .background {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -1;
+    }
+
     .root {
         display: flex;
         justify-content: center;
         align-items: center;
         width: 100%;
         height: 100%;
+        backdrop-filter: blur(15px);
     }
 
     .container {
@@ -53,11 +63,12 @@
         background-color: black;
         padding: 2.5rem;
         min-width: 30rem;
+        border: 0.4rem solid white;
     }
 
     h1 {
         font-size: 1.5rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: .5rem;
         color: white;
     }
 
@@ -68,7 +79,7 @@
         width: 100%;
         padding: 1rem 2rem;
         text-decoration: none;
-        margin-top: 2rem;
+        margin-top: 1rem;
         font-size: .75rem;
         gap: 1rem;
         height: 3.5rem;
