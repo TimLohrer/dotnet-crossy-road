@@ -4,5 +4,4 @@ namespace CrossyRoadApi.Models.Database;
 
 public class UserRole : IdentityRole<Guid>
 {
-    
 }

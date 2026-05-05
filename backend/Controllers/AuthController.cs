@@ -1,4 +1,5 @@
-using CrossyRoadApi.Dto;
+using System.Security.Claims;
+using CrossyRoadApi.Config;
 using CrossyRoadApi.Models.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -12,21 +13,10 @@ namespace CrossyRoadApi.Controllers;
 public class AuthController(
     SignInManager<CrossyUser> signInManager,
     UserManager<CrossyUser> userManager,
+    AppConfig config,
     ILogger<AuthController> logger)
     : ControllerBase
 {
-    [HttpGet("@me")]
-    [Authorize]
-    [ProducesResponseType(typeof(CrossyPlayerDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetCurrentUser()
-    {
-        var user = await userManager.GetUserAsync(User);
-
-        if (user == null) return Unauthorized();
-
-        return Ok(user.ToDto());
-    }
-
     [HttpGet("signin/{providerName}")]
     public IActionResult Login(string providerName, string? returnUrl = null)
     {
@@ -74,9 +64,10 @@ public class AuthController(
             providerKey = claims.FirstOrDefault(x => x.Type == ClaimConstants.ObjectId)?.Value;
 
         var emailClaim = claims.SingleOrDefault(x => x.Type == ClaimConstants.PreferredUserName)?.Value;
-        var displayNameClaim = claims.SingleOrDefault(x => x.Type == "given_name")?.Value;
+        // TODO: Fix this for normal ms auth (?)
+        var displayNameClaim = claims.SingleOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
 
-        if (string.IsNullOrEmpty(emailClaim) ||
+        if (string.IsNullOrEmpty(providerKey) || string.IsNullOrEmpty(emailClaim) ||
             string.IsNullOrEmpty(displayNameClaim)) return UnprocessableEntity();
 
         var result = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, providerKey, true, true);
@@ -98,7 +89,7 @@ public class AuthController(
                 logger.LogInformation("Access token not set");
             }
 
-            externalUser.Username = displayNameClaim;
+            externalUser.UserName = displayNameClaim;
 
             await userManager.UpdateAsync(externalUser);
 
@@ -106,7 +97,7 @@ public class AuthController(
             await signInManager.SignInAsync(externalUser, true, info.LoginProvider);
 
             // Success
-            return returnUrl != null ? Redirect(returnUrl) : NoContent();
+            return Redirect(config.OAuthSuccessRedirectUri);
         }
 
         if (result.IsLockedOut) return BadRequest("Locked Out");
@@ -116,9 +107,8 @@ public class AuthController(
 
         var user = new CrossyUser
         {
-            UserName = emailClaim,
             Email = emailClaim,
-            Username = displayNameClaim
+            UserName = displayNameClaim
         };
 
         var userCreateResult = await userManager.CreateAsync(user);
@@ -129,6 +119,6 @@ public class AuthController(
         if (!addedLoginResult.Succeeded) return BadRequest();
 
         await signInManager.SignInAsync(user, true, info.LoginProvider);
-        return Redirect("http://localhost:5173");
+        return Redirect(config.OAuthSuccessRedirectUri);
     }
 }

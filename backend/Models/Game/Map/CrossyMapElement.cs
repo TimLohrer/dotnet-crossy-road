@@ -56,7 +56,7 @@ public abstract class CrossyMapElement(
             BasePosition = Position,
             Positions = GetPositions(),
             ModelLocation = GetModelPath(),
-            HasCollision = HasCollision,
+            HasCollision = HasCollision
         };
     }
 }

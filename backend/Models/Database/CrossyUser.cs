@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using CrossyRoadApi.Dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,8 +7,6 @@ namespace CrossyRoadApi.Models.Database;
 [PrimaryKey(nameof(Id))]
 public class CrossyUser : IdentityUser<Guid>
 {
-    [StringLength(35)] public string Username { get; set; }
-
     public int HighScore { get; set; }
     public int Taler { get; set; }
     public CrossySkin Skin { get; set; } = CrossySkin.Default;
@@ -20,7 +17,7 @@ public class CrossyUser : IdentityUser<Guid>
         return new CrossyPlayerDto
         {
             Id = Id,
-            Username = Username,
+            Username = UserName,
             HighScore = HighScore,
             Taler = Taler,
             Skin = Skin,
@@ -33,7 +30,7 @@ public class CrossyUser : IdentityUser<Guid>
         return new CrossyPlayerMinimalDto
         {
             Id = Id,
-            Username = Username,
+            Username = UserName,
             HighScore = HighScore,
             Skin = Skin
         };

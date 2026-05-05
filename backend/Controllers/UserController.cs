@@ -1,10 +1,7 @@
 using CrossyRoadApi.Models.Database;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web;
 
 namespace CrossyRoadApi.Controllers;
 
@@ -19,14 +16,8 @@ public class UserController(UserManager<CrossyUser> userContext) : ControllerBas
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Get()
     {
-        var userId = User.GetObjectId();
-        if (userId == null)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, "Can't get user id???");
-        }
-        
-        var user = await userContext.Users.FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
-        
-        return Ok(user);
+        var user = await userContext.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+        return Ok(user.ToDto());
     }
 }

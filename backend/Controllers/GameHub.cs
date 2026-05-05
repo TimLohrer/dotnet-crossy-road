@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CrossyRoadApi.Controllers;
 
+// [Authorize]
 public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContext) : Hub
 {
     public override async Task OnConnectedAsync()
@@ -20,13 +21,11 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
 
     public async Task CreateGame()
     {
-        // TODO: fetch from DB
-        // _context.CrossyPlayers.FirstAsync(p => p.Id == SOME UUID)
-        var user = new CrossyUser
-        {
-            Username = Context.ConnectionId
-        };
-        var host = CrossyPlayer.Create(Context.ConnectionId, user, new Vector3(0, 0, -2));
+        var user = await userContext.GetUserAsync(Context.User!);
+        if (user == null)
+            await Clients.Client(Context.ConnectionId)
+                .SendAsync(CrossyWsEvent.Disconnect, "Invalid auth, no user found!");
+        var host = CrossyPlayer.Create(Context.ConnectionId, user!, new Vector3(0, 0, -2));
         var wsGame = CrossyGame.Create(host, CrossyTheme.Default);
         ActiveGames.Games.Add(wsGame);
 
@@ -40,13 +39,7 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
     public async Task JoinGame(Guid gameId, Guid playerId)
     {
         var wsGame = ActiveGames.Games.FirstOrDefault(x => x.Id == gameId);
-        if (wsGame == null)
-        {
-            await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.GameJoinError, "Game does not exist");
-            return;
-        }
-
-        if (wsGame.GamePhase != CrossyGame.Phase.Created)
+        if (wsGame == null || wsGame.GamePhase != CrossyGame.Phase.Created)
         {
             await Clients.Client(Context.ConnectionId).SendAsync(CrossyWsEvent.GameJoinError, "Game does not exist");
             return;
@@ -55,7 +48,7 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
         var user = new CrossyUser
         {
             Id = playerId,
-            Username = Context.ConnectionId
+            UserName = Context.ConnectionId
         };
         var wsPlayer = CrossyPlayer.Create(Context.ConnectionId, user, new Vector3(0, 0, -2));
         wsGame.Players.Add(wsPlayer);

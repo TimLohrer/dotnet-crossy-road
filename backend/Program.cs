@@ -4,7 +4,6 @@ using CrossyRoadApi.Controllers;
 using CrossyRoadApi.Database;
 using CrossyRoadApi.Models.Database;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -28,10 +27,6 @@ builder.Services.AddCors(options =>
 var appConfig = new AppConfig();
 builder.Configuration.Bind(appConfig);
 builder.Services.AddSingleton(appConfig);
-var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, ".aspnet-dp-keys");
-builder.Services.AddDataProtection()
-    .SetApplicationName("CrossyRoadApi")
-    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 builder.Services.AddDbContext<CrossyDbContext>(options =>
     options.UseNpgsql(appConfig.Database.ConnectionString).UseSnakeCaseNamingConvention());
 builder.Services.AddSignalR().AddJsonProtocol(options => { options.PayloadSerializerOptions.IncludeFields = true; });
@@ -66,7 +61,7 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.ClientSecret = appConfig.BoschOAuth.ClientSecret;
         opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
         opt.SignInScheme = IdentityConstants.ExternalScheme;
-        opt.CallbackPath = "/api/v1/signin-oidc";
+        opt.CallbackPath = "/auth/signin-oidc";
         opt.ResponseType = "id_token token";
         opt.SaveTokens = true;
         foreach (var scope in appConfig.BoschOAuth.Scopes.Split(",").Select(x => x.Trim()))
@@ -79,7 +74,7 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.ClientSecret = appConfig.MicrosoftOAuth.ClientSecret;
         opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
         opt.SignInScheme = IdentityConstants.ExternalScheme;
-        opt.CallbackPath = "/api/v1/signin-oidc";
+        opt.CallbackPath = "/auth/signin-oidc";
         opt.ResponseType = "id_token token";
         opt.SaveTokens = true;
         foreach (var scope in appConfig.MicrosoftOAuth.Scopes.Split(",").Select(x => x.Trim()))
@@ -121,14 +116,16 @@ if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseHttpsRedirection();
 
+app.UsePathBase("/api/v1");
+app.UseRouting();
+
 app.UseCors("AllowFrontend");
 
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseWebSockets();
 
-app.UsePathBase("/api/v1");
 app.MapControllers();
 
 app.MapHub<GameHub>("/game/ws");
