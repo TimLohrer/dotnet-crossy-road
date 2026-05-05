@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DeathScreen from './../lib/DeathScreen.svelte';
 	import Menu from "$lib/Menu.svelte";
 	import CrossyRoadGame from "$lib/CrossyRoadGame.svelte";
 	import GameHud from "$lib/GameHud.svelte";
@@ -12,10 +13,13 @@
 
 
 {#if $wsGame}
-	<GameHud />
 	{#if $wsGame.gamePhase == GamePhase.Created}
 		<Menu />
-	{/if}	
+	{:else if $wsGame.gamePhase == GamePhase.Active}
+		<GameHud />
+	{:else if $wsGame.gamePhase == GamePhase.Ended}
+		<DeathScreen />
+	{/if}
 {/if}
 
 <CrossyRoadGame />

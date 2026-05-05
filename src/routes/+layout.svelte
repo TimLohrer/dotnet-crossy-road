@@ -39,7 +39,7 @@
         font-style: normal;
     }
 
-	:global(body) {
-		font-family: PixelFont;
+	:global(*) {
+		font-family: PixelFont !important;
 	}
 </style>

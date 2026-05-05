@@ -8,6 +8,7 @@ import type { Lane } from './models/Lane';
 import type { Player } from './models/Player';
 import { GameRenderer } from './GameRenderer';
 import { MenuState } from './models/MenuState';
+import { GamePhase } from './models/GamePhase';
 
 export class GameSocket {
 	private connection: signalR.HubConnection;
@@ -56,7 +57,6 @@ export class GameSocket {
 				});
 				console.log('YOU ARE HOST!');
 				console.log(`GAME CODE: ${joinedGame.id.split('-')[0].toUpperCase()}`);
-				
 			}
 			
 			menuState.update(() => MenuState.Play);
@@ -109,11 +109,15 @@ export class GameSocket {
 			if (deadPlayer?.user.id) {
 				this.getRenderer()!.removePlayer(deadPlayer.user.id);
 			}
+
 			wsGame.update((game) => {
 				game = newGame;
 				game?.players.forEach((p) => {
 					p.position = Vec3.fromObject(p.position);
 				});
+				if (deadPlayer?.user.id === this.getUser()!.id) {
+					game.gamePhase = GamePhase.Ended;
+				}
 				return game;
 			});
 		});
