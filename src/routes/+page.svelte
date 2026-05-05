@@ -4,11 +4,31 @@
 	import CrossyRoadGame from "$lib/CrossyRoadGame.svelte";
 	import GameHud from "$lib/GameHud.svelte";
 	import { MenuState } from "$lib/models/MenuState";
-	import { menuState, wsGame } from "$lib/stores/stateStore";
+	import { menuState, wsGame, user as userStore } from "$lib/stores/stateStore";
 	import PopUp from "$lib/ PopUp.svelte";
 	import MenuSkins from "$lib/MenuSkins.svelte";
 	import MenuMultiplayer from "$lib/MenuMultiplayer.svelte";
 	import { GamePhase } from "$lib/models/GamePhase";
+	import type { User } from '$lib/models/User';
+	import { PUBLIC_API_URL } from '$lib/environment';
+	import { onMount } from 'svelte';
+
+	onMount(async () => {
+		const res = await fetch(`${PUBLIC_API_URL}/user/@me`, {
+			credentials: 'include',
+			headers: {
+				cookie: document.cookie
+			}
+		});
+
+		if (!res.ok) {
+			throw window.location.replace(`/signin`);
+		}
+
+		const user = await res.json() as User;
+
+		userStore.update(() => user);
+	});
 </script>
 
 
