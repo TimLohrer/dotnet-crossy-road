@@ -17,7 +17,6 @@
 </div>
 
 <style>
-
     .container {
         font-family: PixelFont;
         background-color: black;
@@ -61,6 +60,7 @@
         background-color: white;
         padding-left: 0.5rem;
         padding-right: 0.5rem;
+        transition: all 100ms;
     }
 
     button:hover {
