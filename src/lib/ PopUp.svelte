@@ -45,7 +45,6 @@
 </div>
 
 <style>
-
     .container {
         display: flex;
         justify-content: center;
@@ -62,7 +61,7 @@
     .popup {
         min-width: max-content;
         min-height: max-content;
-        background-color: rgb(0, 0, 0);
+        background-color: black;
         margin-bottom: 7rem;
         pointer-events: all;
         color: white;
