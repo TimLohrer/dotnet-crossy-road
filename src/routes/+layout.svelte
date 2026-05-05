@@ -30,3 +30,16 @@
 </svelte:head>
  
 {@render children()}
+
+<style>
+	@font-face {
+        font-family: "PixelFont";
+        src: url("/game-over-fireball760-fonts/game-over.otf");
+        font-weight: normal;
+        font-style: normal;
+    }
+
+	:global(body) {
+		font-family: PixelFont;
+	}
+</style>

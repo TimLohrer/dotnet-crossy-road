@@ -46,19 +46,6 @@
 {/if}
 
 <style>
-    * {
-        padding: 0;
-        margin: 0;
-        box-sizing: border-box;
-    }
-
-    @font-face {
-        font-family: "PixelFont";
-        src: url("/game-over-fireball760-fonts/game-over.otf");
-        font-weight: normal;
-        font-style: normal;
-    }
-    
     .menu_container {
         position: absolute;
         inset: 0;
