@@ -79,6 +79,7 @@ public class CrossyGame
             player.User = null;
         }
 
+        await dbContext.CrossyPlayers.AddRangeAsync(Players);
         await dbContext.CrossyGames.AddAsync(this);
         await dbContext.SaveChangesAsync();
     }
