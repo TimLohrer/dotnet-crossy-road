@@ -1,8 +1,27 @@
-<div class="container">
-    <div class="popup"></div>
+<script lang="ts">
+    import type { TransitionConfig } from "svelte/transition";
+    const { children } = $props();
+
+    function popupIn(_node: Element, { duration = 200, blur = 10 } = {}): TransitionConfig {
+        return {
+            duration,
+            css: (t) => `
+                opacity: ${t};
+                backdrop-filter: blur(${t * blur}px);
+                -webkit-backdrop-filter: blur(${t * blur}px);
+            `
+        };
+    }
+</script>
+
+<div class="container" in:popupIn out:popupIn>
+    <div class="popup">
+        {@render children()}
+    </div>
 </div>
 
 <style>
+
     .container {
         display: flex;
         justify-content: center;
@@ -11,17 +30,22 @@
         height: 100%;
         z-index: 100;
         position: absolute;
-        backdrop-filter: blur(0px);
         pointer-events: none;
+        opacity: 1;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     }
 
     .popup {
-        width: 40rem;
-        height: 45rem;
+        min-width: max-content;
+        min-height: max-content;
         background-color: rgb(0, 0, 0);
-        box-shadow: rgb(255, 255, 255) 7px 7px 0px;   
         margin-bottom: 7rem;
         pointer-events: all;
+        color: white;
+        border-style: solid;
+        border-width: 0.4rem;
+        border-color: white;
     }
 
 </style>

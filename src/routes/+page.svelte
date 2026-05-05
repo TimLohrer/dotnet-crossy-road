@@ -5,6 +5,9 @@
 	import { MenuState } from "$lib/models/MenuState";
 	import { menuState } from "$lib/stores/stateStore";
 	import PopUp from "$lib/ PopUp.svelte";
+	import { fade } from 'svelte/transition';
+	import MenuSkins from "$lib/MenuSkins.svelte";
+	import MenuMultiplayer from "$lib/MenuMultiplayer.svelte";
 
 
 </script>
@@ -14,5 +17,11 @@
 <CrossyRoadGame />
 <GameHud />
 {#if $menuState === MenuState.Skins}
-	<PopUp />
+	<PopUp>
+		<MenuSkins />
+	</PopUp>
+{:else if $menuState == MenuState.JoinGame}
+	<PopUp>
+		<MenuMultiplayer />
+	</PopUp>
 {/if}

@@ -31,13 +31,13 @@
             <div class="menu_panel">
                 <button class:active={activeButton=="START"} onclick={() => {
                     activeButton = "START";
-                    $menuState = MenuState.Singleplayer;
+                    $menuState = MenuState.Play;
                 }}>Start</button>
             </div>
             <div class="menu_panel">
                 <button class:active={activeButton=="MULTIPLAYER"} onclick={() => {
                     activeButton = "MULTIPLAYER";
-                    $menuState = MenuState.Multiplayer;
+                    $menuState = MenuState.JoinGame;
                 }}>Multiplayer</button>
             </div>
         </nav>
@@ -53,7 +53,8 @@
         flex-direction: row;
         align-items: end;
         justify-content: center;
-        z-index: 10;
+        z-index: 101;
+        pointer-events: none;
     }
 
     .logo_container {
@@ -62,7 +63,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 10;
+        z-index: 1;
     }
 
     img {
@@ -77,6 +78,7 @@
         justify-content: end;
         height: 9rem;
         gap: 1rem;
+        pointer-events: all;
     }
 
     button {
@@ -87,11 +89,10 @@
         border-style: none;
         background-color: rgb(0, 0, 0);
         color: white;
-        border-width: 0.4rem;
         font-family: PixelFont;
-        font-size: 30;
+        font-size: 1.3rem;
         border-style: solid;
-        border-width: 7px;
+        border-width: 0.4rem;
         border-color: white;
     }
 

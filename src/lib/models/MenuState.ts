@@ -1,5 +1,5 @@
 export enum MenuState {
     Skins,
-    Singleplayer,
-    Multiplayer,
+    Play,
+    JoinGame,
 }

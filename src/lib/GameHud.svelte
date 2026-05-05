@@ -5,9 +5,9 @@
 
 {#if $wsGame}
     <div class="hud">
-        <h1>Score: {$wsGame?.players.find(p => p.user.id === $user?.id)?.score} Seed: {$wsGame?.seed} Phase: {$wsGame.gamePhase}</h1>
+        <p>Score: {$wsGame?.players.find(p => p.user.id === $user?.id)?.score} Seed: {$wsGame?.seed} Phase: {$wsGame.gamePhase}</p>
         {#if $wsGame.gamePhase == GamePhase.Created}
-            <h1>Game Code: {$wsGame.id.split("-")[0].toUpperCase()}</h1>
+            <p>Game Code: {$wsGame.id.split("-")[0].toUpperCase()}</p>
         {/if}
     </div>
 {/if}

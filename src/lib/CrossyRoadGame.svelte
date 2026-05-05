@@ -3,6 +3,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { GameRenderer } from './GameRenderer';
 	import { GameSocket } from './GameSocket';
+	import { PUBLIC_API_URL } from './environment';
 
 	let container: HTMLDivElement;
 	
@@ -11,7 +12,7 @@
 		
 		$gameRenderer = new GameRenderer(window, container);
 
-		$gameSocket = new GameSocket("http://localhost:5016/api/v1/game/ws");
+		$gameSocket = new GameSocket(`${PUBLIC_API_URL}/game/ws`);
 		
 		if (otherGameId) {
 			$gameSocket!.onReady = async () => {
