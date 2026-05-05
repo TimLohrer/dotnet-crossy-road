@@ -38,7 +38,8 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
 
     public async Task JoinGame(string gameCode)
     {
-        var wsGame = ActiveGames.Games.FirstOrDefault(x => x.Id.ToString().Split("-")[0].Equals(gameCode, StringComparison.OrdinalIgnoreCase));
+        var wsGame = ActiveGames.Games.FirstOrDefault(x =>
+            x.Id.ToString().Split("-")[0].Equals(gameCode, StringComparison.OrdinalIgnoreCase));
         if (wsGame is not { GamePhase: CrossyGame.Phase.Created })
         {
             await Clients.Caller.SendAsync(CrossyWsEvent.GameJoinError, "Game does not exist");
@@ -46,19 +47,20 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
         }
 
         var user = await userContext.GetUserAsync(Context.User!);
-        if (wsGame.Players.Any(p => p.User.Id == user!.Id))
+        if (wsGame.Players.Any(p => p.UserId == user!.Id))
         {
             await Clients.Caller.SendAsync(CrossyWsEvent.GameJoinError, "You are already in this game");
             return;
         }
 
         var wsPlayer = CrossyPlayer.Create(Context.ConnectionId, user!, new Vector3(0, 0, -2));
+        wsPlayer.CrossyGameId = wsGame.Id;
         wsGame.Players.Add(wsPlayer);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, wsGame.Id.ToString());
         await Clients.Caller.SendAsync(CrossyWsEvent.GameJoined, wsGame.ToDto());
         await Clients.OthersInGroup(wsGame.Id.ToString())
-            .SendAsync(CrossyWsEvent.PlayerJoined, wsGame.ToDto(), wsPlayer.User.Id);
+            .SendAsync(CrossyWsEvent.PlayerJoined, wsGame.ToDto(), wsPlayer.UserId);
 
         var startSections = new CrossyMapGenerator(wsGame).GenerateMapStart(wsPlayer).Select(l => l.ToDto()).ToList();
         await Clients.Caller.SendAsync(CrossyWsEvent.NewSection, startSections);
@@ -68,7 +70,7 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
     {
         var wsGame = ActiveGames.Games.FirstOrDefault(g =>
             g.GamePhase == CrossyGame.Phase.Created &&
-            g.Id == gameId && g.Players.Any(p => p.ConnectionId == Context.ConnectionId && p.User.Id == g.HostId));
+            g.Id == gameId && g.Players.Any(p => p.ConnectionId == Context.ConnectionId && p.UserId == g.HostId));
         if (wsGame != null)
         {
             wsGame.StartGame();
@@ -117,7 +119,7 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
 
         var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
         if (!wsPlayer.IsAlive) return;
-        wsPlayer.DiedAt = DateTime.Now;
+        wsPlayer.DiedAt = DateTime.UtcNow;
 
         var player = await userContext.GetUserAsync(Context.User!);
         if (player != null)
@@ -129,13 +131,12 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
 
         await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.PlayerDeath, wsGame.ToDto());
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, wsGame.Id.ToString());
-        await Clients.Caller.SendAsync(CrossyWsEvent.GameLeft, wsGame.Id);
 
         if (wsGame.Players.Where(p => p.IsAlive).ToList().Count == 0)
         {
-            ActiveGames.Games.Remove(wsGame);
             wsGame.EndGame();
             await wsGame.SaveGame(context);
+            ActiveGames.Games.Remove(wsGame);
         }
     }
 
@@ -146,18 +147,19 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
         if (wsGame != null)
         {
             var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
-            await Clients.OthersInGroup(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.PlayerLeft, wsPlayer.User.Id);
+            await Clients.OthersInGroup(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.PlayerLeft, wsPlayer.UserId);
             wsGame.Players.Remove(wsPlayer);
             if (wsGame.Players.Where(p => p.IsAlive).ToList().Count == 0)
             {
-                ActiveGames.Games.Remove(wsGame);
                 if (wsGame.GamePhase == CrossyGame.Phase.Active)
                 {
                     wsGame.EndGame();
                     await wsGame.SaveGame(context);
                 }
+
+                ActiveGames.Games.Remove(wsGame);
             }
-            
+
             await Clients.Caller.SendAsync(CrossyWsEvent.GameLeft, wsGame.Id);
         }
     }

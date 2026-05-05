@@ -10,4 +10,25 @@ public class CrossyDbContext(DbContextOptions<CrossyDbContext> options)
 {
     public DbSet<CrossyGame> CrossyGames { get; set; }
     public DbSet<CrossyPlayer> CrossyPlayers { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        builder.Entity<CrossyPlayer>(entity =>
+        {
+            entity.HasKey(player => new { player.CrossyGameId, player.UserId });
+
+            entity.HasOne(player => player.CrossyGame)
+                .WithMany(game => game.Players)
+                .HasForeignKey(player => player.CrossyGameId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(player => player.User)
+                .WithMany()
+                .HasForeignKey(player => player.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+    }
 }

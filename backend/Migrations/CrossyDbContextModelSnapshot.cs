@@ -171,7 +171,7 @@ namespace CrossyRoadApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("seed");
 
-                    b.Property<DateTime>("StartTime")
+                    b.Property<DateTime?>("StartTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_time");
 
@@ -187,13 +187,13 @@ namespace CrossyRoadApi.Migrations
 
             modelBuilder.Entity("CrossyRoadApi.Models.Game.CrossyPlayer", b =>
                 {
+                    b.Property<Guid>("CrossyGameId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("crossy_game_id");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
-
-                    b.Property<Guid?>("CrossyGameId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("crossy_game_id");
 
                     b.Property<DateTime?>("DiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -219,11 +219,11 @@ namespace CrossyRoadApi.Migrations
                         .HasColumnType("real")
                         .HasColumnName("z");
 
-                    b.HasKey("UserId")
+                    b.HasKey("CrossyGameId", "UserId")
                         .HasName("pk_crossy_players");
 
-                    b.HasIndex("CrossyGameId")
-                        .HasDatabaseName("ix_crossy_players_crossy_game_id");
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_crossy_players_user_id");
 
                     b.ToTable("crossy_players", (string)null);
                 });
@@ -360,9 +360,11 @@ namespace CrossyRoadApi.Migrations
 
             modelBuilder.Entity("CrossyRoadApi.Models.Game.CrossyPlayer", b =>
                 {
-                    b.HasOne("CrossyRoadApi.Models.Game.CrossyGame", null)
+                    b.HasOne("CrossyRoadApi.Models.Game.CrossyGame", "CrossyGame")
                         .WithMany("Players")
                         .HasForeignKey("CrossyGameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_crossy_players_crossy_games_crossy_game_id");
 
                     b.HasOne("CrossyRoadApi.Models.Database.CrossyUser", "User")
@@ -371,6 +373,8 @@ namespace CrossyRoadApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_crossy_players_users_user_id");
+
+                    b.Navigation("CrossyGame");
 
                     b.Navigation("User");
                 });

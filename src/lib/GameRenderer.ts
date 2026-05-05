@@ -287,6 +287,9 @@ export class GameRenderer {
 				case 'arrowright':
 					newPosition.x -= moveDistance;
 					break;
+				case 'k':
+					get(gameSocket)?.sendPlayerDeath();
+					return;
 				default:
 					return;
 			}

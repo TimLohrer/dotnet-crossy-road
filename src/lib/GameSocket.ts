@@ -102,7 +102,7 @@ export class GameSocket {
 		});
 
 		this.connection.on(WebsocketEvent.PlayerDeath, (newGame: Game) => {
-			const deadPlayer = this.getGame()?.players.find((p) => !newGame.players.some((np) => np.isAlive !== p.isAlive));
+			const deadPlayer = this.getGame()?.players.find((p) => p.user.id == newGame.players.find((np) => np.isAlive !== p.isAlive).user.id);
 			if (deadPlayer?.user.id) {
 				this.getRenderer()!.removePlayer(deadPlayer.user.id);
 			}
@@ -114,8 +114,11 @@ export class GameSocket {
 				return game;
 			});
 
+			console.log(deadPlayer);
+
 			if (deadPlayer?.user.id == this.getUser()?.id) {
 				// TODO: Show death screen
+				alert('You died!');
 				return this.createGame();
 			}
 		});

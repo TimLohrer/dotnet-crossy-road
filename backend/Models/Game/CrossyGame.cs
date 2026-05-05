@@ -18,7 +18,7 @@ public class CrossyGame
 
     public Guid Id { get; } = Guid.NewGuid();
     public Guid HostId { get; private set; }
-    public List<CrossyPlayer> Players { get; set; }
+    public List<CrossyPlayer> Players { get; set; } = [];
     public int Seed { get; private set; } = new Random().Next();
     public CrossyTheme Theme { get; private set; } = CrossyTheme.Default;
     [NotMapped] public Phase GamePhase { get; set; } = Phase.Created;
@@ -27,13 +27,16 @@ public class CrossyGame
 
     public static CrossyGame Create(CrossyPlayer host, CrossyTheme theme, int? seed = null)
     {
-        return new CrossyGame
+        var game = new CrossyGame
         {
-            HostId = host.User.Id,
+            HostId = host.UserId,
             Players = [host],
             Theme = theme,
             Seed = seed ?? new Random().Next()
         };
+
+        host.CrossyGameId = game.Id;
+        return game;
     }
 
     public CrossyGameDto ToDto()
@@ -53,21 +56,28 @@ public class CrossyGame
 
     public void StartGame()
     {
-        StartTime = DateTime.Now;
+        StartTime = DateTime.UtcNow;
         GamePhase = Phase.Active;
     }
 
     public void EndGame()
     {
         GamePhase = Phase.Ended;
-        EndTime = DateTime.Now;
+        EndTime = DateTime.UtcNow;
     }
 
     public async Task SaveGame(CrossyDbContext dbContext)
     {
         if (GamePhase != Phase.Ended) throw new InvalidOperationException("Can only save ended games");
+
+        foreach (var player in Players)
+        {
+            player.CrossyGameId = Id;
+            player.UserId = player.User?.Id ?? player.UserId;
+            player.User = null;
+        }
+
         await dbContext.CrossyGames.AddAsync(this);
-        await dbContext.CrossyPlayers.AddRangeAsync(Players);
         await dbContext.SaveChangesAsync();
     }
 }

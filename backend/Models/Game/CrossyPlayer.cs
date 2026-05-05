@@ -9,11 +9,14 @@ namespace CrossyRoadApi.Models.Game;
 
 public class CrossyPlayer
 {
-    [NotMapped] public string ConnectionId { get; private set; }
+    [NotMapped] public string ConnectionId { get; private set; } = null!;
 
-    [Key] [ForeignKey(nameof(User))] public Guid UserId { get; set; }
+    [Required] public Guid CrossyGameId { get; set; }
+    public virtual CrossyGame? CrossyGame { get; set; }
 
-    public virtual CrossyUser User { get; set; }
+    [Required] [ForeignKey(nameof(User))] public Guid UserId { get; set; }
+
+    public virtual CrossyUser? User { get; set; }
 
     [NotMapped]
     public Vector3 Position
@@ -45,6 +48,7 @@ public class CrossyPlayer
         return new CrossyPlayer
         {
             ConnectionId = connectionId,
+            UserId = user.Id,
             User = user,
             Position = spawnPosition
         };
@@ -55,7 +59,7 @@ public class CrossyPlayer
         return new CrossyPlayerDto
         {
             ConnectionId = ConnectionId,
-            User = User.ToMinimalDto(),
+            User = (User ?? throw new InvalidOperationException("Player user is not loaded")).ToMinimalDto(),
             Position = Position,
             Taler = Taler,
             Score = Score,
