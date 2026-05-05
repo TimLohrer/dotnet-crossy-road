@@ -4,13 +4,14 @@ using CrossyRoadApi.Models.Database;
 using CrossyRoadApi.Models.Game;
 using CrossyRoadApi.Models.Game.Map;
 using CrossyRoadApi.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace CrossyRoadApi.Controllers;
 
-// [Authorize]
+[Authorize]
 public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContext) : Hub
 {
     public override async Task OnConnectedAsync()

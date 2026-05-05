@@ -15,7 +15,11 @@ export class GameSocket {
 
 	constructor(url: string) {
 		this.connection = new signalR.HubConnectionBuilder()
-			.withUrl(url)
+			.withUrl(url, {
+				headers: {
+					cookie: document.cookie
+				}
+			})
 			.withAutomaticReconnect()
 			.build();
 

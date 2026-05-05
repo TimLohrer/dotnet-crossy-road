@@ -28,6 +28,7 @@ public class CrossyGame
         return new CrossyGame
         {
             HostId = host.User.Id,
+            Players = [host],
             Theme = theme,
             Seed = seed ?? new Random().Next()
         };
