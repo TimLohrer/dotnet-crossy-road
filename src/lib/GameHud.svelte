@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { GamePhase } from "./models/GamePhase";
 	import { user, wsGame } from "./stores/stateStore";
 </script>
 
 <div class="hud">
-    <p>Score: {$wsGame?.players.find(p => p.user.id === $user?.id)?.score} Seed: {$wsGame?.seed} Phase: {$wsGame?.gamePhase}</p>
+    <p>{$wsGame?.players.find(p => p.user.id === $user?.id)?.score}</p>
 </div>
 
 <style>
@@ -12,13 +11,27 @@
         display: flex;
         flex-direction: row;
         position: absolute;
-        top: 0;
-        left: 0;
+        top: 1rem;
+        left: 1rem;
         width: 100%;
         height: 100%;
         gap: 1rem;
         padding: 1rem;
         z-index: 1000;
         pointer-events: none;
+    }
+    
+    p {
+        background-color: black;
+        color: white;
+        max-height: min-content;
+        font-size: 1.3rem;
+        border-style: solid;
+        border-width: 0.4rem;
+        border-color: white;
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        font-size: 2.5rem;
     }
 </style>

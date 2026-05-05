@@ -68,14 +68,16 @@
         top: 1rem;
         justify-self: center;
         z-index: 100;
-        font-size: 1.5rem;
         background-color: black;
         color: white;
+        height: 4rem;
         font-size: 1.3rem;
         border-style: solid;
         border-width: 0.4rem;
         border-color: white;
-        padding: 0.5rem 1rem;
+        padding: 0 1rem;
+        display: flex;
+        align-items: center;
         pointer-events: none;
     }
 
@@ -117,7 +119,7 @@
         right: 1rem;
         z-index: 100;
         width: max-content;
-        height: 4.5rem;
+        height: 4rem;
         padding: 0 1rem;
         cursor: pointer;
         border-style: solid;
