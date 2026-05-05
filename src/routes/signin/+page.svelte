@@ -17,13 +17,17 @@
             color: '#FFFFFF'
         }
     ];
+
+    let returnUrl: string | null = $state(null);
+
+     $effect(() => { returnUrl = window.location.origin; });
 </script>
 
 <div class="root">
     <div class="container">
         <h1>Sign In</h1>
         {#each methods as method}
-            <a href={`${PUBLIC_API_URL}/auth/signin/${method.method}`} class="sign-in-button" style="background-color: {method.color}; color: {method.fontColor}">
+            <a href={`${PUBLIC_API_URL}/auth/signin/${method.method}?returnUrl=${returnUrl}`} class="sign-in-button" style="background-color: {method.color}; color: {method.fontColor}">
                 {#if method.image}
                     <img src={method.image} alt={method.name} class="sign-in-image" />
                 {/if}

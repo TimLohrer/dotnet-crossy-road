@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PUBLIC_API_URL } from "./environment";
 	import { GamePhase } from "./models/GamePhase";
 	import { MenuState } from "./models/MenuState";
     import { menuState, user, wsGame } from "./stores/stateStore";
@@ -24,6 +25,10 @@
             <button class="info-panel">Waiting for host to start the game!</button>
         </div>
     {/if}
+</div>
+
+<div class="logout">
+    <a href={`${PUBLIC_API_URL}/auth/signout?returnUrl=${encodeURIComponent(`${window.location.origin}/signin`)}`}>Sign Out</a>
 </div>
 
 <style>
@@ -62,9 +67,8 @@
         cursor: pointer;
         outline: none;
         border-style: none;
-        background-color: rgb(0, 0, 0);
+        background-color: black;
         color: white;
-        font-family: PixelFont;
         font-size: 1.3rem;
         border-style: solid;
         border-width: 0.4rem;
@@ -79,6 +83,30 @@
         cursor: default;
         width: max-content;
         padding: 0 2rem;
+    }
+
+    .logout {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 101;
+        width: max-content;
+        height: 4.5rem;
+        padding: 0 1rem;
+        cursor: pointer;
+        border-style: solid;
+        border-width: 0.4rem;
+        border-color: red;
+        backdrop-filter: blur(5px);
+    }
+    
+    .logout a {
+        font-size: 1rem;
+        color: red;
+        text-decoration: none;
     }
 </style>
 

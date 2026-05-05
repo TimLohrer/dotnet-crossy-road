@@ -99,7 +99,7 @@ public class AuthController(
             await signInManager.SignInAsync(externalUser, true, info.LoginProvider);
 
             // Success
-            return Redirect(config.OAuthSuccessRedirectUri);
+            return returnUrl != null ? Redirect(returnUrl) : NoContent();
         }
 
         if (result.IsLockedOut) return BadRequest("Locked Out");
@@ -121,6 +121,6 @@ public class AuthController(
         if (!addedLoginResult.Succeeded) return BadRequest();
 
         await signInManager.SignInAsync(user, true, info.LoginProvider);
-        return Redirect(config.OAuthSuccessRedirectUri);
+        return returnUrl != null ? Redirect(returnUrl) : NoContent();
     }
 }
