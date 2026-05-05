@@ -157,9 +157,9 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
                     await wsGame.SaveGame(context);
                 }
             }
+            
+            await Clients.Caller.SendAsync(CrossyWsEvent.GameLeft, wsGame.Id);
         }
-
-        await Clients.Caller.SendAsync(CrossyWsEvent.GameLeft, wsGame!.Id);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
