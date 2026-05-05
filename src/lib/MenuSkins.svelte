@@ -17,13 +17,6 @@
 </div>
 
 <style>
-    @font-face {
-        font-family: "PixelFont";
-        src: url("/game-over-fireball760-fonts/game-over.otf");
-        font-weight: normal;
-        font-style: normal;
-    }
-
     .skin {
         background-color: aqua;
         width: 10rem;
