@@ -21,7 +21,7 @@
 
 		const user = await res.json() as User;
 
-		userStore.set(user);
+		userStore.update(() => user);
 	});
 </script>
 
