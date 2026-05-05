@@ -255,13 +255,14 @@ export class GameRenderer {
 		const game = get(wsGame);
 		const user = get(userStore);
 		if (!game || !user) return;
-		if (game.gamePhase == GamePhase.Created && game.hostId == user.id) {
-			await get(gameSocket)?.startGame();
-		};
+		
 		const player = Game.getPlayer(game, get(userStore)!.id)!;
 		const moveDistance = 1;
 		let newPosition = player.position.clone();
-		if (get(menuState) != MenuState.Skins) {
+		if (get(menuState) === MenuState.Play) {
+			if (game.gamePhase == GamePhase.Created && game.hostId == user.id && ["w","a","s","d","arrowup","arrowleft","arrowright","arrowdown"].includes(e.key.toLowerCase())) {
+				await get(gameSocket)?.startGame();
+			};
 			switch (e.key.toLowerCase()) {
 				case 'w':
 					newPosition.z += moveDistance;
