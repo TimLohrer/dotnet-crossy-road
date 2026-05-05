@@ -92,7 +92,7 @@
         position: absolute;
         top: 1rem;
         right: 1rem;
-        z-index: 101;
+        z-index: 100;
         width: max-content;
         height: 4.5rem;
         padding: 0 1rem;
