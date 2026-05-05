@@ -30,5 +30,14 @@ public class CrossyDbContext(DbContextOptions<CrossyDbContext> options)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
         });
+
+        builder.Entity<CrossyGame>(entity =>
+        {
+            entity.HasOne(game => game.Host)
+                .WithMany()
+                .HasForeignKey(game => game.HostId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+        });
     }
 }

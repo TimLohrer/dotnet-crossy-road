@@ -3,6 +3,7 @@ using System;
 using CrossyRoadApi.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CrossyRoadApi.Migrations
 {
     [DbContext(typeof(CrossyDbContext))]
-    partial class CrossyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505125626_player_fk_and_composite_key")]
+    partial class player_fk_and_composite_key
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -163,7 +166,7 @@ namespace CrossyRoadApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("end_time");
 
-                    b.Property<Guid?>("HostId")
+                    b.Property<Guid>("HostId")
                         .HasColumnType("uuid")
                         .HasColumnName("host_id");
 
@@ -181,9 +184,6 @@ namespace CrossyRoadApi.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_crossy_games");
-
-                    b.HasIndex("HostId")
-                        .HasDatabaseName("ix_crossy_games_host_id");
 
                     b.ToTable("crossy_games", (string)null);
                 });
@@ -359,17 +359,6 @@ namespace CrossyRoadApi.Migrations
                         .HasName("pk_asp_net_user_tokens");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("CrossyRoadApi.Models.Game.CrossyGame", b =>
-                {
-                    b.HasOne("CrossyRoadApi.Models.Database.CrossyUser", "Host")
-                        .WithMany()
-                        .HasForeignKey("HostId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_crossy_games_users_host_id");
-
-                    b.Navigation("Host");
                 });
 
             modelBuilder.Entity("CrossyRoadApi.Models.Game.CrossyPlayer", b =>

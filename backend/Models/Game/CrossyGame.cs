@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using CrossyRoadApi.Database;
 using CrossyRoadApi.Dto;
+using CrossyRoadApi.Models.Database;
 using CrossyRoadApi.Models.Game.Map;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,8 @@ public class CrossyGame
     }
 
     public Guid Id { get; } = Guid.NewGuid();
-    public Guid HostId { get; private set; }
+    public Guid? HostId { get; private set; }
+    public CrossyUser? Host { get; set; }
     public List<CrossyPlayer> Players { get; set; } = [];
     public int Seed { get; private set; } = new Random().Next();
     public CrossyTheme Theme { get; private set; } = CrossyTheme.Default;
