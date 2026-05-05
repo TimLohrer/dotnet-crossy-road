@@ -66,6 +66,8 @@ public class AuthController(
         var emailClaim = claims.SingleOrDefault(x => x.Type == ClaimConstants.PreferredUserName)?.Value;
         // TODO: Fix this for normal ms auth (?)
         var displayNameClaim = claims.SingleOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
+        if (info.LoginProvider == "microsoft")
+            displayNameClaim = claims.SingleOrDefault(x => x.Type == "given_name")?.Value;
 
         if (string.IsNullOrEmpty(providerKey) || string.IsNullOrEmpty(emailClaim) ||
             string.IsNullOrEmpty(displayNameClaim)) return UnprocessableEntity();

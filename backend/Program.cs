@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,7 +62,7 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.ClientSecret = appConfig.BoschOAuth.ClientSecret;
         opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
         opt.SignInScheme = IdentityConstants.ExternalScheme;
-        opt.CallbackPath = "/auth/signin-oidc";
+        opt.CallbackPath = "/auth/signin-oidc-bosch";
         opt.ResponseType = "id_token token";
         opt.SaveTokens = true;
         foreach (var scope in appConfig.BoschOAuth.Scopes.Split(",").Select(x => x.Trim()))
@@ -74,8 +75,9 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.ClientSecret = appConfig.MicrosoftOAuth.ClientSecret;
         opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
         opt.SignInScheme = IdentityConstants.ExternalScheme;
-        opt.CallbackPath = "/auth/signin-oidc";
-        opt.ResponseType = "id_token token";
+        opt.CallbackPath = "/auth/signin-oidc-microsoft";
+        opt.ResponseType = OpenIdConnectResponseType.Code;
+        opt.UsePkce = true;
         opt.SaveTokens = true;
         foreach (var scope in appConfig.MicrosoftOAuth.Scopes.Split(",").Select(x => x.Trim()))
             opt.Scope.Add(scope);
