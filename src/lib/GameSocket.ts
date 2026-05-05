@@ -38,7 +38,7 @@ export class GameSocket {
 			const oldRenderer = this.getRenderer();
 			if (oldRenderer) {
 				oldRenderer.container.children.item(0)?.remove();
-				gameRenderer.set(new GameRenderer(oldRenderer.window, oldRenderer.container));
+				gameRenderer.update(() => new GameRenderer(oldRenderer.window, oldRenderer.container));
 			}
 
 			wsGame.update((game) => {
@@ -55,8 +55,11 @@ export class GameSocket {
 					return u;
 				});
 				console.log('YOU ARE HOST!');
+				console.log(`GAME CODE: ${joinedGame.id.split('-')[0].toUpperCase()}`);
+				
 			}
-			console.log(joinedGame.id);
+			
+			menuState.update(() => MenuState.Play);
 		});
 
 		this.connection.on(WebsocketEvent.PlayerJoined, async (newGame: Game, newPlayerId: string) => {
@@ -102,7 +105,7 @@ export class GameSocket {
 		});
 
 		this.connection.on(WebsocketEvent.PlayerDeath, (newGame: Game) => {
-			const deadPlayer = this.getGame()?.players.find((p) => p.user.id == newGame.players.find((np) => np.isAlive !== p.isAlive).user.id);
+			const deadPlayer = this.getGame()?.players.find((p) => p.user.id == newGame.players.find((np) => np.isAlive !== p.isAlive)?.user.id);
 			if (deadPlayer?.user.id) {
 				this.getRenderer()!.removePlayer(deadPlayer.user.id);
 			}
@@ -113,28 +116,11 @@ export class GameSocket {
 				});
 				return game;
 			});
-
-			console.log(deadPlayer);
-
-			if (deadPlayer?.user.id == this.getUser()?.id) {
-				// TODO: Show death screen
-				alert('You died!');
-				return this.createGame();
-			}
 		});
 
 		this.connection.on(WebsocketEvent.PlayerLeft, (playerId: string) =>
 			this.getRenderer()!.removePlayer(playerId)
 		);
-
-		this.connection.on(WebsocketEvent.GameLeft, (gameId: string) => {
-			menuState.set(MenuState.Singleplayer);
-			// Create new game -> automatically destroys old game and renderer state
-			
-			if (this.getGame()?.id === gameId) {
-				this.createGame();
-			}
-		});
 	}
 
 	public async connect() {
@@ -171,7 +157,8 @@ export class GameSocket {
 		if (game) {
 			await this.connection.invoke(WebsocketEvent.LeaveGame, game!.id);
 		}
-		await this.connection.invoke(WebsocketEvent.JoinGame, gameId, this.getUser()!.id);
+		
+		await this.connection.invoke(WebsocketEvent.JoinGame, gameId);
 	}
 
 	public async startGame() {

@@ -160,7 +160,7 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
                 ActiveGames.Games.Remove(wsGame);
             }
 
-            await Clients.Caller.SendAsync(CrossyWsEvent.GameLeft, wsGame.Id);
+            await Clients.Caller.SendAsync(CrossyWsEvent.LeaveGame, wsGame.Id);
         }
     }
 
