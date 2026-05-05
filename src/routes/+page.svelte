@@ -25,11 +25,11 @@
 <CrossyRoadGame />
 
 {#if $menuState === MenuState.Skins}
-	<PopUp>
+	<PopUp params={{ canEscapeToClose: true, onClose: () => $menuState = MenuState.Play }}>
 		<MenuSkins />
 	</PopUp>
 {:else if $menuState == MenuState.JoinGame}
-	<PopUp>
+	<PopUp params={{ canEscapeToClose: true, onClose: () => $menuState = MenuState.Play }}>
 		<MenuMultiplayer />
 	</PopUp>
 {/if}

@@ -1,6 +1,16 @@
 <script lang="ts">
     import type { TransitionConfig } from "svelte/transition";
-    const { children } = $props();
+	import { onMount } from "svelte";
+
+    interface PopUpProps {
+        children: () => any;
+        params?: {
+            canEscapeToClose?: boolean;
+            onClose?: () => void;
+        }
+    }
+
+    const { children, params }: PopUpProps = $props();
 
     function popupIn(_node: Element, { duration = 200, blur = 10 } = {}): TransitionConfig {
         return {
@@ -12,8 +22,22 @@
             `
         };
     }
+
+    onMount(() => {
+        if (params?.canEscapeToClose) {
+            const handleKeyDown = (e: KeyboardEvent) => {
+                if (e.key.toLowerCase() === "escape") {
+                    params.onClose?.();
+                }
+            };
+            window.addEventListener("keydown", handleKeyDown);
+            return () => window.removeEventListener("keydown", handleKeyDown);
+        }
+    });
 </script>
 
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="container" in:popupIn out:popupIn>
     <div class="popup">
         {@render children()}
@@ -30,7 +54,6 @@
         height: 100%;
         z-index: 100;
         position: absolute;
-        pointer-events: none;
         opacity: 1;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);

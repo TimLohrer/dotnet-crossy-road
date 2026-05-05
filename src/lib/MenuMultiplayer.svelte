@@ -12,7 +12,7 @@
 <div class="container">
     <form class="form" onsubmit={joinGame}>
         <input type="text" name="game" id="gameId" placeholder="GameCode..." bind:value={gameCode}>
-        <button type="submit">Submit</button>
+        <button type="submit">Join</button>
     </form>
 </div>
 
@@ -64,10 +64,7 @@
     }
 
     button:hover {
-        background-color: fuchsia;
-    }
-
-    button:active {
-        background-color: rgb(180, 0, 180);
+        background-color: black;
+        color: white;
     }
 </style>
