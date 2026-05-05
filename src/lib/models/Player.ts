@@ -8,6 +8,6 @@ export interface Player {
 	position: Vec3;
 	score: number;
 	taler: number;
-	diedAt: number | null;
+	diedAt: Date | null;
 	isAlive: boolean;
 }

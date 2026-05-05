@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Numerics;
+using CrossyRoadApi.Dto;
 using CrossyRoadApi.Models.Database;
 using CrossyRoadApi.Models.Game.Map;
 
@@ -46,6 +47,20 @@ public class CrossyPlayer
             ConnectionId = connectionId,
             User = user,
             Position = spawnPosition
+        };
+    }
+
+    public CrossyPlayerDto ToDto()
+    {
+        return new CrossyPlayerDto
+        {
+            ConnectionId = ConnectionId,
+            User = User.ToMinimalDto(),
+            Position = Position,
+            Taler = Taler,
+            Score = Score,
+            DiedAt = DiedAt,
+            IsAlive = IsAlive
         };
     }
 

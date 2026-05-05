@@ -9,7 +9,9 @@ export class Game {
 		public players: Player[],
 		public seed: number,
 		public theme: Theme,
-		public gamePhase: GamePhase
+		public gamePhase: GamePhase,
+		public startTime: Date | null,
+		public endTime: Date | null
 	) {}
 
 	public static getPlayer = (game: Game, playerId: string) =>

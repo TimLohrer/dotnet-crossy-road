@@ -7,7 +7,7 @@
     <div class="hud">
         <h1>Score: {$wsGame?.players.find(p => p.user.id === $user?.id)?.score} Seed: {$wsGame?.seed} Phase: {$wsGame.gamePhase}</h1>
         {#if $wsGame.gamePhase == GamePhase.Created}
-            <button onclick={() => window.open(`/?gameId=${$wsGame.id}`)}>Join as new player</button>
+            <h1>Game Code: {$wsGame.id.split("-")[0].toUpperCase()}</h1>
         {/if}
     </div>
 {/if}

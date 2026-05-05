@@ -12,12 +12,12 @@ public class CrossyUser : IdentityUser<Guid>
     public CrossySkin Skin { get; set; } = CrossySkin.Default;
     public List<CrossySkin> OwnedSkins { get; set; } = [CrossySkin.Default];
 
-    public CrossyPlayerDto ToDto()
+    public CrossyUserDto ToDto()
     {
-        return new CrossyPlayerDto
+        return new CrossyUserDto
         {
             Id = Id,
-            Username = UserName,
+            Username = UserName!,
             HighScore = HighScore,
             Taler = Taler,
             Skin = Skin,
@@ -25,12 +25,12 @@ public class CrossyUser : IdentityUser<Guid>
         };
     }
 
-    public CrossyPlayerMinimalDto ToMinimalDto()
+    public CrossyUserMinimalDto ToMinimalDto()
     {
-        return new CrossyPlayerMinimalDto
+        return new CrossyUserMinimalDto
         {
             Id = Id,
-            Username = UserName,
+            Username = UserName!,
             HighScore = HighScore,
             Skin = Skin
         };

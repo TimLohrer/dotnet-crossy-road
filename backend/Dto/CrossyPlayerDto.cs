@@ -1,13 +1,14 @@
-using CrossyRoadApi.Models.Database;
+using System.Numerics;
 
 namespace CrossyRoadApi.Dto;
 
 public class CrossyPlayerDto
 {
-    public Guid Id { get; set; }
-    public string Username { get; set; }
-    public int HighScore { get; set; }
+    public string ConnectionId { get; set; }
+    public CrossyUserMinimalDto User { get; set; }
+    public Vector3 Position { get; set; }
+    public int Score { get; set; }
     public int Taler { get; set; }
-    public CrossySkin Skin { get; set; }
-    public List<CrossySkin> OwnedSkins { get; set; }
+    public DateTime? DiedAt { get; set; }
+    public bool IsAlive { get; set; }
 }

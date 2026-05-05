@@ -7,7 +7,6 @@ import { Vec3 } from './models/Vec3';
 import type { Lane } from './models/Lane';
 import type { Player } from './models/Player';
 import { GameRenderer } from './GameRenderer';
-import { GamePhase } from './models/GamePhase';
 import { MenuState } from './models/MenuState';
 
 export class GameSocket {
@@ -125,10 +124,13 @@ export class GameSocket {
 			this.getRenderer()!.removePlayer(playerId)
 		);
 
-		this.connection.on(WebsocketEvent.GameLeft, () => {
+		this.connection.on(WebsocketEvent.GameLeft, (gameId: string) => {
 			menuState.set(MenuState.Singleplayer);
 			// Create new game -> automatically destroys old game and renderer state
-			this.createGame();
+			
+			if (this.getGame()?.id === gameId) {
+				this.createGame();
+			}
 		});
 	}
 
