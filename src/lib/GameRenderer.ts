@@ -2,9 +2,9 @@ import * as THREE from "three";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/Addons.js";
 import type { Lane } from "./models/Lane";
 import type { Player } from "./models/Player";
-import { gameSocket, gameState, user as userStore, wsGame } from "./stores/stateStore";
+import { gameSocket, menuState, user as userStore, wsGame } from "./stores/stateStore";
 import { get } from "svelte/store";
-import { GameState } from "./models/GameState";
+import { MenuState } from "./models/MenuState";
 import { Game } from "./models/Game";
 import { GamePhase } from "./models/GamePhase";
 
@@ -205,6 +205,12 @@ export class GameRenderer {
 		}
 	}
 
+	private getElementAtPosition(position: THREE.Vector3): string | undefined {
+		return this.renderedObjects.find(
+			(obj) => Math.round(obj.position.x) == position.x && Math.round(obj.position.z) == position.z
+		)?.name;
+	}
+
 	private cameraMovement(player: Player) {
 		const targetZ = player.position.z - 16 + GameRenderer.cameraOffsetZ;
 
@@ -236,7 +242,7 @@ export class GameRenderer {
 
 	private animate() {
 		requestAnimationFrame(() => this.animate());
-		if (get(gameState) != GameState.Skins && get(wsGame)?.gamePhase == GamePhase.Active) {
+		if (get(wsGame)?.gamePhase == GamePhase.Active) {
 			const player = Game.getPlayer(get(wsGame)!, get(userStore)!.id)!;
 			this.cameraMovement(player);
 			this.updateLight(player);
@@ -255,7 +261,7 @@ export class GameRenderer {
 		const player = Game.getPlayer(game, get(userStore)!.id)!;
 		const moveDistance = 1;
 		let newPosition = player.position.clone();
-		if (get(gameState) != GameState.Skins) {
+		if (get(menuState) != MenuState.Skins) {
 			switch (e.key.toLowerCase()) {
 				case 'w':
 					newPosition.z += moveDistance;

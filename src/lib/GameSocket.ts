@@ -7,6 +7,7 @@ import { Vec3 } from './models/Vec3';
 import type { Lane } from './models/Lane';
 import type { Player } from './models/Player';
 import { GameRenderer } from './GameRenderer';
+import { GamePhase } from './models/GamePhase';
 
 export class GameSocket {
 	private connection: signalR.HubConnection;
@@ -98,6 +99,23 @@ export class GameSocket {
 			this.getRenderer()!
 				.renderedObjects.find((obj) => obj.name === newPlayer.user.id)!
 				.position.copy(newPlayer.position.toVector3());
+		});
+
+		this.connection.on(WebsocketEvent.PlayerDeath, (newGame: Game) => {
+			const deadPlayerId = this.getGame()?.players.find((p) => !newGame.players.some((np) => np.user.id === p.user.id))?.user.id;
+			if (deadPlayerId) {
+				this.getRenderer()!.removePlayer(deadPlayerId);
+			}
+			wsGame.update((game) => {
+				game = newGame;
+				if (deadPlayerId == this.getUser()?.id) {
+					game.gamePhase = GamePhase.Ended;
+				}
+				game?.players.forEach((p) => {
+					p.position = Vec3.fromObject(p.position);
+				});
+				return game;
+			});
 		});
 
 		this.connection.on(WebsocketEvent.PlayerLeft, (playerId: string) =>

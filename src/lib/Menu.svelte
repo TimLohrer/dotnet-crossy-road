@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { GamePhase } from "./models/GamePhase";
-	import { GameState } from "./models/GameState";
-    import { gameState, wsGame } from "./stores/stateStore";
+	import { MenuState } from "./models/MenuState";
+    import { menuState, wsGame } from "./stores/stateStore";
     import { type Snippet } from "svelte";
 
     interface Props {
@@ -25,19 +25,19 @@
             <div class="menu_panel">
                 <button class:active={activeButton=="SKINS"} onclick={() => {
                     activeButton = "SKINS";
-                    $gameState = GameState.Skins;
+                    $menuState = MenuState.Skins;
                 }}>Skins</button>
             </div>
             <div class="menu_panel">
                 <button class:active={activeButton=="START"} onclick={() => {
                     activeButton = "START";
-                    $gameState = GameState.Singleplayer;
+                    $menuState = MenuState.Singleplayer;
                 }}>Start</button>
             </div>
             <div class="menu_panel">
                 <button class:active={activeButton=="MULTIPLAYER"} onclick={() => {
                     activeButton = "MULTIPLAYER";
-                    $gameState = GameState.Multiplayer;
+                    $menuState = MenuState.Multiplayer;
                 }}>Multiplayer</button>
             </div>
         </nav>
