@@ -114,9 +114,10 @@ export class GameSocket {
 		});
 
 		this.connection.on(WebsocketEvent.PlayerDeath, (newGame: Game) => {
-			const deadPlayer = this.getGame()?.players.find((p) => p.user.id == newGame.players.find((np) => np.isAlive !== p.isAlive)?.user.id);
-			if (deadPlayer?.user.id) {
+			const deadPlayer = this.getGame()?.players.find((p) => p.user.id == newGame.players.find((np) => np.isAlive !== p.isAlive && np.user.id == p.user.id)?.user.id);
+			if (deadPlayer) {
 				this.getRenderer()!.removePlayer(deadPlayer.user.id);
+
 			}
 
 			wsGame.update((game) => {
@@ -167,6 +168,7 @@ export class GameSocket {
 
 	public async joinGame(gameId: string) {
 		const game = this.getGame();
+		if (game?.id.split('-')[0].toUpperCase() === gameId.toUpperCase()) return menuState.update(() => MenuState.Play);
 		if (game) {
 			await this.connection.invoke(WebsocketEvent.LeaveGame, game!.id);
 		}

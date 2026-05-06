@@ -39,15 +39,15 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
     public async Task JoinGame(string gameCode)
     {
         var wsGame = ActiveGames.Games.FirstOrDefault(x =>
-            x.Id.ToString().Split("-")[0].Equals(gameCode, StringComparison.OrdinalIgnoreCase));
-        if (wsGame is not { GamePhase: CrossyGame.Phase.Created })
+            string.Equals(x.Id.ToString().Split("-")[0], gameCode, StringComparison.CurrentCultureIgnoreCase));
+        if (wsGame == null || wsGame.GamePhase != CrossyGame.Phase.Created)
         {
             await Clients.Caller.SendAsync(CrossyWsEvent.GameJoinError, "Game does not exist");
             return;
         }
 
         var user = await userContext.GetUserAsync(Context.User!);
-        if (wsGame.Players.Any(p => p.UserId == user!.Id))
+        if (wsGame.Players.Any(p => p.ConnectionId == Context.ConnectionId))
         {
             await Clients.Caller.SendAsync(CrossyWsEvent.GameJoinError, "You are already in this game");
             return;
@@ -121,12 +121,12 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
         if (!wsPlayer.IsAlive) return;
         wsPlayer.DiedAt = DateTime.UtcNow;
 
-        var player = await userContext.GetUserAsync(Context.User!);
-        if (player != null)
+        var user = await userContext.GetUserAsync(Context.User!);
+        if (user != null)
         {
-            if (wsPlayer.Score > player.HighScore) player.HighScore = wsPlayer.Score;
-            if (wsPlayer.Taler > 0) player.Taler += wsPlayer.Taler;
-            await userContext.UpdateAsync(player);
+            if (wsPlayer.Score > user.HighScore) user.HighScore = wsPlayer.Score;
+            if (wsPlayer.Taler > 0) user.Taler += wsPlayer.Taler;
+            await userContext.UpdateAsync(user);
         }
 
         await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.PlayerDeath, wsGame.ToDto());
