@@ -22,7 +22,7 @@
 
 		$gameSocket!.connect();
 
-		window.addEventListener('keyup', (e: KeyboardEvent) => $gameRenderer!.onKeyUp(e));
+		window.addEventListener('keydown', (e: KeyboardEvent) => $gameRenderer?.onKeyDown(e));
 		window.addEventListener('resize', () => $gameRenderer!.resize());
 	});
 

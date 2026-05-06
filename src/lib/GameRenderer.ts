@@ -443,7 +443,7 @@ export class GameRenderer {
 		this.render();
 	}
 
-	public async onKeyUp(e: KeyboardEvent) {
+	public async onKeyDown(e: KeyboardEvent) {
 		const game = this.getGame();
 		const user = this.getUser();
 		if (!game || !user) return;

@@ -165,8 +165,8 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
         if (wsGame != null)
         {
             var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
-            await Clients.OthersInGroup(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.PlayerLeft, wsPlayer.UserId);
             wsGame.Players.Remove(wsPlayer);
+            await Clients.OthersInGroup(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.PlayerLeft, wsGame.ToDto());
             if (wsGame.Players.Where(p => p.IsAlive).ToList().Count == 0)
             {
                 if (wsGame.GamePhase == CrossyGame.Phase.Active)
@@ -177,7 +177,7 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
 
                 ActiveGames.Games.Remove(wsGame);
             }
-            else if (wsGame.GamePhase != CrossyGame.Phase.Active)
+            else if (wsGame.GamePhase != CrossyGame.Phase.Active && wsGame.HostId == wsPlayer.UserId)
             {
                 ActiveGames.Games.Remove(wsGame);
             }

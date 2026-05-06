@@ -134,12 +134,25 @@ export class GameSocket {
 			});
 		});
 
-		this.connection.on(WebsocketEvent.PlayerLeft, (playerId: string) => {
-			this.getRenderer()!.removePlayer(playerId);
-			if (playerId == this.getGame()?.hostId && this.getGame()?.gamePhase !== GamePhase.Active) {
+		this.connection.on(WebsocketEvent.PlayerLeft, (newGame: Game) => {
+			const leftPlayerId = this.getGame()?.players.find((p) => !newGame.players.some((np) => np.user.id === p.user.id))?.user.id;
+			if (!leftPlayerId) return;
+
+			this.getRenderer()!.removePlayer(leftPlayerId);
+			wsGame.update((game) => {
+				game = newGame;
+				game?.players.forEach((p) => {
+					p.position = Vec3.fromObject(p.position);
+				});
+				return game;
+			});
+			
+			if ((leftPlayerId == newGame.hostId || newGame.players.length <= 1) && newGame?.gamePhase !== GamePhase.Active) {
 				menuState.update(() => MenuState.Play);
-				this.createGame();
-				// TODO: INFO POPUP
+				if (leftPlayerId == newGame.hostId) {
+					this.createGame();
+					// TODO: INFO POPUP -> Host left game
+				}
 			}
 		});
 	}
