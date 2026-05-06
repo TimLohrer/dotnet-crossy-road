@@ -108,9 +108,7 @@ export class GameSocket {
 				return game;
 			});
 			
-			this.getRenderer()!
-				.renderedObjects.find((obj) => obj.name === newPlayer.user.id)!
-				.position.copy(newPlayer.position.toVector3());
+			this.getRenderer()!.syncRemotePlayerPosition(newPlayer);
 		});
 
 		this.connection.on(WebsocketEvent.PlayerDeath, (newGame: Game) => {
