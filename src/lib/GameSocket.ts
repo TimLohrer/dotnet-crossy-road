@@ -97,6 +97,14 @@ export class GameSocket {
 		});
 
 		this.connection.on(WebsocketEvent.UpdatePlayerModel, (updatedPlayer: Player) => {
+			wsGame.update((game) => {
+				let player = game?.players.find((p) => p.user.id === updatedPlayer.user.id);
+				const playerIndex = game?.players.findIndex((p) => p.user.id === updatedPlayer.user.id);
+				if (player && playerIndex !== undefined) {
+					game!.players[playerIndex] = updatedPlayer;
+				}
+				return game;
+			});
 			this.getRenderer()!.replacePlayerModel(updatedPlayer);
 		});
 
