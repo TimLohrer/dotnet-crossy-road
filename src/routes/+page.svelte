@@ -27,7 +27,8 @@
 		}
 
 		const user = await res.json() as User;
-
+		userStore.update(() => user);
+		
 		const skinRes = await fetch(`${PUBLIC_API_URL}/shop/skins`, {
 			credentials: 'include',
 			headers: {
@@ -36,8 +37,9 @@
 		});
 
 		const skins = await skinRes.json() as Skin[]; 
-
-		userStore.update(() => user);
+		if (!skinRes.ok) {
+			throw new Error('Failed to fetch skins');
+		}
 		skinList.update(() => skins); 
 	});
 </script>

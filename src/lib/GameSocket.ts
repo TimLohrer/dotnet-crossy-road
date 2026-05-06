@@ -134,9 +134,14 @@ export class GameSocket {
 			});
 		});
 
-		this.connection.on(WebsocketEvent.PlayerLeft, (playerId: string) =>
-			this.getRenderer()!.removePlayer(playerId)
-		);
+		this.connection.on(WebsocketEvent.PlayerLeft, (playerId: string) => {
+			this.getRenderer()!.removePlayer(playerId);
+			if (playerId == this.getGame()?.hostId && this.getGame()?.gamePhase !== GamePhase.Active) {
+				menuState.update(() => MenuState.Play);
+				this.createGame();
+				// TODO: INFO POPUP
+			}
+		});
 	}
 
 	public async connect() {
@@ -201,5 +206,14 @@ export class GameSocket {
 	public async sendPlayerDeath() {
 		const game = this.getGame();
 		await this.connection?.invoke(WebsocketEvent.PlayerDeath, game?.id);
+	}
+
+	public async leaveGame() {
+		const game = this.getGame();
+		if (game) {
+			await this.connection.invoke(WebsocketEvent.LeaveGame, game!.id);
+		}
+		this.createGame();
+		menuState.update(() => MenuState.Play);
 	}
 }

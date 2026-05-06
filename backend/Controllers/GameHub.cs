@@ -177,6 +177,10 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
 
                 ActiveGames.Games.Remove(wsGame);
             }
+            else if (wsGame.GamePhase != CrossyGame.Phase.Active)
+            {
+                ActiveGames.Games.Remove(wsGame);
+            }
 
             await Clients.Caller.SendAsync(CrossyWsEvent.LeaveGame, wsGame.Id);
         }

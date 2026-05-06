@@ -1,32 +1,35 @@
 <script lang="ts">
 	import { PUBLIC_API_URL } from "./environment";
-	import { GamePhase } from "./models/GamePhase";
 	import { MenuState } from "./models/MenuState";
-    import { menuState, user, wsGame } from "./stores/stateStore";
+    import { gameSocket, menuState, user, wsGame } from "./stores/stateStore";
 </script>
 
 <div class="logo_container">
     <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
 </div>
 
-<div class="gamecode">Game Code: <span>{$wsGame?.id.split("-")[0].toUpperCase()}</span></div>
+<div class="top-bar">
+    {#if $wsGame?.hostId == $user?.id}
+        Game Code: <span>{$wsGame?.id.split("-")[0].toUpperCase()}</span>
+    {:else}
+        Waiting for host to start the game!
+    {/if}
+</div>
 
 <div class="menu_container">
-    {#if $wsGame?.hostId == $user?.id}
-        <div class="menu_panel">
-            <button class:active={$menuState == MenuState.Skins} onclick={() => $menuState = MenuState.Skins}>Skins</button>
-        </div>
-        <div class="menu_panel">
-            <button class:active={$menuState == MenuState.Play} onclick={() => $menuState = MenuState.Play}>Start</button>
-        </div>
-        <div class="menu_panel">
+    <div class="menu_panel">
+        <button class:active={$menuState == MenuState.Skins} onclick={() => $menuState = MenuState.Skins}>Skins</button>
+    </div>
+    <div class="menu_panel">
+        <button class:active={$menuState == MenuState.Play} onclick={() => $menuState = MenuState.Play}>Start</button>
+    </div>
+    <div class="menu_panel">
+        {#if $wsGame && $wsGame.players.length > 1}
+            <button onclick={() => $gameSocket?.leaveGame()}>Leave Game</button>
+        {:else}
             <button class:active={$menuState == MenuState.JoinGame} onclick={() => $menuState = MenuState.JoinGame}>Multiplayer</button>
-        </div>
-    {:else}
-        <div class="menu_panel">
-            <button class="info-panel">Waiting for host to start the game!</button>
-        </div>
-    {/if}
+        {/if}
+    </div>
 </div>
 
 <div class="logout">
@@ -63,7 +66,7 @@
         padding-bottom: 250px;
     }
 
-    .gamecode {
+    .top-bar {
         position: absolute;
         top: 1rem;
         justify-self: center;
@@ -81,7 +84,7 @@
         pointer-events: none;
     }
 
-    .gamecode span {
+    .top-bar span {
         pointer-events: all;
         margin-left: 0.5rem;
     }
