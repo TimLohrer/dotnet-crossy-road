@@ -26,5 +26,10 @@ public enum CrossyModelPart
 
     [EnumMember(Value = "log_0")] Log0,
 
-    [EnumMember(Value = "lillypad")] Lillypad
+    [EnumMember(Value = "lillypad")] Lillypad,
+
+    [EnumMember(Value = "car_0")] Car0,
+    [EnumMember(Value = "car_1")] Car1,
+    [EnumMember(Value = "car_2")] Car2,
+    [EnumMember(Value = "car_3")] Car3
 }
