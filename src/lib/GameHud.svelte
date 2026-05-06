@@ -13,8 +13,6 @@
         position: absolute;
         top: 1rem;
         left: 1rem;
-        width: 100%;
-        height: 100%;
         gap: 1rem;
         padding: 1rem;
         z-index: 1000;
