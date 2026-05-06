@@ -114,6 +114,7 @@ public class CrossyMapGenerator(CrossyGame game)
             var section = GenerateMapSection(i, player);
             lanes.AddRange(section);
             i += section.Count;
+            player.FurthestGeneratedZPosition += section.Count;
         }
 
         return lanes;

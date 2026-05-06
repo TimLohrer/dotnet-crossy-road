@@ -34,7 +34,7 @@ public class CrossyPlayer
     public float Y { get; set; }
     public float Z { get; set; }
     [NotMapped] public int FurthestZPosition { get; private set; }
-    [NotMapped] public int FurthestGeneratedZPosition { get; set; } = 14; // See GenerateMapStart function
+    [NotMapped] public int FurthestGeneratedZPosition { get; set; } = 0; // See GenerateMapStart function
     [NotMapped] public CrossyModelPart LastGeneratedSectionType { get; set; }
     public int Score { get; private set; }
     public int Taler { get; private set; }
