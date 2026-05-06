@@ -35,24 +35,31 @@
                 <SkinPreview params={{skin: skin}} />
             </div>
             <div class="name">{skin.name}</div>
+            {#if !$user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id)}
+                <div class="lock">
+                    <img src="/assets/lock.png" alt="lock">
+                </div>
+            {/if}
         </div>
     {/each}
 </div>
 
+
+
 <style>
     .skin {
         width: 10rem;
-        min-height: 12rem;
+        height: 12rem;
+        position: relative;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
         justify-content: flex-start;
-        gap: 0.5rem;
         cursor: pointer;
         border: 0.12rem solid white;
-        padding: 0.5rem;
         box-sizing: border-box;
         background-color: rgba(255, 255, 255, 0.04);
+        overflow: hidden;
     }
 
     .container {
@@ -73,16 +80,41 @@
 
     .preview {
         width: 100%;
-        height: 8.5rem;
+        flex: 1 1 auto;
+        min-height: 0;
         overflow: hidden;
     }
 
     .name {
         width: 100%;
+        padding: 0.5rem;
+        box-sizing: border-box;
         text-align: center;
         color: white;
         font-size: 0.95rem;
         font-weight: 600;
         line-height: 1.2;
+        z-index: 101;
+        border-color: white;
+        border-width: 0.12rem;
+        border-style: solid;
+    }
+
+    .lock {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: end;
+        align-items: start;
+        padding: 0.5rem;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        backdrop-filter: grayscale(100%);
+        pointer-events: none;
+    }
+
+    img {
+        width: 1.6rem;
+        height: 2rem;
     }
 </style>

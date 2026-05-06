@@ -49,7 +49,7 @@
         const aspect = width / Math.max(height, 1);
         camera = new THREE.PerspectiveCamera(40, aspect, 0.001, 1000);
         camera.position.set(-1.7, 1.2, -1.5);
-        camera.lookAt(0, 0.8, 0);
+        camera.lookAt(0, 0.5, 0);
 
         renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
         renderer.setSize(width, height);
@@ -159,5 +159,11 @@
     .skin {
         width: 100%;
         height: 100%;
+    }
+
+    .skin :global(canvas) {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
     }
 </style>
