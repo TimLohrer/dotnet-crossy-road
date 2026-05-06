@@ -156,7 +156,7 @@ export class GameRenderer {
 			this.objectList.push(model);
 		}
 
-		const idleAnimation = model.animations.find((a) => a.name.toLowerCase() == 'idle');
+		const idleAnimation = gltf.animations.find((a) => a.name.toLowerCase() == 'idle');	
 		if (idleAnimation) {
 			const mixer = new THREE.AnimationMixer(model);
 			mixer.clipAction(idleAnimation).play();
@@ -390,12 +390,13 @@ export class GameRenderer {
 	}
 
 	private updateAnimations() {
+		this.timer.update();
 		const delta = this.timer.getDelta();
 		this.mixers.forEach((mixer) => mixer.update(delta));
-		this.updatePlayerMoveAnimations(delta);
+		this.updatePlayerMoveAnimations();
 	}
 
-	private updatePlayerMoveAnimations(deltaSeconds: number) {
+	private updatePlayerMoveAnimations() {
 		const now = performance.now();
 		Object.entries(this.moveAnimations).forEach(([playerId, animation]) => {
 			const playerObj = this.renderedObjects.find((obj) => obj.name === playerId);
@@ -437,8 +438,8 @@ export class GameRenderer {
 			const player = Game.getPlayer(this.getGame()!, this.getUser()!.id)!;
 			this.cameraMovement(player);
 			this.updateLight(player);
-			this.updateAnimations();
 		}
+		this.updateAnimations();
 		this.render();
 	}
 
