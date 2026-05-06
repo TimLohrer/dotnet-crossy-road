@@ -14,6 +14,8 @@ public class CrossySkin(int id, string name, int price, CrossySkin.SkinRarity ra
 
     public static readonly CrossySkin Duck = new(1, "Duck", 100, SkinRarity.Uncommon, "chicken");
 
+    public static readonly List<CrossySkin> Skins = [Chicken, Duck];
+    
     public readonly int Id = id;
     public readonly string ModelName = modelName;
     public readonly string Name = name;

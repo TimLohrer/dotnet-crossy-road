@@ -47,4 +47,14 @@ public class ShopController(UserManager<CrossyUser> userContext) : ControllerBas
 
         return Ok();
     }
+
+    [HttpGet("skins")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public IActionResult GetSkins()
+    {
+        return Ok(CrossySkin.Skins);
+    }
+    
 }
