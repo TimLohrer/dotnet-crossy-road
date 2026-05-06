@@ -12,9 +12,8 @@ import { Direction, type MapElement } from './models/MapElement';
 export class GameRenderer {
 	private static frustrumSize = 9;
 	private static cameraOffsetZ = 10;
-	private static moveAnimationDurationMs = 150;
+	private static moveAnimationDurationMs = 125;
 	private static jumpHeight = 0.35;
-	private static turnAnimationSpeed = 14;
 	private static GLTF_CACHE: { [key: string]: GLTF } = {};
 	private static gltfLoader = new GLTFLoader();
 
@@ -36,11 +35,12 @@ export class GameRenderer {
 		[playerId: string]: {
 			start: THREE.Vector3;
 			end: THREE.Vector3;
+			yRotationStart: number;
+			yRotationEnd: number;
 			startedAt: number;
 			durationMs: number;
 		};
 	} = {};
-	private targetRotationsY: { [playerId: string]: number } = {};
 
 	constructor(window: Window, container: HTMLDivElement) {
 		this.window = window;
@@ -207,29 +207,23 @@ export class GameRenderer {
 
 	private updatePlayerPosition(player: Player) {
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
-		if (playerObj) {
-			const targetPosition = player.position.toVector3();
-			const startPosition = playerObj.position.clone();
-			const direction = targetPosition.clone().sub(startPosition);
+		if (!playerObj) return;
 
-			if (direction.lengthSq() > 0) {
-				const targetYaw = Math.atan2(direction.x, direction.z);
-				const previousYaw = this.targetRotationsY[player.user.id];
-				if (previousYaw === undefined || Math.abs(this.normalizeAngle(targetYaw - previousYaw)) > 0.001) {
-					this.targetRotationsY[player.user.id] = targetYaw;
-				}
-			}
+		const targetPosition = player.position.toVector3();
+		const startPosition = playerObj.position.clone();
+		const targetYRotation = this.getTargetYRotation(startPosition, targetPosition);
 
-			this.moveAnimations[player.user.id] = {
-				start: startPosition,
-				end: targetPosition,
-				startedAt: performance.now(),
-				durationMs: GameRenderer.moveAnimationDurationMs
-			};
-			this.render();
-			this.getSocket()!.sendPlayerPositionUpdate();
-			this.cleanUpLanes(player, playerObj);
-		}
+		this.moveAnimations[player.user.id] = {
+			start: startPosition,
+			end: targetPosition,
+			yRotationStart: playerObj.rotation.y,
+			yRotationEnd: targetYRotation,
+			startedAt: performance.now(),
+			durationMs: GameRenderer.moveAnimationDurationMs
+		};
+		this.render();
+		this.getSocket()!.sendPlayerPositionUpdate();
+		this.cleanUpLanes(player, playerObj);
 	}
 
 	public syncRemotePlayerPosition(player: Player) {
@@ -238,18 +232,30 @@ export class GameRenderer {
 
 		const targetPosition = player.position.toVector3();
 		const startPosition = playerObj.position.clone();
-		const direction = targetPosition.clone().sub(startPosition);
-
-		if (direction.lengthSq() > 0) {
-			this.targetRotationsY[player.user.id] = Math.atan2(direction.x, direction.z);
-		}
+		const targetYRotation = this.getTargetYRotation(startPosition, targetPosition);
 
 		this.moveAnimations[player.user.id] = {
 			start: startPosition,
 			end: targetPosition,
+			yRotationStart: playerObj.rotation.y,
+			yRotationEnd: targetYRotation,
 			startedAt: performance.now(),
 			durationMs: GameRenderer.moveAnimationDurationMs
 		};
+	}
+
+	private getTargetYRotation(start: THREE.Vector3, end: THREE.Vector3): number {
+		let targetYRotation = 0;
+		if (start.x > end.x) {
+			targetYRotation = -Math.PI / 2;
+		} else if (start.x < end.x) {
+			targetYRotation = Math.PI / 2;
+		} else if (start.z > end.z) {
+			targetYRotation = Math.PI;
+		} else if (start.z < end.z) {
+			targetYRotation = 0;
+		}
+		return targetYRotation;
 	}
 
 	private isPlayerColliding(targetPosition: THREE.Vector3): boolean {
@@ -384,26 +390,15 @@ export class GameRenderer {
 			playerObj.position.lerpVectors(animation.start, animation.end, eased);
 			const jumpArc = Math.sin(progress * Math.PI) * GameRenderer.jumpHeight;
 			playerObj.position.y = animation.start.y + jumpArc;
+			playerObj.rotation.y = this.normalizeAngle(
+				animation.yRotationStart +
+					this.normalizeAngle(animation.yRotationEnd - animation.yRotationStart) * eased
+			);
 
 			if (progress >= 1) {
 				playerObj.position.copy(animation.end);
 				delete this.moveAnimations[playerId];
 			}
-		});
-
-		this.renderedObjects.forEach((obj) => {
-			const targetYaw = this.targetRotationsY[obj.name];
-			if (targetYaw === undefined) return;
-
-			const angleDiff = this.normalizeAngle(targetYaw - obj.rotation.y);
-			if (Math.abs(angleDiff) < 0.001) {
-				obj.rotation.y = targetYaw;
-				return;
-			}
-
-			const maxStep = GameRenderer.turnAnimationSpeed * deltaSeconds;
-			const step = Math.sign(angleDiff) * Math.min(Math.abs(angleDiff), maxStep);
-			obj.rotation.y = this.normalizeAngle(obj.rotation.y + step);
 		});
 	}
 
