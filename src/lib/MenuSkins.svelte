@@ -51,7 +51,6 @@
         width: 100%;
         height: 8.5rem;
         overflow: hidden;
-        border-radius: 0.35rem;
     }
 
     .name {
