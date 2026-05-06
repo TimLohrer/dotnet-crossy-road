@@ -42,7 +42,7 @@
         align-self: end;
         align-items: center;
         justify-content: center;
-        z-index: 100;
+        z-index: 101;
         height: 9rem;
         gap: 1rem;
         pointer-events: all;
