@@ -10,15 +10,8 @@ public abstract class CrossyMapElement(
     bool hasCollision)
     : CrossyModel(modelPart, lane.Position with { X = xPosition })
 {
-    public enum ModelDirection
-    {
-        Right,
-        Left
-    }
-
     public bool HasCollision { get; } = hasCollision;
     public int ModelWidth { get; } = modelWidth;
-    public ModelDirection Direction { get; protected set; } = ModelDirection.Left;
 
     public override string GetModelPath()
     {
@@ -30,21 +23,5 @@ public abstract class CrossyMapElement(
         Position = Position with { X = xPosition };
     }
 
-    public void SetDirection(ModelDirection direction)
-    {
-        Direction = direction;
-    }
-
-    public CrossyMapElementDto ToDto()
-    {
-        return new CrossyMapElementDto
-        {
-            Id = Id,
-            Type = ModelPart,
-            BasePosition = Position,
-            ModelWidth = ModelWidth,
-            ModelLocation = GetModelPath(),
-            HasCollision = HasCollision
-        };
-    }
+    public abstract CrossyMapElementDto ToDto();
 }

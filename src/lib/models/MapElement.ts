@@ -1,4 +1,3 @@
-import { Vector3 } from 'three';
 import type { Vec3 } from './Vec3';
 
 export interface MapElement {
@@ -9,6 +8,9 @@ export interface MapElement {
     direction: Direction;
     modelLocation: string;
     hasCollision: boolean;
+    isStatic: boolean;
+    speed: number;
+    nextCarDelay: number;
 }
 
 export enum Direction {

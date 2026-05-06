@@ -108,6 +108,7 @@ export class GameRenderer {
 	private async loadModel(
 		path: string,
 		pos: THREE.Vector3,
+		direction: Direction,
 		hasCollision: boolean,
 		name: string
 	): Promise<THREE.Object3D> {
@@ -133,6 +134,10 @@ export class GameRenderer {
 					child.receiveShadow = true;
 				}
 			});
+		}
+
+		if (direction == Direction.Left) {
+			model.rotation.y = Math.PI;
 		}
 
 		model.position.copy(pos);
@@ -173,6 +178,7 @@ export class GameRenderer {
 			this.loadModel(
 				lane.modelLocation,
 				lane.position.toVector3(),
+				Direction.Right, // Lane models are always facing right
 				false,
 				'lane_' + (lane.modelLocation.split('/').pop()?.split('.')[0] ?? lane.type)
 			);
@@ -180,6 +186,7 @@ export class GameRenderer {
 				const { uuid } = await this.loadModel(
 					element.modelLocation,
 					element.basePosition.toVector3(),
+					element.direction,
 					element.hasCollision,
 					'element_' + (element.modelLocation.split('/').pop()?.split('.')[0] ?? element.type)
 				);

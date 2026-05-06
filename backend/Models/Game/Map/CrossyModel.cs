@@ -6,9 +6,6 @@ namespace CrossyRoadApi.Models.Game.Map;
 
 public abstract class CrossyModel
 {
-    // Size of one pixel in a model (constant is used to provide position offsets)
-    public static readonly float PixelSize = 0.05f;
-
     protected CrossyModel(CrossyModelPart modelPart, Vector3 position)
     {
         Id = Guid.NewGuid();
