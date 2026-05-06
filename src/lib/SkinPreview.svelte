@@ -2,7 +2,7 @@
     import * as THREE from 'three';
     import { GLTFLoader, type GLTF } from 'three/examples/jsm/Addons.js';
     import { onMount, onDestroy } from 'svelte';
-    import type { Skin } from './models/Skin';
+    import type { Skin, SkinRarity } from './models/Skin';
 
     interface Props {
         params: {
@@ -44,6 +44,7 @@
         const height = container.clientHeight;
 
         scene = new THREE.Scene();
+        scene.background = new THREE.Color("#D3FFE7");
 
         // Camera setup
         const aspect = width / Math.max(height, 1);

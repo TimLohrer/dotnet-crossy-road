@@ -4,27 +4,53 @@
 	import { gameSocket, skinList, user } from "./stores/stateStore";
 	import type { User } from "./models/User";
 	import type { Skin } from "./models/Skin";
+	import PopUp from "./ PopUp.svelte";
 
     async function handleEvent(skin: Skin) {
-        const skinRes = await fetch(`${PUBLIC_API_URL}/shop/select`, {
-			credentials: 'include',
-            method: "POST",
-			headers: {
-				cookie: document.cookie,
-                "Content-Type": "application/json"
-			},
+        const isOwned = $user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id);
 
-            body: JSON.stringify(skin.id)
-		});
+        if (isOwned) {
+            const skinRes = await fetch(`${PUBLIC_API_URL}/shop/select`, {
+                credentials: 'include',
+                method: "POST",
+                headers: {
+                    cookie: document.cookie,
+                    "Content-Type": "application/json"
+                },
 
-        if (!skinRes.ok) throw new Error(`failed to select Skin: ${skinRes.status}`);
+                body: JSON.stringify(skin.id)
+            });
 
-        const newUser = await skinRes.json() as User;
-        $user = newUser;
-        $gameSocket?.syncPlayerModel()
+            if (!skinRes.ok) throw new Error(`failed to select Skin: ${skinRes.status}`);
+
+            const newUser = await skinRes.json() as User;
+            $user = newUser;
+            $gameSocket?.syncPlayerModel();
+        }
+        else {
+            const skinRes = await fetch(`${PUBLIC_API_URL}/shop/buy`, {
+                credentials: 'include',
+                method: "POST",
+                headers: {
+                    cookie: document.cookie,
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(skin.id)
+            })
+
+            if (!skinRes.ok) throw new Error(`failed to select Skin: ${skinRes.status}`);
+        
+            const newUser = await skinRes.json() as User;
+            $user = newUser;
+            $gameSocket?.syncPlayerModel();
+        }
     }
 
 </script>
+<div class="budget">
+    {$user?.taler}
+</div>
 <!-- svelte-ignore component_name_lowercase -->
 <div class="container">
     {#each $skinList as skin}
@@ -36,6 +62,9 @@
             </div>
             <div class="name">{skin.name}</div>
             {#if !$user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id)}
+                <div class="pricetag">
+                    {skin.price}
+                </div>
                 <div class="lock">
                     <img src="/assets/lock.png" alt="lock">
                 </div>
@@ -43,6 +72,7 @@
         </div>
     {/each}
 </div>
+
 
 
 
@@ -64,7 +94,7 @@
 
     .container {
         height: 45rem;
-        width: 40rem;
+        width: 33rem;
         background-color: black;
         border-style: none;
         outline: none;
@@ -113,8 +143,33 @@
         pointer-events: none;
     }
 
+    .pricetag {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 120;
+        padding: 0.3rem 0.6rem;
+        border: 0.12rem solid white;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        font-weight: 700;
+        opacity: 0;
+        transition: opacity 0.15s ease-in-out;
+        pointer-events: none;
+    }
+
+    .skin:hover .pricetag {
+        opacity: 1;
+    }
+
     img {
         width: 1.6rem;
         height: 2rem;
     }
+
+    .budget {
+        padding-left: 1rem;
+    }
+
 </style>

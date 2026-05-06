@@ -10,15 +10,16 @@ namespace CrossyRoadApi.Controllers;
 [Route("[controller]")]
 public class ShopController(UserManager<CrossyUser> userContext) : ControllerBase
 {
-    [HttpGet("buy")]
+    [HttpPost("buy")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CrossyUserDto))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Buy(int skinId)
+    public async Task<IActionResult> Buy([FromBody] int? skinId)
     {
+        if (skinId == null) return BadRequest("Skin does not exist!");
         var user = await userContext.GetUserAsync(User);
-        var skin = CrossySkin.FromId(skinId);
+        var skin = CrossySkin.FromId((int)skinId);
         if (skin == null) return BadRequest("Skin does not exist!");
         if (user!.Taler < skin.Price) return BadRequest("Not enough Talers");
         if (user.OwnedSkins.Contains(skin.Id)) return BadRequest("Skin already owned");
