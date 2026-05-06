@@ -16,7 +16,6 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
     }
 
     private static readonly int CarCount = 20;
-    private static readonly List<int> AvailableDelays = [1000, 1000, 1000, 1500, 1500, 2000, 2500, 3000];
 
     private static readonly List<CrossyModelPart> AvailableCars =
     [
@@ -28,27 +27,30 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
 
     protected override void GenerateElements()
     {
-        var startX = new List<int> { 12, -12 }[Randomizer.Next(2)];
-        var baseSpeed = Randomizer.Next(1, 4) / 10; // Number between 0.1 and 0.3
-        var zBasedSpeedMultiplyer = zPosition / 1000 + 1; // If score is e.g. 100 -> 1.1
+        var startX = new List<int> { 13, -13 }[Randomizer.Next(2)];
+        var baseSpeed = Randomizer.Next(3, 9) / 5f; // Number between 0.1 and 0.3
+        var zBasedSpeedMultiplyer = zPosition / 1000f + 1.0f; // If score is e.g. 100 -> 1.1
         var speed = baseSpeed * zBasedSpeedMultiplyer;
         for (var i = 0; i < CarCount; i++)
         {
             var type = AvailableCars[Randomizer.Next(AvailableCars.Count)];
-            var delay = AvailableDelays[Randomizer.Next(AvailableDelays.Count)];
+            var offset =
+                (Elements.Count > 0
+                    ? ((CrossyMovingMapElement)Elements.Last()).XOffset + Elements.Last().ModelWidth + 1
+                    : 0) + Randomizer.Next(0, 10);
             switch (type)
             {
                 case CrossyModelPart.Car0:
-                    AddElement(new Car0(this, startX, speed, delay));
+                    AddElement(new Car0(this, startX, speed, offset));
                     break;
                 case CrossyModelPart.Car1:
-                    AddElement(new Car1(this, startX, speed, delay * 2));
+                    AddElement(new Car1(this, startX, speed, offset));
                     break;
                 case CrossyModelPart.Car2:
-                    AddElement(new Car2(this, startX, speed, delay * 2));
+                    AddElement(new Car2(this, startX, speed, offset));
                     break;
                 case CrossyModelPart.Car3:
-                    AddElement(new Car3(this, startX, speed, delay * 2));
+                    AddElement(new Car3(this, startX, speed, offset));
                     break;
             }
         }

@@ -10,7 +10,7 @@ export interface MapElement {
     hasCollision: boolean;
     isStatic: boolean;
     speed: number;
-    nextCarDelay: number;
+    xOffset: number;
 }
 
 export enum Direction {

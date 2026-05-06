@@ -13,6 +13,6 @@ public class CrossyMapElementDto
     public bool HasCollision { get; set; }
     public bool IsStatic { get; set; }
     public float Speed { get; set; }
-    public int NextCarDelay { get; set; }
+    public int XOffset { get; set; }
     public CrossyMovingMapElement.ModelDirection Direction { get; set; }
 }

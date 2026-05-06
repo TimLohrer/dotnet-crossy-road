@@ -9,7 +9,7 @@ public abstract class CrossyMovingMapElement(
     int modelWidth,
     bool hasCollision,
     float speed,
-    int nextCarDelay)
+    int xOffest)
     : CrossyMapElement(modelPart, lane, xPosition, modelWidth, hasCollision)
 {
     public enum ModelDirection
@@ -17,10 +17,11 @@ public abstract class CrossyMovingMapElement(
         Right,
         Left
     }
-    
-    public readonly int NextCarDelay = nextCarDelay;
+
+    public readonly ModelDirection Direction = xPosition > 0 ? ModelDirection.Right : ModelDirection.Left;
     public readonly float Speed = speed;
-    public readonly ModelDirection Direction = xPosition < 0 ? ModelDirection.Right : ModelDirection.Left;
+
+    public readonly int XOffset = xOffest;
 
     public override CrossyMapElementDto ToDto()
     {
@@ -29,12 +30,13 @@ public abstract class CrossyMovingMapElement(
             Id = Id,
             Type = ModelPart,
             BasePosition = Position,
+            Direction = Direction,
             ModelWidth = ModelWidth,
             ModelLocation = GetModelPath(),
             HasCollision = HasCollision,
             IsStatic = false,
             Speed = Speed,
-            NextCarDelay = NextCarDelay
+            XOffset = XOffset
         };
     }
 }

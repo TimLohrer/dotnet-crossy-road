@@ -28,6 +28,9 @@ export class GameRenderer {
 	mixers: THREE.AnimationMixer[] = [];
 	timer: THREE.Timer = new THREE.Timer();
 
+	private static readonly LANE_MIN_X = -15;
+	private static readonly LANE_MAX_X = 15;
+
 	objectList: THREE.Object3D[] = [];
 	renderedObjects: THREE.Object3D[] = [];
 	elements: { [key: string]: MapElement } = {};
@@ -100,7 +103,7 @@ export class GameRenderer {
 
 	private getGame = () => get(wsGame);
 	private getUser = () => get(userStore);
-	private getPlayer = () => Game.getPlayer(this.getGame()!, this.getUser()!.id);
+	private getPlayer = () => this.getGame() ? Game.getPlayer(this.getGame()!, this.getUser()!.id) : null;
 	private getSocket = () => get(gameSocket);
 
 	private render = () => this.renderer.render(this.scene, this.camera);
@@ -108,6 +111,7 @@ export class GameRenderer {
 	private async loadModel(
 		path: string,
 		pos: THREE.Vector3,
+		xOffset: number,
 		direction: Direction,
 		hasCollision: boolean,
 		name: string
@@ -140,7 +144,7 @@ export class GameRenderer {
 			model.rotation.y = Math.PI;
 		}
 
-		model.position.copy(pos);
+		model.position.copy(pos).add(new THREE.Vector3(xOffset, 0, 0));
 		model.name = name;
 
 		if (hasCollision) {
@@ -178,6 +182,7 @@ export class GameRenderer {
 			this.loadModel(
 				lane.modelLocation,
 				lane.position.toVector3(),
+				0,
 				Direction.Right, // Lane models are always facing right
 				false,
 				'lane_' + (lane.modelLocation.split('/').pop()?.split('.')[0] ?? lane.type)
@@ -186,10 +191,12 @@ export class GameRenderer {
 				const { uuid } = await this.loadModel(
 					element.modelLocation,
 					element.basePosition.toVector3(),
+					element.xOffset ?? 0,
 					element.direction,
 					element.hasCollision,
 					'element_' + (element.modelLocation.split('/').pop()?.split('.')[0] ?? element.type)
 				);
+				
 				this.elements[uuid] = element;
 			});
 		});
@@ -237,7 +244,7 @@ export class GameRenderer {
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
 		if (!playerObj) return;
 
-		const targetPosition = player.position.toVector3();
+		const targetPosition = player.position.toVector3();		
 		const startPosition = playerObj.position.clone();
 		const targetYRotation = this.getTargetYRotation(startPosition, targetPosition);
 
@@ -333,7 +340,6 @@ export class GameRenderer {
 				return occupiedPositions.some((pos) => pos.x == playerPos.x && pos.z == playerPos.z);
 			}
 		);
-		
 
 		const lane = this.renderedObjects.find(
 			(obj) =>
@@ -344,6 +350,32 @@ export class GameRenderer {
 		);
 
 		return mapElement ?? lane;
+	}
+
+	private getCollidableElementAtPosition(position: THREE.Vector3): THREE.Object3D | undefined {
+		const playerPos = position.clone().round();
+
+		return this.renderedObjects.find((obj) => {
+			const element = this.elements[obj.uuid];
+			if (!element || !element.hasCollision) return false;
+
+			const basePos = obj.position.clone().round();
+			const occupiedPositions = [basePos];
+			for (let i = 1; i < element.modelWidth; i++) {
+				const offset = new THREE.Vector3();
+				switch (element.direction) {
+					case Direction.Right:
+						offset.set(i, 0, 0);
+						break;
+					case Direction.Left:
+						offset.set(-i, 0, 0);
+						break;
+				}
+				occupiedPositions.push(basePos.clone().add(offset));
+			}
+
+			return occupiedPositions.some((pos) => pos.x == playerPos.x && pos.z == playerPos.z);
+		});
 	}
 
 	private cameraMovement(player: Player) {
@@ -375,11 +407,13 @@ export class GameRenderer {
 		if (!playerObj) return;
 
 		const isActiveUser = player.user.id === this.getUser()?.id;
+		const collidableElementAtPos = this.getCollidableElementAtPosition(player.position.toVector3());
 		const elementAtPos = this.getElementAtPosition(player.position.toVector3());
 		const socket = this.getSocket()!;
 
-		console.log(elementAtPos);
-		
+		if (isActiveUser && collidableElementAtPos) {
+			return socket.sendPlayerDeath();
+		}
 
 		if (
 			isActiveUser &&
@@ -391,9 +425,6 @@ export class GameRenderer {
 			return socket.sendPlayerDeath();
 		}
 
-		if (elementAtPos) {
-			console.log(`Moved onto element: ${elementAtPos.name}`);
-		}
 	}
 
 	private updateAnimations() {
@@ -401,6 +432,27 @@ export class GameRenderer {
 		const delta = this.timer.getDelta();
 		this.mixers.forEach((mixer) => mixer.update(delta));
 		this.updatePlayerMoveAnimations();
+		this.updateCarAnimations(delta);
+	}
+
+	private updateCarAnimations(delta: number) {
+		const min = GameRenderer.LANE_MIN_X;
+		const max = GameRenderer.LANE_MAX_X;
+
+		for (const obj of this.renderedObjects) {
+			const element = this.elements[obj.uuid];
+			if (!element || element.isStatic) continue;
+
+			const dx = element.direction === Direction.Right ? -element.speed * delta : element.speed * delta;
+			obj.position.x += dx;
+			const spawnX = -element.basePosition.x - (element.xOffset ?? 0);
+
+			if (element.direction === Direction.Right && obj.position.x < min) {
+				obj.position.x = spawnX;
+			} else if (element.direction === Direction.Left && obj.position.x > max) {
+				obj.position.x = spawnX;
+			}
+		}
 	}
 
 	private updatePlayerMoveAnimations() {
@@ -441,12 +493,13 @@ export class GameRenderer {
 
 	private animate() {
 		requestAnimationFrame(() => this.animate());
+		this.updateAnimations();
 		if (this.getGame()?.gamePhase == GamePhase.Active) {
 			const player = Game.getPlayer(this.getGame()!, this.getUser()!.id)!;
 			this.cameraMovement(player);
 			this.updateLight(player);
+			this.handlePlayerPosition(player);
 		}
-		this.updateAnimations();
 		this.render();
 	}
 
@@ -521,7 +574,6 @@ export class GameRenderer {
 			if (game.gamePhase == GamePhase.Active && !this.isPlayerColliding(newPosition.toVector3())) {
 				player.position = newPosition;
 				this.updatePlayerPosition(player);
-				this.handlePlayerPosition(player);
 			}
 		}
 	}
