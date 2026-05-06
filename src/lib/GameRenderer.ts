@@ -246,6 +246,10 @@ export class GameRenderer {
 
 		const targetPosition = player.position.toVector3();		
 		const startPosition = playerObj.position.clone();
+		const landingY = this.getLandingY(targetPosition, playerObj);
+		if (landingY !== null) {
+			targetPosition.y = landingY;
+		}
 		const targetYRotation = this.getTargetYRotation(startPosition, targetPosition);
 
 		this.moveAnimations[player.user.id] = {
@@ -267,6 +271,10 @@ export class GameRenderer {
 
 		const targetPosition = player.position.toVector3();
 		const startPosition = playerObj.position.clone();
+		const landingY = this.getLandingY(targetPosition, playerObj);
+		if (landingY !== null) {
+			targetPosition.y = landingY;
+		}
 		const targetYRotation = this.getTargetYRotation(startPosition, targetPosition);
 
 		this.moveAnimations[player.user.id] = {
@@ -291,6 +299,26 @@ export class GameRenderer {
 			targetYRotation = 0;
 		}
 		return targetYRotation;
+	}
+
+	private getObjectTopY(obj: THREE.Object3D): number {
+		const box = new THREE.Box3().setFromObject(obj);
+		return box.max.y;
+	}
+
+	private getPlayerFeetOffset(playerObj: THREE.Object3D): number {
+		const box = new THREE.Box3().setFromObject(playerObj);
+		return playerObj.position.y - box.min.y;
+	}
+
+	private getLandingY(targetPosition: THREE.Vector3, playerObj: THREE.Object3D): number | null {
+		if (targetPosition.x > 6 || targetPosition.x < -6) return null;
+
+		const targetElement = this.getElementAtPosition(targetPosition);
+		if (!targetElement || targetElement.name === 'lane_water') return -1;
+		if (targetElement.name === 'lane_rail') return 0;
+
+		return this.getObjectTopY(targetElement) + this.getPlayerFeetOffset(playerObj);
 	}
 
 	private isPlayerColliding(targetPosition: THREE.Vector3): boolean {
