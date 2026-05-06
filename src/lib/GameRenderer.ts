@@ -14,6 +14,7 @@ export class GameRenderer {
 	private static cameraOffsetZ = 10;
 	private static moveAnimationDurationMs = 125;
 	private static jumpHeight = 0.35;
+		private static cleanupDistanceBehindPlayer = 18;
 	private static GLTF_CACHE: { [key: string]: GLTF } = {};
 	private static gltfLoader = new GLTFLoader();
 
@@ -262,7 +263,7 @@ export class GameRenderer {
 		};
 		this.render();
 		this.getSocket()!.sendPlayerPositionUpdate();
-		this.cleanUpLanes(player, playerObj);
+		this.cleanUpInvisibleWorldObjects(player.position.z);
 	}
 
 	public syncRemotePlayerPosition(player: Player) {
@@ -337,11 +338,25 @@ export class GameRenderer {
 		}
 	}
 
-	private cleanUpLanes(player: Player, playerObj: THREE.Object3D) {
-		if (playerObj.position.z < player.position.z - 15) {
-			this.scene.remove(playerObj);
-			this.renderedObjects.filter((obj) => obj.name === player.user.id);
-		}
+	private cleanUpInvisibleWorldObjects(playerZ: number) {
+		const cutoffZ = playerZ - GameRenderer.cleanupDistanceBehindPlayer;
+		const removedObjects = this.renderedObjects.filter((obj) => {
+			if (obj.name === this.getUser()?.id) return false;
+			const isWorldObject = obj.name.includes('lane_') || this.elements[obj.uuid] !== undefined;
+			return isWorldObject && obj.position.z < cutoffZ;
+		});
+
+		if (removedObjects.length === 0) return;
+
+		const removedUuids = new Set(removedObjects.map((obj) => obj.uuid));
+		removedObjects.forEach((obj) => {
+			this.scene.remove(obj);
+			delete this.elements[obj.uuid];
+		});
+
+		this.renderedObjects = this.renderedObjects.filter((obj) => !removedUuids.has(obj.uuid));
+		this.objectList = this.objectList.filter((obj) => !removedUuids.has(obj.uuid));
+		this.mixers = this.mixers.filter((mixer) => !removedUuids.has(mixer.getRoot().uuid));
 	}
 
 	private getElementAtPosition(position: THREE.Vector3): THREE.Object3D | undefined {
