@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { PUBLIC_API_URL } from "./environment";
 	import SkinPreview from "./SkinPreview.svelte";
-	import { gameSocket, skinList, user } from "./stores/stateStore";
+	import { gameSocket, menuState, skinList, user } from "./stores/stateStore";
 	import type { User } from "./models/User";
 	import type { Skin } from "./models/Skin";
-	import PopUp from "./ PopUp.svelte";
+	import { MenuState } from "./models/MenuState";
 
     async function handleEvent(skin: Skin) {
         const isOwned = $user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id);
@@ -26,6 +26,7 @@
             const newUser = await skinRes.json() as User;
             $user = newUser;
             $gameSocket?.syncPlayerModel();
+            $menuState = MenuState.Play;
         }
         else {
             const skinRes = await fetch(`${PUBLIC_API_URL}/shop/buy`, {
@@ -44,6 +45,7 @@
             const newUser = await skinRes.json() as User;
             $user = newUser;
             $gameSocket?.syncPlayerModel();
+            $menuState = MenuState.Play;
         }
     }
 
