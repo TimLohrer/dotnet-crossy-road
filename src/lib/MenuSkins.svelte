@@ -1,26 +1,34 @@
-<script>
-	import { div } from "three/tsl";
-	import { Skin } from "./models/Skin";
+<script lang="ts">
 	import SkinPreview from "./SkinPreview.svelte";
+	import { skinList } from "./stores/stateStore";
 
 </script>
 <!-- svelte-ignore component_name_lowercase -->
 <div class="container">
-    {#each Object.keys(Skin).filter(key => isNaN(Number(key))) as skin}
+    {#each $skinList as skin}
         <div class="skin">
             <div class="preview">
-                <SkinPreview />
+                <SkinPreview params={{skin: skin}} />
             </div>
-            {skin}
+            <div class="name">{skin.name}</div>
         </div>
     {/each}
 </div>
 
 <style>
     .skin {
-        background-color: aqua;
         width: 10rem;
-        height: 12rem;
+        min-height: 12rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        cursor: pointer;
+        border: 0.12rem solid white;
+        padding: 0.5rem;
+        box-sizing: border-box;
+        background-color: rgba(255, 255, 255, 0.04);
     }
 
     .container {
@@ -29,5 +37,29 @@
         background-color: black;
         border-style: none;
         outline: none;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+
+    .preview {
+        width: 100%;
+        height: 8.5rem;
+        overflow: hidden;
+        border-radius: 0.35rem;
+    }
+
+    .name {
+        width: 100%;
+        text-align: center;
+        color: white;
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.2;
     }
 </style>

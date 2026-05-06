@@ -4,7 +4,7 @@
 	import CrossyRoadGame from "$lib/CrossyRoadGame.svelte";
 	import GameHud from "$lib/GameHud.svelte";
 	import { MenuState } from "$lib/models/MenuState";
-	import { menuState, wsGame, user as userStore } from "$lib/stores/stateStore";
+	import { menuState, wsGame, user as userStore, skinList } from "$lib/stores/stateStore";
 	import PopUp from "$lib/ PopUp.svelte";
 	import MenuSkins from "$lib/MenuSkins.svelte";
 	import MenuMultiplayer from "$lib/MenuMultiplayer.svelte";
@@ -12,6 +12,7 @@
 	import type { User } from '$lib/models/User';
 	import { PUBLIC_API_URL } from '$lib/environment';
 	import { onMount } from 'svelte';
+	import type { Skin } from '$lib/models/Skin';
 
 	onMount(async () => {
 		const res = await fetch(`${PUBLIC_API_URL}/user/@me`, {
@@ -27,7 +28,17 @@
 
 		const user = await res.json() as User;
 
+		const skinRes = await fetch(`${PUBLIC_API_URL}/shop/skins`, {
+			credentials: 'include',
+			headers: {
+				cookie: document.cookie
+			}
+		});
+
+		const skins = await skinRes.json() as Skin[]; 
+
 		userStore.update(() => user);
+		skinList.update(() => skins); 
 	});
 </script>
 
