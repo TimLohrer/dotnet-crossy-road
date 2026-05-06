@@ -1,3 +1,4 @@
+using CrossyRoadApi.Dto;
 using CrossyRoadApi.Models.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,7 +12,7 @@ public class ShopController(UserManager<CrossyUser> userContext) : ControllerBas
 {
     [HttpGet("buy")]
     [Authorize]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CrossyUserDto))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Buy(int skinId)
@@ -27,12 +28,12 @@ public class ShopController(UserManager<CrossyUser> userContext) : ControllerBas
 
         await userContext.UpdateAsync(user);
 
-        return Ok();
+        return Ok(user.ToDto());
     }
 
     [HttpPost("select")]
     [Authorize]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CrossyUserDto))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Select([FromBody] int? skinId)
@@ -41,6 +42,7 @@ public class ShopController(UserManager<CrossyUser> userContext) : ControllerBas
         var user = await userContext.GetUserAsync(User);
         var skin = CrossySkin.FromId((int)skinId);
         if (skin == null) return BadRequest("Skin does not exist!");
+        if (!user.OwnedSkins.Contains(skin.Id)) return BadRequest("You don't own this skin!");
         if (user!.Skin == skin.Id) return Ok("Skin already selected");
 
         user.Skin = skin.Id;
@@ -51,7 +53,7 @@ public class ShopController(UserManager<CrossyUser> userContext) : ControllerBas
 
     [HttpGet("skins")]
     [Authorize]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type =  typeof(List<CrossySkin>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult GetSkins()
     {
