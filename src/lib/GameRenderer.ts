@@ -86,6 +86,11 @@ export class GameRenderer {
 		this.animate();
 	}
 
+	private getGame = () => get(wsGame);
+	private getUser = () => get(userStore);
+	private getPlayer = () => Game.getPlayer(this.getGame()!, this.getUser()!.id);
+	private getSocket = () => get(gameSocket);
+
 	private render = () => this.renderer.render(this.scene, this.camera);
 
 	private async loadModel(
@@ -193,7 +198,7 @@ export class GameRenderer {
 		if (playerObj) {
 			playerObj.position.copy(player.position.toVector3());
 			this.render();
-			get(gameSocket)!.sendPlayerPositionUpdate();
+			this.getSocket()!.sendPlayerPositionUpdate();
 			this.cleanUpLanes(player, playerObj);
 		}
 	}
@@ -227,7 +232,7 @@ export class GameRenderer {
 				const playerPos = position.round();
 				const basePos = obj.position.clone().round();
 				const element = this.elements[obj.uuid];
-				if (!element) return false;
+				if (!element || element.hasCollision) return false;
 				const occupiedPositions = [basePos];
 				for (let i = 1; i < element.modelWidth; i++) {
 					const offset = new THREE.Vector3();
@@ -286,9 +291,9 @@ export class GameRenderer {
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
 		if (!playerObj) return;
 
-		const isActiveUser = player.user.id === get(userStore)?.id;
+		const isActiveUser = player.user.id === this.getUser()?.id;
 		const elementAtPos = this.getElementAtPosition(player.position.toVector3());
-		const socket = get(gameSocket)!;
+		const socket = this.getSocket()!;
 
 		console.log(elementAtPos);
 		
@@ -315,8 +320,8 @@ export class GameRenderer {
 
 	private animate() {
 		requestAnimationFrame(() => this.animate());
-		if (get(wsGame)?.gamePhase == GamePhase.Active) {
-			const player = Game.getPlayer(get(wsGame)!, get(userStore)!.id)!;
+		if (this.getGame()?.gamePhase == GamePhase.Active) {
+			const player = Game.getPlayer(this.getGame()!, this.getUser()!.id)!;
 			this.cameraMovement(player);
 			this.updateLight(player);
 			this.updateAnimations();
@@ -325,11 +330,11 @@ export class GameRenderer {
 	}
 
 	public async onKeyUp(e: KeyboardEvent) {
-		const game = get(wsGame);
-		const user = get(userStore);
+		const game = this.getGame();
+		const user = this.getUser();
 		if (!game || !user) return;
 
-		const player = Game.getPlayer(game, get(userStore)!.id)!;
+		const player = Game.getPlayer(game, user.id)!;
 		const moveDistance = 1;
 		let newPosition = player.position.clone();
 		if (get(menuState) === MenuState.Play) {
@@ -340,7 +345,7 @@ export class GameRenderer {
 					e.key.toLowerCase()
 				)
 			) {
-				await get(gameSocket)?.startGame();
+				await this.getSocket()?.startGame();
 			}
 			switch (e.key.toLowerCase()) {
 				case 'w':
@@ -368,7 +373,7 @@ export class GameRenderer {
 					newPosition.x -= moveDistance;
 					break;
 				case 'k':
-					get(gameSocket)?.sendPlayerDeath();
+					this.getSocket()?.sendPlayerDeath();
 					return;
 				default:
 					return;
