@@ -104,7 +104,7 @@
             }
         }
 
-        await loadModel(`/models/skin/${params.skin.modelName}.gltf`);
+        await loadModel(`/models/skins/${params.skin.modelName}.gltf`);
 
         const timer = new THREE.Timer();
         const animate = () => {
