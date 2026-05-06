@@ -1,5 +1,5 @@
 export interface Skin {
-    id: string;
+    id: number;
     modelName: string;
     name: string;
     price: number;

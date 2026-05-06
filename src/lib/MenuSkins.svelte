@@ -1,12 +1,36 @@
 <script lang="ts">
+	import { PUBLIC_API_URL } from "./environment";
 	import SkinPreview from "./SkinPreview.svelte";
-	import { skinList } from "./stores/stateStore";
+	import { gameSocket, skinList, user } from "./stores/stateStore";
+	import type { User } from "./models/User";
+	import type { Skin } from "./models/Skin";
+
+    async function handleEvent(skin: Skin) {
+        const skinRes = await fetch(`${PUBLIC_API_URL}/shop/select`, {
+			credentials: 'include',
+            method: "POST",
+			headers: {
+				cookie: document.cookie,
+                "Content-Type": "application/json"
+			},
+
+            body: JSON.stringify(skin.id)
+		});
+
+        if (!skinRes.ok) throw new Error(`failed to select Skin: ${skinRes.status}`);
+
+        const newUser = await skinRes.json() as User;
+        $user = newUser;
+        $gameSocket?.syncPlayerModel()
+    }
 
 </script>
 <!-- svelte-ignore component_name_lowercase -->
 <div class="container">
     {#each $skinList as skin}
-        <div class="skin">
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div class="skin" onclick={() => handleEvent(skin)}>
             <div class="preview">
                 <SkinPreview params={{skin: skin}} />
             </div>

@@ -30,22 +30,23 @@ public class ShopController(UserManager<CrossyUser> userContext) : ControllerBas
         return Ok();
     }
 
-    [HttpGet("select")]
+    [HttpPost("select")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Select(int skinId)
+    public async Task<IActionResult> Select([FromBody] int? skinId)
     {
+        if (skinId == null) return BadRequest("Skin does not exist!");
         var user = await userContext.GetUserAsync(User);
-        var skin = CrossySkin.FromId(skinId);
+        var skin = CrossySkin.FromId((int)skinId);
         if (skin == null) return BadRequest("Skin does not exist!");
         if (user!.Skin == skin.Id) return Ok("Skin already selected");
 
         user.Skin = skin.Id;
         await userContext.UpdateAsync(user);
 
-        return Ok();
+        return Ok(user.ToDto());
     }
 
     [HttpGet("skins")]
