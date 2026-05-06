@@ -78,6 +78,24 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
         }
     }
 
+    public async Task UpdatePlayerModel(int skinId)
+    {
+        var user = await userContext.GetUserAsync(Context.User!);
+        var wsGame = ActiveGames.Games.FirstOrDefault(g => g.Players.Any(p => p.ConnectionId == Context.ConnectionId));
+        if (user == null || wsGame == null || wsGame.GamePhase != CrossyGame.Phase.Created || !user.OwnedSkins.Contains(skinId)) return;
+        
+        var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
+        wsPlayer.User!.Skin = skinId;
+
+        if (user.Skin != skinId)
+        {
+            user.Skin = skinId;
+            await userContext.UpdateAsync(user);
+        }
+        
+        await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.UpdatePlayerModel, wsPlayer.ToDto());
+    }
+
     public async Task UpdatePlayerPosition(Guid gameId, Vector3 newPosition)
     {
         var wsGame = ActiveGames.Games.FirstOrDefault(g =>

@@ -7,6 +7,7 @@ export class WebsocketEvent {
 	static StartGame = 'StartGame';
 	static GameJoined = 'GameJoined';
 	static PlayerJoined = 'PlayerJoined';
+	static UpdatePlayerModel = 'UpdatePlayerModel';
     static PlayerDeath = 'PlayerDeath';
 	static PlayerLeft = 'PlayerLeft';
     

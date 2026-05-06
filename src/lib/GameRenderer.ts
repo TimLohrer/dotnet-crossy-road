@@ -190,7 +190,7 @@ export class GameRenderer {
 	}
 
 	public async loadPlayer(player: Player) {
-		const gltf = await GameRenderer.gltfLoader.loadAsync(`/models/skins/chicken.gltf`);
+		const gltf = await GameRenderer.gltfLoader.loadAsync(`/models/skins/${player.user.skin.modelName}.gltf`);
 		const playerModel = gltf.scene as THREE.Object3D;
 		playerModel.position.copy(player.position.toVector3());
 		playerModel.name = player.user.id;
@@ -204,6 +204,27 @@ export class GameRenderer {
 		this.render();
 		this.renderedObjects.push(playerModel);
 	}
+
+	public async replacePlayerModel(player: Player) {
+		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
+		if (!playerObj) return;
+		const gltf = await GameRenderer.gltfLoader.loadAsync(`/models/skins/${player.user.skin.modelName}.gltf`);
+		const newModel = gltf.scene as THREE.Object3D;
+		newModel.position.copy(playerObj.position);
+		newModel.rotation.copy(playerObj.rotation);
+		newModel.name = player.user.id;
+		newModel.traverse((child) => {
+			if (child.isObject3D) {
+				child.castShadow = true;
+				child.receiveShadow = true;
+			}
+		});
+		this.scene.add(newModel);
+		this.scene.remove(playerObj);
+		this.renderedObjects = this.renderedObjects.filter((obj) => obj.name !== player.user.id);
+		this.renderedObjects.push(newModel);
+	}
+
 
 	private updatePlayerPosition(player: Player) {
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);

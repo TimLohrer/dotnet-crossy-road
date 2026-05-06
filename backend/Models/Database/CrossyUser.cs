@@ -9,8 +9,8 @@ public class CrossyUser : IdentityUser<Guid>
 {
     public int HighScore { get; set; }
     public int Taler { get; set; }
-    public CrossySkin Skin { get; set; } = CrossySkin.Default;
-    public List<CrossySkin> OwnedSkins { get; set; } = [CrossySkin.Default];
+    public int Skin { get; set; } = CrossySkin.Chicken.Id;
+    public List<int> OwnedSkins { get; set; } = [CrossySkin.Chicken.Id];
 
     public CrossyUserDto ToDto()
     {
@@ -20,8 +20,8 @@ public class CrossyUser : IdentityUser<Guid>
             Username = UserName!,
             HighScore = HighScore,
             Taler = Taler,
-            Skin = Skin,
-            OwnedSkins = OwnedSkins
+            Skin = CrossySkin.FromId(Skin),
+            OwnedSkins = OwnedSkins.Select(CrossySkin.FromId).ToList()
         };
     }
 
@@ -32,7 +32,7 @@ public class CrossyUser : IdentityUser<Guid>
             Id = Id,
             Username = UserName!,
             HighScore = HighScore,
-            Skin = Skin
+            Skin = CrossySkin.FromId(Skin)
         };
     }
 }

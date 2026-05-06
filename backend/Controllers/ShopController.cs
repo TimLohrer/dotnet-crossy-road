@@ -1,6 +1,5 @@
 using CrossyRoadApi.Models.Database;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,15 +13,17 @@ public class ShopController(UserManager<CrossyUser> userContext) : ControllerBas
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Buy(CrossySkin skin)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Buy(int skinId)
     {
         var user = await userContext.GetUserAsync(User);
-        if (user!.Taler < 100) return BadRequest("Not enough Talers");
-        if (user.OwnedSkins.Contains(skin)) return BadRequest("Skin already owned");
-        user.OwnedSkins.Add(skin);
-        user.Skin = skin;
-        user.Taler -= 100;
+        var skin = CrossySkin.FromId(skinId);
+        if (skin == null) return BadRequest("Skin does not exist!");
+        if (user!.Taler < skin.Price) return BadRequest("Not enough Talers");
+        if (user.OwnedSkins.Contains(skin.Id)) return BadRequest("Skin already owned");
+        user.OwnedSkins.Add(skin.Id);
+        user.Skin = skin.Id;
+        user.Taler -= skin.Price;
 
         await userContext.UpdateAsync(user);
 
@@ -33,15 +34,17 @@ public class ShopController(UserManager<CrossyUser> userContext) : ControllerBas
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Select(CrossySkin skin)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Select(int skinId)
     {
         var user = await userContext.GetUserAsync(User);
-        
-        if (user!.OwnedSkins.Contains(skin)) return BadRequest("Skin already owned");
-        user.Skin = skin;
-        
+        var skin = CrossySkin.FromId(skinId);
+        if (skin == null) return BadRequest("Skin does not exist!");
+        if (user!.Skin == skin.Id) return Ok("Skin already selected");
+
+        user.Skin = skin.Id;
         await userContext.UpdateAsync(user);
+
         return Ok();
     }
 }

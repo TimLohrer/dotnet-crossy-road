@@ -96,6 +96,10 @@ export class GameSocket {
 			this.getRenderer()!.loadSection(lanes);
 		});
 
+		this.connection.on(WebsocketEvent.UpdatePlayerModel, (updatedPlayer: Player) => {
+			this.getRenderer()!.replacePlayerModel(updatedPlayer);
+		});
+
 		this.connection.on(WebsocketEvent.UpdatePlayerPosition, (newPlayer: Player) => {
 			newPlayer.position = Vec3.fromObject(newPlayer.position);
 			
@@ -172,6 +176,13 @@ export class GameSocket {
 		}
 		
 		await this.connection.invoke(WebsocketEvent.JoinGame, gameId);
+	}
+
+	public async syncPlayerModel() {
+		const user = this.getUser();
+		const player = this.getPlayer();
+		if (!user || !player || user.skin.id == player.user.skin.id) return;
+		await this.connection.invoke(WebsocketEvent.UpdatePlayerModel, user.skin.id);
 	}
 
 	public async startGame() {
