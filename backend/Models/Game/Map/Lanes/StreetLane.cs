@@ -28,7 +28,7 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
     protected override void GenerateElements()
     {
         var startX = new List<int> { 13, -13 }[Randomizer.Next(2)];
-        var baseSpeed = Randomizer.Next(3, 9) / 5f; // Number between 0.1 and 0.3
+        var baseSpeed = Randomizer.Next(4, 12) / 5f; // Number between 0.1 and 0.3
         var zBasedSpeedMultiplyer = zPosition / 1000f + 1.0f; // If score is e.g. 100 -> 1.1
         var speed = baseSpeed * zBasedSpeedMultiplyer;
         for (var i = 0; i < CarCount; i++)
@@ -36,8 +36,8 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
             var type = AvailableCars[Randomizer.Next(AvailableCars.Count)];
             var offset =
                 (Elements.Count > 0
-                    ? ((CrossyMovingMapElement)Elements.Last()).XOffset + Elements.Last().ModelWidth + 1
-                    : 0) + Randomizer.Next(0, 10);
+                    ? ((CrossyMovingMapElement)Elements.Last()).XOffset + Elements.Last().ModelWidth
+                    : 0) + Randomizer.Next(1, 10);
             switch (type)
             {
                 case CrossyModelPart.Car0:

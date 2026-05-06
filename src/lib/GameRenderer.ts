@@ -131,7 +131,7 @@ export class GameRenderer {
 					child.receiveShadow = true;
 				}
 			});
-		} else {
+		} else if (!name.includes('car') && !name.includes('train') && !name.includes('log')) {
 			model.traverse((child) => {
 				if (child.isObject3D) {
 					child.castShadow = true;
@@ -144,7 +144,7 @@ export class GameRenderer {
 			model.rotation.y = Math.PI;
 		}
 
-		model.position.copy(pos).add(new THREE.Vector3(xOffset, 0, 0));
+		model.position.copy(pos).add(new THREE.Vector3(direction == Direction.Right ? -xOffset : xOffset, 0, 0));
 		model.name = name;
 
 		if (hasCollision) {
@@ -350,7 +350,7 @@ export class GameRenderer {
 				const playerPos = position.round();
 				const basePos = obj.position.clone().round();
 				const element = this.elements[obj.uuid];
-				if (!element || element.hasCollision) return false;
+				if (!element || element.hasCollision || obj.position.x > 6 || obj.position.x < -6) return false;
 				const occupiedPositions = [basePos];
 				for (let i = 1; i < element.modelWidth; i++) {
 					const offset = new THREE.Vector3();
@@ -380,29 +380,34 @@ export class GameRenderer {
 		return mapElement ?? lane;
 	}
 
-	private getCollidableElementAtPosition(position: THREE.Vector3): THREE.Object3D | undefined {
-		const playerPos = position.clone().round();
+	private getAxisOverlap(minA: number, maxA: number, minB: number, maxB: number): number {
+		return Math.max(0, Math.min(maxA, maxB) - Math.max(minA, minB));
+	}
+
+	private getCollidableElementAtPosition(playerObj: THREE.Object3D): THREE.Object3D | undefined {
+		const playerBox = new THREE.Box3().setFromObject(playerObj);
+		const minOverlapX = (playerBox.max.x - playerBox.min.x) * 0.25;
+		const minOverlapZ = (playerBox.max.z - playerBox.min.z) * 0.25;
 
 		return this.renderedObjects.find((obj) => {
 			const element = this.elements[obj.uuid];
-			if (!element || !element.hasCollision) return false;
+			if (!element || !element.hasCollision || obj.position.x > 6 || obj.position.x < -6) return false;
 
-			const basePos = obj.position.clone().round();
-			const occupiedPositions = [basePos];
-			for (let i = 1; i < element.modelWidth; i++) {
-				const offset = new THREE.Vector3();
-				switch (element.direction) {
-					case Direction.Right:
-						offset.set(i, 0, 0);
-						break;
-					case Direction.Left:
-						offset.set(-i, 0, 0);
-						break;
-				}
-				occupiedPositions.push(basePos.clone().add(offset));
-			}
+			const elementBox = new THREE.Box3().setFromObject(obj);
+			const overlapX = this.getAxisOverlap(
+				playerBox.min.x,
+				playerBox.max.x,
+				elementBox.min.x,
+				elementBox.max.x
+			);
+			const overlapZ = this.getAxisOverlap(
+				playerBox.min.z,
+				playerBox.max.z,
+				elementBox.min.z,
+				elementBox.max.z
+			);
 
-			return occupiedPositions.some((pos) => pos.x == playerPos.x && pos.z == playerPos.z);
+			return overlapX >= minOverlapX && overlapZ >= minOverlapZ;
 		});
 	}
 
@@ -435,7 +440,7 @@ export class GameRenderer {
 		if (!playerObj) return;
 
 		const isActiveUser = player.user.id === this.getUser()?.id;
-		const collidableElementAtPos = this.getCollidableElementAtPosition(player.position.toVector3());
+		const collidableElementAtPos = this.getCollidableElementAtPosition(playerObj);
 		const elementAtPos = this.getElementAtPosition(player.position.toVector3());
 		const socket = this.getSocket()!;
 
@@ -452,7 +457,6 @@ export class GameRenderer {
 		) {
 			return socket.sendPlayerDeath();
 		}
-
 	}
 
 	private updateAnimations() {
@@ -460,10 +464,32 @@ export class GameRenderer {
 		const delta = this.timer.getDelta();
 		this.mixers.forEach((mixer) => mixer.update(delta));
 		this.updatePlayerMoveAnimations();
-		this.updateCarAnimations(delta);
+		this.updateMovingElementsAnimations(delta);
 	}
 
-	private updateCarAnimations(delta: number) {
+	private getMovingElementSpawnX(element: MapElement): number {
+		return element.basePosition.x +
+			(element.direction === Direction.Right ? -(element.xOffset ?? 0) : (element.xOffset ?? 0));
+	}
+
+	private getMovingElementLoopLength(element: MapElement): number {
+		const laneWidth = GameRenderer.LANE_MAX_X - GameRenderer.LANE_MIN_X;
+		const laneElements = Object.values(this.elements).filter(
+			(candidate) =>
+				!candidate.isStatic &&
+				candidate.direction === element.direction &&
+				candidate.basePosition.z === element.basePosition.z
+		);
+
+		if (laneElements.length <= 1) {
+			return laneWidth;
+		}
+
+		const spawnXs = laneElements.map((candidate) => this.getMovingElementSpawnX(candidate));
+		return laneWidth + (Math.max(...spawnXs) - Math.min(...spawnXs));
+	}
+
+	private updateMovingElementsAnimations(delta: number) {
 		const min = GameRenderer.LANE_MIN_X;
 		const max = GameRenderer.LANE_MAX_X;
 
@@ -473,12 +499,14 @@ export class GameRenderer {
 
 			const dx = element.direction === Direction.Right ? -element.speed * delta : element.speed * delta;
 			obj.position.x += dx;
-			const spawnX = -element.basePosition.x - (element.xOffset ?? 0);
+			const loopLength = this.getMovingElementLoopLength(element);
 
-			if (element.direction === Direction.Right && obj.position.x < min) {
-				obj.position.x = spawnX;
-			} else if (element.direction === Direction.Left && obj.position.x > max) {
-				obj.position.x = spawnX;
+			while (obj.position.x < min) {
+				obj.position.x += loopLength;
+			}
+
+			while (obj.position.x > max) {
+				obj.position.x -= loopLength;
 			}
 		}
 	}
