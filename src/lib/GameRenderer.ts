@@ -328,17 +328,12 @@ export class GameRenderer {
 	}
 
 	private getTargetYRotation(start: THREE.Vector3, end: THREE.Vector3): number {
-		let targetYRotation = 0;
-		if (start.x > end.x) {
-			targetYRotation = -Math.PI / 2;
-		} else if (start.x < end.x) {
-			targetYRotation = Math.PI / 2;
-		} else if (start.z > end.z) {
-			targetYRotation = Math.PI;
-		} else if (start.z < end.z) {
-			targetYRotation = 0;
+		const dx = end.x - start.x;
+		const dz = end.z - start.z;
+		if (Math.abs(dz) >= Math.abs(dx)) {
+			return dz > 0 ? 0 : Math.PI;
 		}
-		return targetYRotation;
+		return dx > 0 ? Math.PI / 2 : -Math.PI / 2;
 	}
 
 	private getObjectTopY(obj: THREE.Object3D): number {
