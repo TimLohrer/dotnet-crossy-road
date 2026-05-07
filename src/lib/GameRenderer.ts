@@ -167,14 +167,6 @@ export class GameRenderer {
 			// 		wireframe: true
 			// 	});
 			// });
-			// const cube = new THREE.Mesh(
-			// 	new THREE.BoxGeometry(1, 0.05, 1),
-			// 	new THREE.MeshBasicMaterial({ color: 0xff0000 })
-			// );
-			// cube.position.copy(model.position);
-			// this.scene.add(cube);
-
-			this.objectList.push(model);
 		}
 
 		const idleAnimation = gltf.animations.find((a) => a.name.toLowerCase() == 'idle');	
