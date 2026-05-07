@@ -5,6 +5,9 @@
 
 <div class="container">
     <p class="box deathmessage">You Died</p>
+    {#if Game.getPlayer($wsGame!, $user!.id)!.score >= $user!.highScore}
+        <p class="highscore">NEW HIGHSCORE!</p>
+    {/if}
     <div class="stats">
         <div class="stat">
             <span>Score</span>
@@ -17,6 +20,10 @@
         <div class="stat">
             <span>Time</span>
             <span>{Game.getDuration($wsGame!)}</span>
+        </div>
+        <div class="stat">
+            <span>Seed</span>
+            <span class="selectable">{$wsGame!.seed}</span>
         </div>
     </div>
     <button class="box" onclick={() => $gameSocket?.createGame()}>Restart</button>
@@ -58,6 +65,21 @@
         border-color: white;
     }
 
+    .highscore {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2rem;
+        color: gold;
+        animation: highscoreAnimation 2s infinite;
+    }
+
+    @keyframes highscoreAnimation {
+        0% { scale: 1; color: gold; }
+        50% { scale: 1.2; color: goldenrod; }
+        100% { scale: 1; color: gold; }
+    }
+
     .stats {
         flex-direction: column;
         gap: 1rem;
@@ -73,6 +95,11 @@
 
     .stats .stat span:nth-child(2) {
         color: white;
+    }
+
+    .stats .stat .selectable {
+        cursor: text;
+        pointer-events: all;
     }
 
     button {
