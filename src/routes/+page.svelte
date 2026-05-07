@@ -13,6 +13,7 @@
 	import { PUBLIC_API_URL } from '$lib/environment';
 	import { onMount } from 'svelte';
 	import type { Skin } from '$lib/models/Skin';
+	import MenuSeed from '$lib/MenuSeed.svelte';
 
 	onMount(async () => {
 		const res = await fetch(`${PUBLIC_API_URL}/user/@me`, {
@@ -64,5 +65,9 @@
 {:else if $menuState == MenuState.JoinGame}
 	<PopUp params={{ canEscapeToClose: true, onClose: () => $menuState = MenuState.Play }}>
 		<MenuMultiplayer />
+	</PopUp>
+{:else if $menuState == MenuState.Seed}
+	<PopUp params={{ canEscapeToClose: true, onClose: () => $menuState = MenuState.Play }}>
+		<MenuSeed />
 	</PopUp>
 {/if}

@@ -1,12 +1,23 @@
 <script lang="ts">
+	import { seededRandom } from "three/src/math/MathUtils.js";
 	import { PUBLIC_API_URL } from "./environment";
 	import { MenuState } from "./models/MenuState";
     import { gameSocket, menuState, user, wsGame } from "./stores/stateStore";
+
+    function changeSeed() {
+        $menuState = MenuState.Seed;
+    }
 </script>
 
 <div class="logo_container">
     <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
 </div>
+
+{#if $wsGame?.hostId == $user?.id && $menuState == MenuState.Play}
+    <div class="seed-bar">
+        <button id="seed" onclick={changeSeed}>Change Seed</button>
+    </div>
+{/if}
 
 <div class="top-bar">
     {#if $wsGame?.hostId == $user?.id}
@@ -82,6 +93,37 @@
         display: flex;
         align-items: center;
         pointer-events: none;
+    }
+
+    .seed-bar {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        justify-self: center;
+        z-index: 101;
+        background-color: black;
+        color: white;
+        height: 4rem;
+        font-size: 1.3rem;
+        border-style: solid;
+        border-width: 0.4rem;
+        border-color: white;
+        display: flex;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    #seed {
+        pointer-events: all;
+        width: 100%;
+        height: 100%;
+        border-style: none;
+        padding: 0 1rem;
+    }
+
+    #seed:hover {
+        color: black;
+        background-color: white;
     }
 
     .top-bar span {
