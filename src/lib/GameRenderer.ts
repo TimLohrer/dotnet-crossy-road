@@ -670,15 +670,21 @@ export class GameRenderer {
 			if (element.modelLocation.includes('train')) {
 				const laneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rail');
 				const signalLaneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rail_signal');
-				
-				const isCloseToLane = element.direction === Direction.Left ? obj.position.x > min - 65 && obj.position.x < 0 && obj.position.x - 5 < min - 65 : obj.position.x < max + 65 && obj.position.x > 0 && obj.position.x + 5 > max + 65;
-				const hasLeftLane = element.direction === Direction.Left ? obj.position.x > 0 && obj.position.x - 5 < 0 : obj.position.x < 0 && obj.position.x + 5 > 0;
+
+				const REQUIRED_DISTANCE = 100;
+				const movingRight = dx > 0;
+				const frontX = obj.position.x;
+				const approachBoundary = movingRight ? min - REQUIRED_DISTANCE : max + REQUIRED_DISTANCE;
+				const isApproachingLane = movingRight
+					? frontX >= approachBoundary && frontX < 0
+					: frontX <= approachBoundary && frontX > 0;
+				const hasPassedLaneCenter = movingRight ? frontX >= 0 : frontX <= 0;
 
 				if (laneElement && signalLaneElement) {
-					if (isCloseToLane) {
+					if (isApproachingLane) {
 						signalLaneElement.visible = true;
 						laneElement.visible = false;
-					} else if (hasLeftLane) {
+					} else if (hasPassedLaneCenter) {
 						laneElement.visible = true;
 						signalLaneElement.visible = false;
 					}
