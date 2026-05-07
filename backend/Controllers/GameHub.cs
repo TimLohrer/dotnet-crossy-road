@@ -22,9 +22,6 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
     public async Task CreateGame(int? seed = null)
     {
         var user = await userContext.GetUserAsync(Context.User!);
-        if (user == null)
-            await Clients.Client(Context.ConnectionId)
-                .SendAsync(CrossyWsEvent.Disconnect, "Invalid auth, no user found!");
         var host = CrossyPlayer.Create(Context.ConnectionId, user!, new Vector3(0, 0, -2));
         var wsGame = CrossyGame.Create(host, CrossyTheme.Default, seed);
         ActiveGames.Games.Add(wsGame);
