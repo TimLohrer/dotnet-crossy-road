@@ -6,11 +6,11 @@ namespace CrossyRoadApi.Models.Game.Map;
 public class CrossyMapGenerator(CrossyGame game)
 {
     private static readonly List<CrossyModelPart> AvailableLanes =
-        [CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Water, CrossyModelPart.Rail];
+        [CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Water, CrossyModelPart.Rail];
 
-    private static readonly int MaxPlainsLength = 5;
+    private static readonly int MaxPlainsLength = 8;
     private static readonly int MaxStreetLength = 6;
-    private static readonly int MaxWaterLenth = 5;
+    private static readonly int MaxWaterLength = 5;
     private static readonly int MaxRailLenth = 4;
 
     private readonly int _seed = game.Seed;
@@ -53,7 +53,7 @@ public class CrossyMapGenerator(CrossyGame game)
     private static List<CrossyMapLane> GeneratePlainsLanes(Random randomizer, int seed, int zPosition)
     {
         var plainsLength = randomizer.Next(1, MaxPlainsLength + 1);
-
+        
         List<CrossyMapLane> lanes = [];
         for (var i = 0; i < plainsLength; i++)
         {
@@ -66,7 +66,7 @@ public class CrossyMapGenerator(CrossyGame game)
 
     private static List<CrossyMapLane> GenerateStreetLanes(Random randomizer, int seed, int zPosition)
     {
-        var streetLength = randomizer.Next(1, MaxStreetLength + 1);
+        var streetLength = GetLaneLength(randomizer, MaxStreetLength);
 
         List<CrossyMapLane> lanes = [];
         if (streetLength == 1)
@@ -83,9 +83,26 @@ public class CrossyMapGenerator(CrossyGame game)
         return lanes;
     }
 
+    private static int GetLaneLength(Random randomizer, int maxLength)
+    {
+        // Smaller lanes are more likely than wider lanes.
+        var totalWeight = 0;
+        for (var length = 1; length <= maxLength; length++)
+            totalWeight += maxLength - length + 1;
+
+        var roll = randomizer.Next(totalWeight);
+        for (var length = 1; length <= maxLength; length++)
+        {
+            roll -= maxLength - length + 1;
+            if (roll < 0) return length;
+        }
+
+        return 1;
+    }
+
     private static List<CrossyMapLane> GenerateWaterLanes(Random randomizer, int seed, int zPosition)
     {
-        var waterLength = randomizer.Next(1, MaxWaterLenth + 1);
+        var waterLength = GetLaneLength(randomizer, MaxWaterLength);
 
         List<CrossyMapLane> lanes = [];
         for (var i = 0; i < waterLength; i++) lanes.Add(new WaterLane(zPosition + i, seed, lanes.Count <= 0 || lanes.Last().Elements.All(e => e.ModelPart != CrossyModelPart.Lillypad)));
@@ -95,10 +112,10 @@ public class CrossyMapGenerator(CrossyGame game)
 
     private static List<CrossyMapLane> GenerateRailLanes(Random randomizer, int seed, int zPosition)
     {
-        var waterLength = randomizer.Next(1, MaxRailLenth + 1);
+        var railLength = GetLaneLength(randomizer, MaxRailLenth);
 
         List<CrossyMapLane> lanes = [];
-        for (var i = 0; i < waterLength; i++) lanes.Add(new RailLane(zPosition + i, seed));
+        for (var i = 0; i < railLength; i++) lanes.Add(new RailLane(zPosition + i, seed));
 
         return lanes;
     }
