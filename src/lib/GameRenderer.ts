@@ -642,6 +642,14 @@ export class GameRenderer {
 				dx *= 2; // speed up logs when they are outside the main area
 			}
 			obj.position.x += dx;
+
+			// culling
+			if (obj.position.x < min - 5 || obj.position.x > max + 5) {
+				obj.visible = false;
+			} else {
+				obj.visible = true;
+			}
+
 			// move all alive players with log if standing on it
 			if (element.modelLocation.includes('log')) {
 				const elementBox = new THREE.Box3().setFromObject(obj);
