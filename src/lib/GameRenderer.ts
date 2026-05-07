@@ -758,72 +758,68 @@ export class GameRenderer {
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
 		if (!playerObj) return;
 		let dx = 0, dz = 0;
-		if (get(menuState) === MenuState.Play) {
-			if (
-				game.gamePhase == GamePhase.Created &&
-				game.hostId == user.id &&
-				isMovementKey
-			) {
-				await this.getSocket()?.startGame();
-			}
+		if (get(menuState) !== MenuState.Play) return;
+		if (
+			game.gamePhase == GamePhase.Created &&
+			game.hostId == user.id &&
+			isMovementKey
+		) {
+			await this.getSocket()?.startGame();
+		}
 
-			const isXAxisKey = ['a', 'd', 'arrowleft', 'arrowright'].includes(pressedKey);
-			if (
-				game.gamePhase == GamePhase.Active &&
-				isMovementKey &&
-				this.moveAnimations[player.user.id]
-			) {
+		const isXAxisKey = ['a', 'd', 'arrowleft', 'arrowright'].includes(pressedKey);
+		if (
+			game.gamePhase == GamePhase.Active &&
+			isMovementKey &&
+			this.moveAnimations[player.user.id]
+		) {
+			return;
+		}
+
+		if (game.gamePhase == GamePhase.Active && isXAxisKey && this.isPlayerOnLog(player)) {
+			return;
+		}
+
+		switch (pressedKey) {
+			case 'w':
+				dz += moveDistance;
+				break;
+			case 'arrowup':
+				dz += moveDistance;
+				break;
+			case 's':
+				dz -= moveDistance;
+				break;
+			case 'arrowdown':
+				dz -= moveDistance;
+				break;
+			case 'a':
+				dx += moveDistance;
+				break;
+			case 'arrowleft':
+				dx += moveDistance;
+				break;
+			case 'd':
+				dx -= moveDistance;
+				break;
+			case 'arrowright':
+				dx -= moveDistance;
+				break;
+			default:
 				return;
-			}
+		}
 
-			if (game.gamePhase == GamePhase.Active && isXAxisKey && this.isPlayerOnLog(player)) {
-				return;
-			}
+		// Snap the rendered position to the nearest grid tile, then add the
+		// delta, snapping to a log slot only when the destination Z lane has one.
+		const newPosition = player.position.clone();
+		const targetZ = Math.round(playerObj.position.z) + dz;
+		const rawTargetX = playerObj.position.x + dx;
+		newPosition.x = this.getSnappedTargetX(rawTargetX, targetZ);
+		newPosition.z = targetZ;
 
-			switch (pressedKey) {
-				case 'w':
-					dz += moveDistance;
-					break;
-				case 'arrowup':
-					dz += moveDistance;
-					break;
-				case 's':
-					dz -= moveDistance;
-					break;
-				case 'arrowdown':
-					dz -= moveDistance;
-					break;
-				case 'a':
-					dx += moveDistance;
-					break;
-				case 'arrowleft':
-					dx += moveDistance;
-					break;
-				case 'd':
-					dx -= moveDistance;
-					break;
-				case 'arrowright':
-					dx -= moveDistance;
-					break;
-				case 'k':
-					this.getSocket()?.sendPlayerDeath();
-					return;
-				default:
-					return;
-			}
-
-			// Snap the rendered position to the nearest grid tile, then add the
-			// delta, snapping to a log slot only when the destination Z lane has one.
-			const newPosition = player.position.clone();
-			const targetZ = Math.round(playerObj.position.z) + dz;
-			const rawTargetX = playerObj.position.x + dx;
-			newPosition.x = this.getSnappedTargetX(rawTargetX, targetZ);
-			newPosition.z = targetZ;
-
-			if (game.gamePhase == GamePhase.Active && !this.isPlayerColliding(newPosition.toVector3())) {
-				player.position = newPosition;
-				this.updatePlayerPosition(player);
-			}
+		if (game.gamePhase == GamePhase.Active && !this.isPlayerColliding(newPosition.toVector3())) {
+			player.position = newPosition;
+			this.updatePlayerPosition(player);
 		}
 	}
 
