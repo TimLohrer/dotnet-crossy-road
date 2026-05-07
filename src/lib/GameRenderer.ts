@@ -2,13 +2,12 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/Addons.js';
 import type { Lane } from './models/Lane';
 import type { Player } from './models/Player';
-import { gameSocket, menuState, user, user as userStore, wsGame } from './stores/stateStore';
+import { gameSocket, menuState, user as userStore, wsGame } from './stores/stateStore';
 import { get } from 'svelte/store';
 import { MenuState } from './models/MenuState';
 import { Game } from './models/Game';
 import { GamePhase } from './models/GamePhase';
 import { Direction, type MapElement } from './models/MapElement';
-import { now } from 'three/examples/jsm/libs/tween.module.js';
 
 export class GameRenderer {
 	private static frustrumSize = 9;
@@ -117,7 +116,6 @@ export class GameRenderer {
 
 	private getGame = () => get(wsGame);
 	private getUser = () => get(userStore);
-	private getPlayer = () => this.getGame() ? Game.getPlayer(this.getGame()!, this.getUser()!.id) : null;
 	private getSocket = () => get(gameSocket);
 
 	private render = () => this.renderer.render(this.scene, this.camera);
@@ -271,8 +269,6 @@ export class GameRenderer {
 		const originZ = playerObj.position.z;
 		const deltaX = targetXZ.x - originX;
 		const deltaZ = targetXZ.z - originZ;
-		const targetFull = new THREE.Vector3(targetXZ.x, 0, targetXZ.z);
-		const landingY = this.getLandingY(targetFull, playerObj);
 
 		const targetYRotation = this.getTargetYRotation(
 			playerObj.position,
@@ -294,7 +290,7 @@ export class GameRenderer {
 		this.render();
 		this.getSocket()!.sendPlayerPositionUpdate();
 		this.cleanUpInvisibleWorldObjects(player.position.z);
-		if (startPosition.z < player.position.z) this.lastMoveTime = performance.now();
+		if (originZ < targetXZ.z) this.lastMoveTime = performance.now();
 	}
 
 	public syncRemotePlayerPosition(player: Player) {
@@ -311,8 +307,6 @@ export class GameRenderer {
 		const originZ = playerObj.position.z;
 		const deltaX = targetXZ.x - originX;
 		const deltaZ = targetXZ.z - originZ;
-		const targetFull = new THREE.Vector3(targetXZ.x, 0, targetXZ.z);
-		const landingY = this.getLandingY(targetFull, playerObj);
 
 		const targetYRotation = this.getTargetYRotation(
 			playerObj.position,
