@@ -186,12 +186,12 @@ export class GameSocket {
 	private getPlayer = () => Game.getPlayer(this.getGame()!, this.getUser()!.id);
 	private getRenderer = () => get(gameRenderer);
 
-	public async createGame() {
+	public async createGame(seed: number | null = null) {
 		const game = this.getGame();
 		if (game) {
 			await this.connection.invoke(WebsocketEvent.LeaveGame, game!.id);
 		}
-		await this.connection.invoke(WebsocketEvent.CreateGame);
+		await this.connection.invoke(WebsocketEvent.CreateGame, seed);
 	}
 
 	public async joinGame(gameId: string) {
