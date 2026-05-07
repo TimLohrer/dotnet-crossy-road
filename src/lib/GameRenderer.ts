@@ -8,15 +8,20 @@ import { MenuState } from './models/MenuState';
 import { Game } from './models/Game';
 import { GamePhase } from './models/GamePhase';
 import { Direction, type MapElement } from './models/MapElement';
+import { now } from 'three/examples/jsm/libs/tween.module.js';
 
 export class GameRenderer {
 	private static frustrumSize = 9;
 	private static cameraOffsetZ = 10;
 	private static moveAnimationDurationMs = 125;
 	private static jumpHeight = 0.35;
-		private static cleanupDistanceBehindPlayer = 18;
+	private static cleanupDistanceBehindPlayer = 18;
 	private static GLTF_CACHE: { [key: string]: GLTF } = {};
 	private static gltfLoader = new GLTFLoader();
+	private static readonly IDLE_CAMERA_PUSH_DELAY_MS = 200;
+	private static readonly IDLE_DEATH_TIME_MS = 8000;
+	private static readonly IDLE_CAMERA_PUSH_SPEED = 0.2;
+	private lastMoveTime: number = performance.now();
 
 	window: Window;
 	container: HTMLDivElement;
@@ -261,6 +266,7 @@ export class GameRenderer {
 			startedAt: performance.now(),
 			durationMs: GameRenderer.moveAnimationDurationMs
 		};
+		this.lastMoveTime = performance.now();
 		this.render();
 		this.getSocket()!.sendPlayerPositionUpdate();
 		this.cleanUpInvisibleWorldObjects(player.position.z);
@@ -427,19 +433,24 @@ export class GameRenderer {
 	}
 
 	private cameraMovement(player: Player) {
-		const targetZ = player.position.z - 16 + GameRenderer.cameraOffsetZ;
+		const now = performance.now()
+		const idleMs = now - this.lastMoveTime;
+
+		const baseTargetZ = player.position.z - 16 + GameRenderer.cameraOffsetZ;
+		let targetZ = baseTargetZ;
+
+		if (idleMs > GameRenderer.IDLE_CAMERA_PUSH_DELAY_MS) {
+			const pushElapsed = (idleMs - GameRenderer.IDLE_CAMERA_PUSH_DELAY_MS) / 1000;
+			targetZ = baseTargetZ + pushElapsed * GameRenderer.IDLE_CAMERA_PUSH_SPEED;
+		}
 
 		const distanceZ = Math.abs(this.camera.position.z - targetZ);
-
 		const baseSpeed = 0.02;
 		const sensitivity = 0.1;
-
 		const distanceFactor = distanceZ * sensitivity;
 		const lerpAlpha = Math.min(baseSpeed + distanceFactor, 1.0);
 
-		let tempCamPos = this.camera.position;
-
-		if (tempCamPos.z < this.camera.position.z + (targetZ - this.camera.position.z) * lerpAlpha) {
+		if (this.camera.position.z < targetZ) {
 			this.camera.position.z += (targetZ - this.camera.position.z) * lerpAlpha;
 		}
 	}
@@ -460,6 +471,10 @@ export class GameRenderer {
 		const socket = this.getSocket()!;
 
 		if (isActiveUser && collidableElementAtPos) {
+			return socket.sendPlayerDeath();
+		}
+
+		if (isActiveUser && performance.now() - this.lastMoveTime >= GameRenderer.IDLE_DEATH_TIME_MS) {
 			return socket.sendPlayerDeath();
 		}
 
