@@ -463,12 +463,6 @@ export class GameRenderer {
 		return mapElement ?? lane;
 	}
 
-	/**
-	 * Finds the log on targetZ whose nearest slot is closest to referenceX,
-	 * and returns the snapped world X for that slot.
-	 * Matches Z-lane only so X drift never causes misses.
-	 * Works for logs of any width (1, 2, 3 tiles).
-	 */
 	private getClosestLogSlotOnLane(
 		targetZ: number,
 		referenceX: number,
@@ -744,6 +738,12 @@ export class GameRenderer {
 			this.cameraMovement(player);
 			this.updateLight(player);
 			this.handlePlayerPosition(player);
+			
+			const isOnLog = this.isPlayerOnLog(player);
+			if (player.isAlive && isOnLog) {
+				// Dont kill the player due to inactivity as long as they are on a log
+				this.lastMoveTime = performance.now();
+			}
 		}
 		this.render();
 	}
