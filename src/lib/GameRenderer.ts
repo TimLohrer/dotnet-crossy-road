@@ -167,6 +167,7 @@ export class GameRenderer {
 			// 		wireframe: true
 			// 	});
 			// });
+			this.objectList.push(model);
 		}
 
 		const idleAnimation = gltf.animations.find((a) => a.name.toLowerCase() == 'idle');	
