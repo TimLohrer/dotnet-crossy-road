@@ -3,76 +3,91 @@
 	import SkinPreview from "./SkinPreview.svelte";
 	import { gameSocket, menuState, skinList, user } from "./stores/stateStore";
 	import type { User } from "./models/User";
-	import type { Skin } from "./models/Skin";
+	import { SkinRarity, type Skin } from "./models/Skin";
 	import { MenuState } from "./models/MenuState";
 
-    async function handleEvent(skin: Skin) {
+    async function selectSkin(skin: Skin) {
         const isOwned = $user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id);
+        if (!isOwned) return; 
 
-        if (isOwned) {
-            const skinRes = await fetch(`${PUBLIC_API_URL}/shop/select`, {
-                credentials: 'include',
-                method: "POST",
-                headers: {
-                    cookie: document.cookie,
-                    "Content-Type": "application/json"
-                },
+        const skinRes = await fetch(`${PUBLIC_API_URL}/shop/select`, {
+            credentials: 'include',
+            method: "POST",
+            headers: {
+                cookie: document.cookie,
+                "Content-Type": "application/json"
+            },
 
-                body: JSON.stringify(skin.id)
-            });
+            body: JSON.stringify(skin.id)
+        });
 
-            if (!skinRes.ok) throw new Error(`failed to select Skin: ${skinRes.status}`);
+        if (!skinRes.ok) throw new Error(`failed to select Skin: ${skinRes.status}`);
 
-            const newUser = await skinRes.json() as User;
-            $user = newUser;
-            $gameSocket?.syncPlayerModel();
-            $menuState = MenuState.Play;
-        }
-        else {
-            const skinRes = await fetch(`${PUBLIC_API_URL}/shop/buy`, {
-                credentials: 'include',
-                method: "POST",
-                headers: {
-                    cookie: document.cookie,
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify(skin.id)
-            })
-
-            if (!skinRes.ok) throw new Error(`failed to select Skin: ${skinRes.status}`);
-        
-            const newUser = await skinRes.json() as User;
-            $user = newUser;
-            $gameSocket?.syncPlayerModel();
-            $menuState = MenuState.Play;
-        }
+        const newUser = await skinRes.json() as User;
+        $user = newUser;
+        $gameSocket?.syncPlayerModel();
+        $menuState = MenuState.Play;
     }
 
+    async function buySkin(skin: Skin) {
+        const isOwned = $user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id);
+        if (isOwned) return selectSkin(skin);
+
+        const skinRes = await fetch(`${PUBLIC_API_URL}/shop/buy`, {
+            credentials: 'include',
+            method: "POST",
+            headers: {
+                cookie: document.cookie,
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(skin.id)
+        })
+
+        if (!skinRes.ok) throw new Error(`failed to select Skin: ${skinRes.status}`);
+    
+        const newUser = await skinRes.json() as User;
+        $user = newUser;
+        $gameSocket?.syncPlayerModel();
+        $menuState = MenuState.Play;
+    }
+
+    let common = "#25D900"
+    let rare = "#00E2FC"
+    let epic = "#9500FF"
+    let legendary = "#F5C100"
+    let rarityMap = new Map([[SkinRarity.Common,common],[SkinRarity.Rare,rare],[SkinRarity.Epic,epic],[SkinRarity.Legendary,legendary]]);
 </script>
-<div class="budget">
-    {$user?.taler}
-</div>
+
 <!-- svelte-ignore component_name_lowercase -->
 <div class="container">
-    {#each $skinList as skin}
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div class="skin" class:selected={$user?.skin?.id === skin.id} onclick={() => handleEvent(skin)}>
-            <div class="preview">
-                <SkinPreview params={{skin: skin}} />
+    <div class="budget">
+        <p>
+            <span>Taler:</span>
+            <span class="taler">{$user?.taler}</span>
+        </p>
+        <hr>
+    </div>
+    <div class="skins">
+        {#each $skinList as skin}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div class="skin" class:owned={$user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id)} class:selected={$user?.skin?.id === skin.id} onclick={() => selectSkin(skin)} style={$user?.skin?.id === skin.id ? `border-color:${rarityMap.get(skin.rarity) ?? common};box-shadow: 0 0 1rem ${rarityMap.get(skin.rarity) ?? common}` : ''}>
+                <div class="preview">
+                    <SkinPreview params={{skin: skin}} />
+                </div>
+                <div class="name">{skin.name}</div>
+                {#if !$user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id)}
+                    <div class="pricetag" class:toExpensive={skin.price > ($user?.taler ?? 0)} onclick={() => buySkin(skin)}>
+                        {skin.price}
+                    </div>
+                    <div class="lock">
+                        <img src="/assets/lock.png" alt="lock">
+                    </div>
+                {/if}
             </div>
-            <div class="name">{skin.name}</div>
-            {#if !$user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id)}
-                <div class="pricetag">
-                    {skin.price}
-                </div>
-                <div class="lock">
-                    <img src="/assets/lock.png" alt="lock">
-                </div>
-            {/if}
-        </div>
-    {/each}
+        {/each}
+    </div>
 </div>
 
 
@@ -92,26 +107,36 @@
         box-sizing: border-box;
         background-color: rgba(255, 255, 255, 0.04);
         overflow: hidden;
+        pointer-events: none;
+    }
+
+    .skin.owned {
+        pointer-events: all;
+        cursor: pointer;
+    }
+
+    .skins {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 0.75rem;
     }
 
     .skin.selected {
         border-width: 0.2rem;
-        border-color: #25D900;
-        box-shadow: 0 0 1rem #25D900;
     }
 
     .container {
-        height: 45rem;
+        height: 100%;
         width: 33rem;
         background-color: black;
         border-style: none;
         outline: none;
         display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
+        flex-direction: column;
         align-content: flex-start;
         gap: 0.75rem;
-        padding: 0.75rem;
         box-sizing: border-box;
         overflow-y: auto;
     }
@@ -163,7 +188,19 @@
         font-weight: 700;
         opacity: 0;
         transition: opacity 0.15s ease-in-out;
-        pointer-events: none;
+        pointer-events: all;
+        transition: all .2s ease-in-out;
+        cursor: pointer;
+    }
+
+    .pricetag:hover {
+        border-color: green;
+        color: green;
+    }
+
+    .pricetag.toExpensive:hover {
+        border-color: red;
+        color: rgba(255, 0, 0, 1.0);
     }
 
     .skin:hover .pricetag {
@@ -176,7 +213,20 @@
     }
 
     .budget {
-        padding-left: 1rem;
+        padding: 0.75rem;
     }
 
+    .budget p {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: space-between;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .budget p span.taler {
+        color: gold;
+    }
 </style>

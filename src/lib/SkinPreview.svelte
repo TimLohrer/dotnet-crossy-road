@@ -132,7 +132,7 @@
             const deltaTime = timer.getDelta();
             mixers.forEach((mixer) => mixer.update(deltaTime));
             if (rotatingModel) {
-                rotatingModel.rotation.y += deltaTime * 1.25;
+                rotatingModel.rotation.y += deltaTime * 0.75;
             }
             renderer.render(scene, camera);
         };

@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { gameSocket, wsGame } from "./stores/stateStore";
+	import { MenuState } from "./models/MenuState";
+	import { gameSocket, menuState, wsGame } from "./stores/stateStore";
 
     let seed: number | undefined = $state();
 
     async function changeSeed() {
-        console.log(seed);
+        if (seed === undefined) return $menuState = MenuState.Play;
         
         await $gameSocket?.createGame(seed);
     }
@@ -19,12 +20,13 @@
 
 <style>
     .seed-container {
-        padding: 0.5rem;
+        padding: 1.5rem 2rem;
     }
 
     input {
         padding: 0 0.5rem;
         outline: none;
+        border: none;
     }
 
     input::-webkit-inner-spin-button, input::-webkit-outer-spin-button {

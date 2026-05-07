@@ -20,7 +20,6 @@
         gap: 1rem;
         padding: 1rem;
         z-index: 1000;
-        pointer-events: none;
     }
     
     p {
