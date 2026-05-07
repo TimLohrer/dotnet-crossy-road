@@ -602,7 +602,9 @@ export class GameRenderer {
 		const delta = this.timer.getDelta();
 		this.mixers.forEach((mixer) => mixer.update(delta));
 		this.updatePlayerMoveAnimations();
-		this.updateMovingElementsAnimations(delta);
+		if (this.getGame()?.gamePhase == GamePhase.Active) {
+			this.updateMovingElementsAnimations(delta);
+		}
 	}
 
 	private getMovingElementSpawnX(element: MapElement): number {
