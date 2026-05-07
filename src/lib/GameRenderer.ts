@@ -622,7 +622,7 @@ export class GameRenderer {
 		const delta = this.timer.getDelta();
 		this.mixers.forEach((mixer) => mixer.update(delta));
 		this.updatePlayerMoveAnimations();
-		if (this.getGame()?.gamePhase == GamePhase.Active) {
+		if (this.getGame()?.gamePhase != GamePhase.Created) {
 			this.updateMovingElementsAnimations(delta);
 		}
 	}
