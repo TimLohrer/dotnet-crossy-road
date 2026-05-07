@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/Addons.js';
 import type { Lane } from './models/Lane';
 import type { Player } from './models/Player';
-import { gameSocket, menuState, user as userStore, wsGame } from './stores/stateStore';
+import { gameSocket, menuState, user, user as userStore, wsGame } from './stores/stateStore';
 import { get } from 'svelte/store';
 import { MenuState } from './models/MenuState';
 import { Game } from './models/Game';
@@ -20,7 +20,7 @@ export class GameRenderer {
 	private static gltfLoader = new GLTFLoader();
 	private static readonly IDLE_CAMERA_PUSH_DELAY_MS = 200;
 	private static readonly IDLE_DEATH_TIME_MS = 8000;
-	private static readonly IDLE_CAMERA_PUSH_SPEED = 0.2;
+	private static readonly IDLE_CAMERA_PUSH_SPEED = 0.3;
 	private lastMoveTime: number = performance.now();
 
 	window: Window;
@@ -474,7 +474,7 @@ export class GameRenderer {
 			return socket.sendPlayerDeath();
 		}
 
-		if (isActiveUser && performance.now() - this.lastMoveTime >= GameRenderer.IDLE_DEATH_TIME_MS) {
+		if (isActiveUser && performance.now() - this.lastMoveTime >= GameRenderer.IDLE_DEATH_TIME_MS && player.score > 0) {
 			return socket.sendPlayerDeath();
 		}
 
