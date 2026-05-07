@@ -11,10 +11,12 @@ public static class CrossyWsEvent
     public static readonly string UpdatePlayerModel = "UpdatePlayerModel";
     public static readonly string PlayerDeath = "PlayerDeath";
     public static readonly string PlayerLeft = "PlayerLeft";
+    public static readonly string UpdateUser = "UpdateUser";
 
     // Game Events:
     public static readonly string NewSection = "NewSection";
     public static readonly string UpdatePlayerPosition = "UpdatePlayerPosition";
+    public static readonly string CollectTaler = "CollectTaler";
 
     // Errors:
     public static readonly string GameJoinError = "GameJoinError";

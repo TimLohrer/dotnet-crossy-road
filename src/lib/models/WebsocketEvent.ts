@@ -10,9 +10,11 @@ export class WebsocketEvent {
 	static UpdatePlayerModel = 'UpdatePlayerModel';
     static PlayerDeath = 'PlayerDeath';
 	static PlayerLeft = 'PlayerLeft';
+	static UpdateUser = 'UpdateUser';
     
 	static NewSection = 'NewSection';
 	static UpdatePlayerPosition = 'UpdatePlayerPosition';
+	static CollectTaler = 'CollectTaler';
 
 	static GameJoinError = 'GameJoinError';
 }

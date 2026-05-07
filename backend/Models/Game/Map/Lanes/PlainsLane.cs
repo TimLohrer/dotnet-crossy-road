@@ -59,6 +59,7 @@ public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, boo
                     continue;
             }
         }
+        GenerateTalers(0.05f);
     }
 
     private List<CrossyModelPart> GenerateBlockedSlots()

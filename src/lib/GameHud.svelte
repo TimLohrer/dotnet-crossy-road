@@ -4,15 +4,19 @@
 
 <div class="hud">
     <p>{$wsGame?.players.find(p => p.user.id === $user?.id)?.score}</p>
+    <p class="taler">{($user?.taler ?? 0) + ($wsGame?.players.find(p => p.user.id === $user?.id)?.taler ?? 0)}</p>
 </div>
 
 <style>
     .hud {
         display: flex;
         flex-direction: row;
+        justify-content: space-between;
+        width: calc(100% - 2rem);
         position: absolute;
         top: 1rem;
         left: 1rem;
+        right: 1rem;
         gap: 1rem;
         padding: 1rem;
         z-index: 1000;
@@ -31,5 +35,10 @@
         display: flex;
         align-items: center;
         font-size: 2.5rem;
+    }
+
+    .taler {
+        border-color: gold;
+        color: gold;
     }
 </style>

@@ -403,6 +403,15 @@ export class GameRenderer {
 		}
 	}
 
+	public removeTalerAtPosition(position: THREE.Vector3) {
+		const talerElement = this.renderedObjects.find((o) => o.name === `element_taler` && o.position.z === position.z && o.position.x === position.x);
+		if (talerElement) {
+			talerElement.visible = false;
+			this.scene.remove(talerElement);
+			this.renderedObjects = this.renderedObjects.filter((obj) => obj.uuid !== talerElement.uuid);
+		}
+	}
+
 	private cleanUpInvisibleWorldObjects(playerZ: number) {
 		const cutoffZ = playerZ - GameRenderer.cleanupDistanceBehindPlayer;
 		const removedObjects = this.renderedObjects.filter((obj) => {

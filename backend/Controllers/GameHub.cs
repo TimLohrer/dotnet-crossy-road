@@ -3,6 +3,7 @@ using CrossyRoadApi.Database;
 using CrossyRoadApi.Models.Database;
 using CrossyRoadApi.Models.Game;
 using CrossyRoadApi.Models.Game.Map;
+using CrossyRoadApi.Models.Game.Map.Elements;
 using CrossyRoadApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -105,8 +106,15 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
 
         var wsPlayer = wsGame.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId)!;
         if (wsGame.GamePhase != CrossyGame.Phase.Active || !wsPlayer.IsAlive) return;
+        if (Math.Abs(wsPlayer.Position.Z - newPosition.Z) > 1) return;
 
         var shouldGenerateNewSection = wsPlayer.UpdatePosition(newPosition);
+        if (wsGame.TalerLocations.Any(t => t.X == newPosition.X && t.Z == newPosition.Z))
+        {
+            wsPlayer.Taler += 1;
+            wsGame.TalerLocations.RemoveAll(t => t.X == newPosition.X && t.Z == newPosition.Z);
+            await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.CollectTaler, wsPlayer.ToDto());
+        }
 
         await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.UpdatePlayerPosition, wsPlayer.ToDto());
 
@@ -142,6 +150,7 @@ public class GameHub(CrossyDbContext context, UserManager<CrossyUser> userContex
             if (wsPlayer.Score > user.HighScore) user.HighScore = wsPlayer.Score;
             if (wsPlayer.Taler > 0) user.Taler += wsPlayer.Taler;
             await userContext.UpdateAsync(user);
+            await Clients.Caller.SendAsync(CrossyWsEvent.UpdateUser, user.ToDto());
         }
 
         await Clients.Group(wsGame.Id.ToString()).SendAsync(CrossyWsEvent.PlayerDeath, wsGame.ToDto());

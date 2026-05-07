@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Numerics;
 using CrossyRoadApi.Database;
 using CrossyRoadApi.Dto;
 using CrossyRoadApi.Models.Database;
@@ -24,6 +25,7 @@ public class CrossyGame
     public int Seed { get; private set; } = new Random().Next();
     public CrossyTheme Theme { get; private set; } = CrossyTheme.Default;
     [NotMapped] public Phase GamePhase { get; set; } = Phase.Created;
+    [NotMapped] public List<Vector3> TalerLocations { get; set; } = [];
     public DateTime? StartTime { get; set; }
     public DateTime? EndTime { get; set; }
 

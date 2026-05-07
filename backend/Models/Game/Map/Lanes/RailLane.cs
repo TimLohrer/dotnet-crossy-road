@@ -11,5 +11,6 @@ public class RailLane(int zPosition, int seed) : CrossyMapLane(CrossyModelPart.R
         var startX = new List<int> { 80, -80 }[Randomizer.Next(2)]; // Randomizes direction
         var offset = Randomizer.Next(300, 600);
         Elements.Add(new Train(this, startX, offset));
+        GenerateTalers(0);
     }
 }

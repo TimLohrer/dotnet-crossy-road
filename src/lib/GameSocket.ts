@@ -9,6 +9,7 @@ import type { Player } from './models/Player';
 import { GameRenderer } from './GameRenderer';
 import { MenuState } from './models/MenuState';
 import { GamePhase } from './models/GamePhase';
+import type { User } from './models/User';
 
 export class GameSocket {
 	private connection: signalR.HubConnection;
@@ -163,6 +164,22 @@ export class GameSocket {
 				}
 			}
 		});
+
+		this.connection.on(WebsocketEvent.CollectTaler, (newPlayer: Player) => {
+			newPlayer.position = Vec3.fromObject(newPlayer.position);
+			
+			wsGame.update((game) => {
+				const playerIndex = game?.players.findIndex((p) => p.user.id === newPlayer.user.id);
+				if (playerIndex !== undefined) {
+					game!.players[playerIndex] = newPlayer;
+				}
+				return game;
+			});
+
+			this.getRenderer()!.removeTalerAtPosition(newPlayer.position.toVector3());
+		});
+
+		this.connection.on(WebsocketEvent.UpdateUser, (updatedUser: User) => userStore.update(() => updatedUser));
 	}
 
 	public async connect() {

@@ -34,5 +34,7 @@ public enum CrossyModelPart
     [EnumMember(Value = "car_2")] Car2,
     [EnumMember(Value = "car_3")] Car3,
     
-    [EnumMember(Value = "train")] Train
+    [EnumMember(Value = "train")] Train,
+    
+    [EnumMember(Value = "taler")] Taler
 }

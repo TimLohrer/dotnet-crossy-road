@@ -54,5 +54,6 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
                     break;
             }
         }
+        GenerateTalers(0);
     }
 }

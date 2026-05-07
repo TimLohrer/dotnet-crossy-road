@@ -27,7 +27,7 @@ public abstract class CrossyModel
             $"/models/{Theme.ToString().ToLower()}/{modelType}/{ModelPart.GetAttributeOfType<EnumMemberAttribute>()!.Value}.gltf";
     }
 
-    public abstract void SetPosition(int position);
+    public abstract void SetPosition(Vector3 newPosition);
 
     public void SetTheme(CrossyTheme theme)
     {

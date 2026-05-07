@@ -1,3 +1,4 @@
+using CrossyRoadApi.Models.Game.Map.Elements;
 using CrossyRoadApi.Models.Game.Map.Lanes;
 using CrossyRoadApi.Utils;
 
@@ -46,6 +47,8 @@ public class CrossyMapGenerator(CrossyGame game)
                 lanes = GeneratePlainsLanes(randomizer, _seed, zPosition);
                 break;
         }
+        
+        lanes.ForEach(l => l.Elements.Where(e => e is Taler).ToList().ForEach(e => game.TalerLocations.Add(e.Position)));
 
         return lanes;
     }
