@@ -382,7 +382,7 @@ export class GameRenderer {
 
 		const targetElement = this.getElementAtPosition(targetPosition);
 		if (!targetElement || targetElement.name === 'lane_water') return -1;
-		if (targetElement.name === 'lane_rail') return 0;
+		if (targetElement.name.startsWith('lane_')) return 0;
 
 		return this.getObjectTopY(targetElement) + this.getPlayerFeetOffset(playerObj);
 	}
@@ -477,7 +477,8 @@ export class GameRenderer {
 				obj.position.x == 0 &&
 				obj.position.y == 0 &&
 				obj.position.z == Math.round(position.z) &&
-				obj.name.includes('lane_')
+				obj.name.includes('lane_') &&
+				obj.name !== 'lane_rail_signal'
 		);
 
 		return mapElement ?? lane;
