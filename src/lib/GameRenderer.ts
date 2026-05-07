@@ -59,10 +59,10 @@ export class GameRenderer {
 		let aspect = width / height;
 
 		this.camera = new THREE.OrthographicCamera(
-			(-GameRenderer.frustrumSize * aspect) / 2,
-			(GameRenderer.frustrumSize * aspect) / 2,
-			GameRenderer.frustrumSize / 2,
-			-GameRenderer.frustrumSize / 2,
+			(-GameRenderer.frustrumSize * aspect) / 2.1,
+			(GameRenderer.frustrumSize * aspect) / 2.1,
+			GameRenderer.frustrumSize / 2.1,
+			-GameRenderer.frustrumSize / 2.1,
 			0.001,
 			1000
 		);
