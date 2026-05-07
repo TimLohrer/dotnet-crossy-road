@@ -37,7 +37,7 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
             var offset =
                 (Elements.Count > 0
                     ? ((CrossyMovingMapElement)Elements.Last()).XOffset + Elements.Last().ModelWidth
-                    : 0) + Randomizer.Next(2, 10) + 1;
+                    : 0) + Randomizer.Next(2, 6);
             switch (type)
             {
                 case CrossyModelPart.Car0:
