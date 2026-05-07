@@ -5,17 +5,17 @@ public class CrossySkin(int id, string name, int price, CrossySkin.SkinRarity ra
     public enum SkinRarity
     {
         Common,
-        Uncommon,
         Rare,
+        Epic,
         Legendary
     }
 
     public static readonly CrossySkin Chicken = new(0, "Chicken", 0, SkinRarity.Common, "chicken");
 
-    public static readonly CrossySkin Chick = new(1, "Chick", 50, SkinRarity.Uncommon, "chick");
-    public static readonly CrossySkin Rabbit = new(2, "Rabbit", 50, SkinRarity.Uncommon, "rabbit");
-    public static readonly CrossySkin Monkey = new(3, "Monkey", 200, SkinRarity.Rare, "monkey");
-    public static readonly CrossySkin Snail = new(4, "Snail", 200, SkinRarity.Rare, "snail");
+    public static readonly CrossySkin Chick = new(1, "Chick", 50, SkinRarity.Common, "chick");
+    public static readonly CrossySkin Rabbit = new(2, "Rabbit", 50, SkinRarity.Rare, "rabbit");
+    public static readonly CrossySkin Monkey = new(3, "Monkey", 200, SkinRarity.Epic, "monkey");
+    public static readonly CrossySkin Snail = new(4, "Snail", 200, SkinRarity.Epic, "snail");
     public static readonly CrossySkin Octopus = new(5, "Octopus", 500, SkinRarity.Legendary, "octopus");
 
     public static readonly List<CrossySkin> Skins = [Chicken, Chick, Rabbit, Monkey, Snail, Octopus];

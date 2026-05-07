@@ -2,7 +2,8 @@
     import * as THREE from 'three';
     import { GLTFLoader, type GLTF } from 'three/examples/jsm/Addons.js';
     import { onMount, onDestroy } from 'svelte';
-    import type { Skin, SkinRarity } from './models/Skin';
+    import { SkinRarity, type Skin } from './models/Skin';
+	import { skinList } from './stores/stateStore';
 
     interface Props {
         params: {
@@ -24,6 +25,12 @@
     let animationFrameId: number | null = null;
     let disposed = false;
 
+    let common = "#25D900"
+    let rare = "#00E2FC"
+    let epic = "#9500FF"
+    let legendary = "#F5C100"
+    let rarityMap = new Map([[SkinRarity.Common,common],[SkinRarity.Rare,rare],[SkinRarity.Epic,epic],[SkinRarity.Legendary,legendary]]);
+
     const disposeSceneNode = (object: THREE.Object3D) => {
         const mesh = object as THREE.Mesh;
         if (mesh.geometry) {
@@ -44,7 +51,16 @@
         const height = container.clientHeight;
 
         scene = new THREE.Scene();
-        scene.background = new THREE.Color("#D3FFE7");
+        const gradientCanvas = document.createElement('canvas');
+        gradientCanvas.width = 2;
+        gradientCanvas.height = 256;
+        const ctx = gradientCanvas.getContext('2d')!;
+        const grad = ctx.createLinearGradient(0, 0, 0, 256);
+        grad.addColorStop(0, '#000000');
+        grad.addColorStop(1, rarityMap.get(params.skin.rarity) ?? common);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 2, 256);
+        scene.background = new THREE.CanvasTexture(gradientCanvas);
 
         // Camera setup
         const aspect = width / Math.max(height, 1);

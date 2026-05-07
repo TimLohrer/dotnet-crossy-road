@@ -58,7 +58,7 @@
     {#each $skinList as skin}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div class="skin" onclick={() => handleEvent(skin)}>
+        <div class="skin" class:selected={$user?.skin?.id === skin.id} onclick={() => handleEvent(skin)}>
             <div class="preview">
                 <SkinPreview params={{skin: skin}} />
             </div>
@@ -92,6 +92,12 @@
         box-sizing: border-box;
         background-color: rgba(255, 255, 255, 0.04);
         overflow: hidden;
+    }
+
+    .skin.selected {
+        border-width: 0.2rem;
+        border-color: #25D900;
+        box-shadow: 0 0 1rem #25D900;
     }
 
     .container {
@@ -141,7 +147,6 @@
         padding: 0.5rem;
         background-color: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(2px);
-        backdrop-filter: grayscale(100%);
         pointer-events: none;
     }
 

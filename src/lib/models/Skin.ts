@@ -8,7 +8,7 @@ export interface Skin {
 
 export enum SkinRarity {
     Common = 0,
-    Uncommon = 1,
-    Rare = 2,
+    Rare = 1,
+    Epic = 2,
     Legendary = 3
 }
