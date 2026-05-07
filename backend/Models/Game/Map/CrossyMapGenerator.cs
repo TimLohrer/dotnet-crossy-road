@@ -88,7 +88,7 @@ public class CrossyMapGenerator(CrossyGame game)
         var waterLength = randomizer.Next(1, MaxWaterLenth + 1);
 
         List<CrossyMapLane> lanes = [];
-        for (var i = 0; i < waterLength; i++) lanes.Add(new WaterLane(zPosition + i, seed));
+        for (var i = 0; i < waterLength; i++) lanes.Add(new WaterLane(zPosition + i, seed, lanes.Count <= 0 || lanes.Last().Elements.All(e => e.ModelPart != CrossyModelPart.Lillypad)));
 
         return lanes;
     }

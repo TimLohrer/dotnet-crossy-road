@@ -42,8 +42,16 @@ export class GameRenderer {
 	elements: { [key: string]: MapElement } = {};
 	private moveAnimations: {
 		[playerId: string]: {
-			start: THREE.Vector3;
-			end: THREE.Vector3;
+			// XZ delta to apply (relative to position at animation start)
+			deltaX: number;
+			deltaZ: number;
+			// World X/Z of the player at the moment the animation was queued,
+			// used to reconstruct absolute target each frame.
+			originX: number;
+			originZ: number;
+			// Absolute target Z (static, never changes)
+			endZ: number;
+			startY: number;
 			yRotationStart: number;
 			yRotationEnd: number;
 			startedAt: number;
@@ -250,17 +258,34 @@ export class GameRenderer {
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
 		if (!playerObj) return;
 
-		const targetPosition = player.position.toVector3();		
-		const startPosition = playerObj.position.clone();
-		const landingY = this.getLandingY(targetPosition, playerObj);
-		if (landingY !== null) {
-			targetPosition.y = landingY;
-		}
-		const targetYRotation = this.getTargetYRotation(startPosition, targetPosition);
+		const rawTargetX = player.position.x;
+		const rawTargetZ = player.position.z;
+		const snappedTargetZ = Math.round(rawTargetZ);
+
+		// Snap to the nearest slot on any log occupying the target lane,
+		// or fall back to the global integer grid.
+		const snappedX = this.getSnappedTargetX(rawTargetX, snappedTargetZ);
+
+		const targetXZ = new THREE.Vector3(snappedX, 0, snappedTargetZ);
+		const originX = playerObj.position.x;
+		const originZ = playerObj.position.z;
+		const deltaX = targetXZ.x - originX;
+		const deltaZ = targetXZ.z - originZ;
+		const targetFull = new THREE.Vector3(targetXZ.x, 0, targetXZ.z);
+		const landingY = this.getLandingY(targetFull, playerObj);
+
+		const targetYRotation = this.getTargetYRotation(
+			playerObj.position,
+			new THREE.Vector3(targetXZ.x, playerObj.position.y, targetXZ.z)
+		);
 
 		this.moveAnimations[player.user.id] = {
-			start: startPosition,
-			end: targetPosition,
+			deltaX,
+			deltaZ,
+			originX,
+			originZ,
+			endZ: targetXZ.z,
+			startY: playerObj.position.y,
 			yRotationStart: playerObj.rotation.y,
 			yRotationEnd: targetYRotation,
 			startedAt: performance.now(),
@@ -275,18 +300,32 @@ export class GameRenderer {
 	public syncRemotePlayerPosition(player: Player) {
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
 		if (!playerObj) return;
+		const snappedTargetZ = Math.round(player.position.z);
 
-		const targetPosition = player.position.toVector3();
-		const startPosition = playerObj.position.clone();
-		const landingY = this.getLandingY(targetPosition, playerObj);
-		if (landingY !== null) {
-			targetPosition.y = landingY;
-		}
-		const targetYRotation = this.getTargetYRotation(startPosition, targetPosition);
+		const targetXZ = new THREE.Vector3(
+			this.getSnappedTargetX(player.position.x, snappedTargetZ),
+			0,
+			snappedTargetZ
+		);
+		const originX = playerObj.position.x;
+		const originZ = playerObj.position.z;
+		const deltaX = targetXZ.x - originX;
+		const deltaZ = targetXZ.z - originZ;
+		const targetFull = new THREE.Vector3(targetXZ.x, 0, targetXZ.z);
+		const landingY = this.getLandingY(targetFull, playerObj);
+
+		const targetYRotation = this.getTargetYRotation(
+			playerObj.position,
+			new THREE.Vector3(targetXZ.x, playerObj.position.y, targetXZ.z)
+		);
 
 		this.moveAnimations[player.user.id] = {
-			start: startPosition,
-			end: targetPosition,
+			deltaX,
+			deltaZ,
+			originX,
+			originZ,
+			endZ: targetXZ.z,
+			startY: playerObj.position.y,
 			yRotationStart: playerObj.rotation.y,
 			yRotationEnd: targetYRotation,
 			startedAt: performance.now(),
@@ -368,10 +407,24 @@ export class GameRenderer {
 	private getElementAtPosition(position: THREE.Vector3): THREE.Object3D | undefined {
 		const mapElement = this.renderedObjects.find(
 			(obj) => {
-				const playerPos = position.round();
-				const basePos = obj.position.clone().round();
 				const element = this.elements[obj.uuid];
-				if (!element || element.hasCollision || obj.position.x > 6 || obj.position.x < -6) return false;
+				if (!element || element.hasCollision || obj.position.x > 8 || obj.position.x < -8) return false;
+
+				// Moving elements (logs): use X/Z point-in-bounds check against the
+				// element's current world bounding box so sub-tile movement doesn't
+				// cause false misses regardless of the caller's context.
+				if (!element.isStatic) {
+					const elementBox = new THREE.Box3().setFromObject(obj);
+					return (
+						position.x >= elementBox.min.x &&
+						position.x <= elementBox.max.x &&
+						position.z >= elementBox.min.z &&
+						position.z <= elementBox.max.z
+					);
+				}
+
+				const playerPos = position.clone().round();
+				const basePos = obj.position.clone().round();
 				const occupiedPositions = [basePos];
 				for (let i = 1; i < element.modelWidth; i++) {
 					const offset = new THREE.Vector3();
@@ -399,6 +452,62 @@ export class GameRenderer {
 		);
 
 		return mapElement ?? lane;
+	}
+
+	/**
+	 * Finds the log on targetZ whose nearest slot is closest to referenceX,
+	 * and returns the snapped world X for that slot.
+	 * Matches Z-lane only so X drift never causes misses.
+	 * Works for logs of any width (1, 2, 3 tiles).
+	 */
+	private getClosestLogSlotOnLane(
+		targetZ: number,
+		referenceX: number,
+		maxSnapDistance = 0.75
+	): number | null {
+		let bestSnappedX: number | null = null;
+		let bestDist = Infinity;
+		const laneZ = Math.round(targetZ);
+
+		for (const obj of this.renderedObjects) {
+			const element = this.elements[obj.uuid];
+			if (!element || !element.modelLocation.includes('log')) continue;
+			if (Math.round(element.basePosition.z) !== laneZ) continue;
+
+			const spawnX = this.getMovingElementSpawnX(element);
+			const driftX = obj.position.x - spawnX;
+			const dynamicBaseX = element.basePosition.x + driftX;
+
+			for (let i = 0; i < element.modelWidth; i++) {
+				const slotX =
+					element.direction === Direction.Right ? dynamicBaseX - i : dynamicBaseX + i;
+				const dist = Math.abs(slotX - referenceX);
+				if (dist < bestDist) {
+					bestDist = dist;
+					bestSnappedX = slotX;
+				}
+			}
+		}
+
+		if (bestSnappedX === null || bestDist > maxSnapDistance) return null;
+		return bestSnappedX;
+	}
+
+	private getSnappedTargetX(rawTargetX: number, targetZ: number): number {
+		const logSlotX = this.getClosestLogSlotOnLane(targetZ, rawTargetX);
+		return logSlotX !== null ? logSlotX : Math.round(rawTargetX);
+	}
+
+	private isPlayerOnLog(player: Player): boolean {
+		const playerObj = this.renderedObjects.find((o) => o.name === player.user.id);
+		if (!playerObj) return false;
+		const playerBox = new THREE.Box3().setFromObject(playerObj);
+		return this.renderedObjects.some((obj) => {
+			const element = this.elements[obj.uuid];
+			if (!element || !element.modelLocation.includes('log')) return false;
+			const elementBox = new THREE.Box3().setFromObject(obj);
+			return playerBox.intersectsBox(elementBox);
+		});
 	}
 
 	private getAxisOverlap(minA: number, maxA: number, minB: number, maxB: number): number {
@@ -465,9 +574,14 @@ export class GameRenderer {
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
 		if (!playerObj) return;
 
+		// Don't evaluate death while mid-jump — the player is legitimately
+		// airborne over water / between tiles during the arc.
+		if (this.moveAnimations[player.user.id]) return;
+
 		const isActiveUser = player.user.id === this.getUser()?.id;
+		const currentPosition = playerObj.position.clone();
 		const collidableElementAtPos = this.getCollidableElementAtPosition(playerObj);
-		const elementAtPos = this.getElementAtPosition(player.position.toVector3());
+		const elementAtPos = this.getElementAtPosition(currentPosition);
 		const socket = this.getSocket()!;
 
 		if (isActiveUser && collidableElementAtPos) {
@@ -482,8 +596,8 @@ export class GameRenderer {
 			isActiveUser &&
 			(!elementAtPos ||
 				elementAtPos.name == 'lane_water' ||
-				player.position.x > 6 ||
-				player.position.x < -6)
+				currentPosition.x > 6 ||
+				currentPosition.x < -6)
 		) {
 			return socket.sendPlayerDeath();
 		}
@@ -527,10 +641,34 @@ export class GameRenderer {
 			const element = this.elements[obj.uuid];
 			if (!element || element.isStatic) continue;
 
-			const dx = element.direction === Direction.Right ? -element.speed * delta : element.speed * delta;
+			let dx = element.direction === Direction.Right ? -element.speed * delta : element.speed * delta;
+			if (element.modelLocation.includes('log') && (obj.position.x > (6 + element.modelWidth) || obj.position.x < -6)) {
+				dx *= 2; // speed up logs when they are outside the main area
+			}
 			obj.position.x += dx;
+			// move all alive players with log if standing on it
+			if (element.modelLocation.includes('log')) {
+				const elementBox = new THREE.Box3().setFromObject(obj);
+				const game = this.getGame();
+				if (game) {
+					for (const p of game.players) {
+						if (!p.isAlive) continue;
+						const playerObj = this.renderedObjects.find((o) => o.name === p.user.id);
+						if (!playerObj) continue;
+						const playerBox = new THREE.Box3().setFromObject(playerObj);
+						if (playerBox.intersectsBox(elementBox)) {
+							playerObj.position.x += dx;
+							p.position.x += dx;
+							// Keep animation origin in sync so the drift term stays zero.
+							if (this.moveAnimations[p.user.id]) {
+								this.moveAnimations[p.user.id].originX += dx;
+							}
+						}
+					}
+				}
+			}
+			
 			const loopLength = this.getMovingElementLoopLength(element);
-
 			while (obj.position.x < min) {
 				obj.position.x += loopLength;
 			}
@@ -554,16 +692,28 @@ export class GameRenderer {
 			const progress = Math.min(elapsed / animation.durationMs, 1);
 			const eased = 1 - Math.pow(1 - progress, 3);
 
-			playerObj.position.lerpVectors(animation.start, animation.end, eased);
+			// originX is kept in sync with log carry by updateMovingElementsAnimations,
+			// so we can apply the jump delta cleanly on top without any drift term.
+			playerObj.position.x = animation.originX + animation.deltaX * eased;
+			playerObj.position.z = animation.originZ + animation.deltaZ * eased;
+
 			const jumpArc = Math.sin(progress * Math.PI) * GameRenderer.jumpHeight;
-			playerObj.position.y = animation.start.y + jumpArc;
+			const targetPos = new THREE.Vector3(
+				playerObj.position.x,
+				0,
+				animation.endZ
+			);
+			const liveEndY = this.getLandingY(targetPos, playerObj);
+			const baseY = liveEndY !== null ? liveEndY : animation.startY;
+			playerObj.position.y = baseY + jumpArc;
+
 			playerObj.rotation.y = this.normalizeAngle(
 				animation.yRotationStart +
 					this.normalizeAngle(animation.yRotationEnd - animation.yRotationStart) * eased
 			);
 
 			if (progress >= 1) {
-				playerObj.position.copy(animation.end);
+				playerObj.position.y = liveEndY !== null ? liveEndY : animation.startY;
 				delete this.moveAnimations[playerId];
 			}
 		});
@@ -607,7 +757,11 @@ export class GameRenderer {
 			'arrowdown'
 		].includes(pressedKey);
 		const moveDistance = 1;
-		let newPosition = player.position.clone();
+		// Always derive target from the rendered mesh position — it's the ground
+		// truth, especially when log carry has drifted the player's X.
+		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
+		if (!playerObj) return;
+		let dx = 0, dz = 0;
 		if (get(menuState) === MenuState.Play) {
 			if (
 				game.gamePhase == GamePhase.Created &&
@@ -617,6 +771,7 @@ export class GameRenderer {
 				await this.getSocket()?.startGame();
 			}
 
+			const isXAxisKey = ['a', 'd', 'arrowleft', 'arrowright'].includes(pressedKey);
 			if (
 				game.gamePhase == GamePhase.Active &&
 				isMovementKey &&
@@ -625,30 +780,34 @@ export class GameRenderer {
 				return;
 			}
 
+			if (game.gamePhase == GamePhase.Active && isXAxisKey && this.isPlayerOnLog(player)) {
+				return;
+			}
+
 			switch (pressedKey) {
 				case 'w':
-					newPosition.z += moveDistance;
+					dz += moveDistance;
 					break;
 				case 'arrowup':
-					newPosition.z += moveDistance;
+					dz += moveDistance;
 					break;
 				case 's':
-					newPosition.z -= moveDistance;
+					dz -= moveDistance;
 					break;
 				case 'arrowdown':
-					newPosition.z -= moveDistance;
+					dz -= moveDistance;
 					break;
 				case 'a':
-					newPosition.x += moveDistance;
+					dx += moveDistance;
 					break;
 				case 'arrowleft':
-					newPosition.x += moveDistance;
+					dx += moveDistance;
 					break;
 				case 'd':
-					newPosition.x -= moveDistance;
+					dx -= moveDistance;
 					break;
 				case 'arrowright':
-					newPosition.x -= moveDistance;
+					dx -= moveDistance;
 					break;
 				case 'k':
 					this.getSocket()?.sendPlayerDeath();
@@ -656,6 +815,14 @@ export class GameRenderer {
 				default:
 					return;
 			}
+
+			// Snap the rendered position to the nearest grid tile, then add the
+			// delta, snapping to a log slot only when the destination Z lane has one.
+			const newPosition = player.position.clone();
+			const targetZ = Math.round(playerObj.position.z) + dz;
+			const rawTargetX = playerObj.position.x + dx;
+			newPosition.x = this.getSnappedTargetX(rawTargetX, targetZ);
+			newPosition.z = targetZ;
 
 			if (game.gamePhase == GamePhase.Active && !this.isPlayerColliding(newPosition.toVector3())) {
 				player.position = newPosition;
