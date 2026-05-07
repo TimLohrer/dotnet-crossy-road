@@ -190,7 +190,7 @@ export class GameRenderer {
 	}
 
 	public loadSection(lanes: Lane[]) {
-		lanes.forEach((lane) => {
+		lanes.forEach(async (lane) => {
 			this.loadModel(
 				lane.modelLocation,
 				lane.position.toVector3(),
@@ -199,6 +199,17 @@ export class GameRenderer {
 				false,
 				'lane_' + (lane.modelLocation.split('/').pop()?.split('.')[0] ?? lane.type)
 			);
+			if (lane.modelLocation == 'rail') {
+				const rail_signal = await this.loadModel(
+					lane.modelLocation + '_signal',
+					lane.position.toVector3(),
+					0,
+					Direction.Right, // Lane models are always facing right
+					false,
+					'lane_' + ((lane.modelLocation + '_signal').split('/').pop()?.split('.')[0] ?? lane.type)
+				);
+				rail_signal.visible = false;
+			}
 
 			const elementLoads = lane.elements.map(async (element) => {
 				const { uuid } = await this.loadModel(
@@ -621,11 +632,15 @@ export class GameRenderer {
 			(element.direction === Direction.Right ? -(element.xOffset ?? 0) : (element.xOffset ?? 0));
 	}
 
-	private getMovingElementLoopLength(_element: MapElement): number {
-		// Loop length equals the visible lane width: an element re-enters from
-		// the opposite edge the instant it exits, keeping the lane continuously
-		// populated with whatever spacing the server defined via spawnX.
-		return GameRenderer.LANE_MAX_X - GameRenderer.LANE_MIN_X;
+	private getMovingElementLoopLength(element: MapElement): number {
+		const laneWidth = GameRenderer.LANE_MAX_X - GameRenderer.LANE_MIN_X;
+		// Trains use their xOffset as the offscreen wait distance before they
+		// reappear, so the loop length includes that gap. Other moving elements
+		// loop seamlessly across the lane width.
+		if (element.modelLocation.includes('train')) {
+			return laneWidth + (element.xOffset ?? 0);
+		}
+		return laneWidth;
 	}
 
 	private updateMovingElementsAnimations(delta: number) {
@@ -640,6 +655,8 @@ export class GameRenderer {
 			if (element.modelLocation.includes('log') && (obj.position.x > (6 + element.modelWidth) || obj.position.x < -6)) {
 				dx *= 2; // speed up logs when they are outside the main area
 			}
+
+			const oldPos = obj.position.clone();
 			obj.position.x += dx;
 
 			// culling
@@ -647,6 +664,21 @@ export class GameRenderer {
 				obj.visible = false;
 			} else {
 				obj.visible = true;
+			}
+
+			if (element.modelLocation.includes('train')) {
+				const isCloseToLane = element.direction == Direction.Right && obj.position.x > -75 && oldPos.x < -75 || element.direction == Direction.Left && obj.position.x < 35 && oldPos.x > 35;
+				const hasLeftLane = element.direction == Direction.Left && obj.position.x > -75 && oldPos.x < -75 || element.direction == Direction.Right && obj.position.x < 35 && oldPos.x > 35;
+				const laneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rails');
+				const signalLaneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rails_signal');
+				if (!laneElement || !signalLaneElement) return;
+				if (isCloseToLane) {
+					signalLaneElement.visible = true;
+					laneElement.visible = false;
+				} else if (hasLeftLane) {
+					laneElement.visible = true;
+					signalLaneElement.visible = false;
+				}
 			}
 
 			// move all alive players with log if standing on it
