@@ -15,7 +15,7 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
         Bottom
     }
 
-    private static readonly int CarCount = 20;
+    private static readonly int CarCount = 5;
 
     private static readonly List<CrossyModelPart> AvailableCars =
     [

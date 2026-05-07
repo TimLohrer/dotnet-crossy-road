@@ -199,7 +199,8 @@ export class GameRenderer {
 				false,
 				'lane_' + (lane.modelLocation.split('/').pop()?.split('.')[0] ?? lane.type)
 			);
-			lane.elements.forEach(async (element) => {
+
+			const elementLoads = lane.elements.map(async (element) => {
 				const { uuid } = await this.loadModel(
 					element.modelLocation,
 					element.basePosition.toVector3(),
@@ -208,8 +209,27 @@ export class GameRenderer {
 					element.hasCollision,
 					'element_' + (element.modelLocation.split('/').pop()?.split('.')[0] ?? element.type)
 				);
-				
 				this.elements[uuid] = element;
+				return uuid;
+			});
+
+			Promise.all(elementLoads).then((uuids) => {
+				const min = GameRenderer.LANE_MIN_X;
+				const max = GameRenderer.LANE_MAX_X;
+				for (const uuid of uuids) {
+					const element = this.elements[uuid];
+					if (!element || element.isStatic) continue;
+					const obj = this.renderedObjects.find((o) => o.uuid === uuid);
+					if (!obj) continue;
+					const loopLength = this.getMovingElementLoopLength(element);
+					if (element.direction === Direction.Right) {
+						// Drifts left — normalize into [min, min + loopLength)
+						obj.position.x = min + ((obj.position.x - min) % loopLength + loopLength) % loopLength;
+					} else {
+						// Drifts right — normalize into (max - loopLength, max]
+						obj.position.x = max - ((max - obj.position.x) % loopLength + loopLength) % loopLength;
+					}
+				}
 			});
 		});
 		this.render();
@@ -607,21 +627,11 @@ export class GameRenderer {
 			(element.direction === Direction.Right ? -(element.xOffset ?? 0) : (element.xOffset ?? 0));
 	}
 
-	private getMovingElementLoopLength(element: MapElement): number {
-		const laneWidth = GameRenderer.LANE_MAX_X - GameRenderer.LANE_MIN_X;
-		const laneElements = Object.values(this.elements).filter(
-			(candidate) =>
-				!candidate.isStatic &&
-				candidate.direction === element.direction &&
-				candidate.basePosition.z === element.basePosition.z
-		);
-
-		if (laneElements.length <= 1) {
-			return laneWidth;
-		}
-
-		const spawnXs = laneElements.map((candidate) => this.getMovingElementSpawnX(candidate));
-		return laneWidth + (Math.max(...spawnXs) - Math.min(...spawnXs));
+	private getMovingElementLoopLength(_element: MapElement): number {
+		// Loop length equals the visible lane width: an element re-enters from
+		// the opposite edge the instant it exits, keeping the lane continuously
+		// populated with whatever spacing the server defined via spawnX.
+		return GameRenderer.LANE_MAX_X - GameRenderer.LANE_MIN_X;
 	}
 
 	private updateMovingElementsAnimations(delta: number) {

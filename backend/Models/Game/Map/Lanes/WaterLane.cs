@@ -2,9 +2,10 @@ using CrossyRoadApi.Models.Game.Map.Elements;
 
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
 
-public class WaterLane(int zPosition, int seed, bool canBeLillyLane) : CrossyMapLane(CrossyModelPart.Water, seed, zPosition)
+public class WaterLane(int zPosition, int seed, bool canBeLillyLane)
+    : CrossyMapLane(CrossyModelPart.Water, seed, zPosition)
 {
-    private static readonly int LogCount = 20;
+    private static readonly int LogCount = 6;
     private static readonly int LillypadChance = 3; // 33% chance for a lillypad lane
     private static readonly int MaxLillypads = 3;
 
@@ -37,7 +38,7 @@ public class WaterLane(int zPosition, int seed, bool canBeLillyLane) : CrossyMap
         else
         {
             var startX = new List<int> { 13, -13 }[Randomizer.Next(2)]; // Randomizes direction
-            var baseSpeed = Randomizer.Next(2, 5) / 5f; // Number between 0.6 and 1.0
+            var baseSpeed = Randomizer.Next(3, 5) / 5f; // Number between 0.6 and 1.0
             var zBasedSpeedMultiplyer = (float)Math.Min(1.5, zPosition / 900f + 1.0f);
             var speed = baseSpeed * zBasedSpeedMultiplyer;
             for (var i = 0; i < LogCount; i++)
@@ -46,7 +47,7 @@ public class WaterLane(int zPosition, int seed, bool canBeLillyLane) : CrossyMap
                 var offset =
                     (Elements.Count > 0
                         ? ((CrossyMovingMapElement)Elements.Last()).XOffset + Elements.Last().ModelWidth
-                        : 0) + Randomizer.Next(2, 8) + 1;
+                        : 0) + Randomizer.Next(2, 6) + 1;
                 switch (type)
                 {
                     case CrossyModelPart.Log0:
