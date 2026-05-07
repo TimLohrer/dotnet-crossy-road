@@ -266,10 +266,10 @@ export class GameRenderer {
 			startedAt: performance.now(),
 			durationMs: GameRenderer.moveAnimationDurationMs
 		};
-		this.lastMoveTime = performance.now();
 		this.render();
 		this.getSocket()!.sendPlayerPositionUpdate();
 		this.cleanUpInvisibleWorldObjects(player.position.z);
+		if (startPosition.z < player.position.z) this.lastMoveTime = performance.now();
 	}
 
 	public syncRemotePlayerPosition(player: Player) {
@@ -439,7 +439,7 @@ export class GameRenderer {
 		const baseTargetZ = player.position.z - 16 + GameRenderer.cameraOffsetZ;
 		let targetZ = baseTargetZ;
 
-		if (idleMs > GameRenderer.IDLE_CAMERA_PUSH_DELAY_MS) {
+		if (idleMs > GameRenderer.IDLE_CAMERA_PUSH_DELAY_MS && player.score > 0) {
 			const pushElapsed = (idleMs - GameRenderer.IDLE_CAMERA_PUSH_DELAY_MS) / 1000;
 			targetZ = baseTargetZ + pushElapsed * GameRenderer.IDLE_CAMERA_PUSH_SPEED;
 		}
