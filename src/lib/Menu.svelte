@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { seededRandom } from "three/src/math/MathUtils.js";
 	import { PUBLIC_API_URL } from "./environment";
 	import { MenuState } from "./models/MenuState";
     import { gameSocket, menuState, user, wsGame } from "./stores/stateStore";
@@ -147,12 +146,6 @@
 
     button.active {
         height: 8rem;
-    }
-
-    button.info-panel {
-        cursor: default;
-        width: max-content;
-        padding: 0 2rem;
     }
 
     .logout {
