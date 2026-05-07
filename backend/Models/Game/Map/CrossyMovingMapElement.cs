@@ -18,7 +18,7 @@ public abstract class CrossyMovingMapElement(
         Left
     }
 
-    public readonly ModelDirection Direction = xPosition > 0 ? ModelDirection.Right : ModelDirection.Left;
+    public readonly ModelDirection Direction = xPosition < 0 ? ModelDirection.Right : ModelDirection.Left;
     public readonly float Speed = speed;
 
     public readonly int XOffset = xOffest;

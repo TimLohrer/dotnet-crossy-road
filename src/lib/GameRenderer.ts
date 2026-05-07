@@ -137,6 +137,9 @@ export class GameRenderer {
 		}
 		let model = gltf.scene.clone() as THREE.Object3D;
 
+		model.position.copy(pos).add(new THREE.Vector3(direction == Direction.Right ? -xOffset : xOffset, 0, 0));
+		model.name = name;
+
 		if (name.includes('lane')) {
 			model.traverse((child) => {
 				if (child.isObject3D) {
@@ -150,14 +153,9 @@ export class GameRenderer {
 					child.receiveShadow = true;
 				}
 			});
-		}
-
-		if (direction == Direction.Left) {
+		} else if (direction == Direction.Right) {
 			model.rotation.y = Math.PI;
 		}
-
-		model.position.copy(pos).add(new THREE.Vector3(direction == Direction.Right ? -xOffset : xOffset, 0, 0));
-		model.name = name;
 
 		if (hasCollision) {
 			// debugging: show collision boxes
