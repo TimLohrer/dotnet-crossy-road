@@ -223,6 +223,15 @@ export class GameRenderer {
 					if (!element || element.isStatic) continue;
 					const obj = this.renderedObjects.find((o) => o.uuid === uuid);
 					if (!obj) continue;
+
+					if (element.modelLocation.includes('train')) {
+						obj.position.x =
+							element.direction === Direction.Right
+								? max + (element.xOffset ?? 0)
+								: min - (element.xOffset ?? 0);
+						continue;
+					}
+
 					const loopLength = this.getMovingElementLoopLength(element);
 					if (element.direction === Direction.Right) {
 						// Drifts left — normalize into [min, min + loopLength)
@@ -714,11 +723,17 @@ export class GameRenderer {
 			}
 			
 			const loopLength = this.getMovingElementLoopLength(element);
-			while (obj.position.x < min) {
+			const wrapMin = element.modelLocation.includes('train')
+				? min - (element.xOffset ?? 0)
+				: min;
+			const wrapMax = element.modelLocation.includes('train')
+				? max + (element.xOffset ?? 0)
+				: max;
+			while (obj.position.x < wrapMin) {
 				obj.position.x += loopLength;
 			}
 
-			while (obj.position.x > max) {
+			while (obj.position.x > wrapMax) {
 				obj.position.x -= loopLength;
 			}
 		}
