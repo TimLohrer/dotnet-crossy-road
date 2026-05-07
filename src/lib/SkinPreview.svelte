@@ -74,7 +74,7 @@
         renderer.shadowMap.type = THREE.PCFShadowMap;
         container.appendChild(renderer.domElement);
 
-        const ambLight = new THREE.AmbientLight(0xffffff, 0.3);
+        const ambLight = new THREE.AmbientLight(0xffffff, 1);
         scene.add(ambLight);
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 2);
