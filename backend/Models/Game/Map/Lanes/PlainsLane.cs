@@ -16,16 +16,16 @@ public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, boo
     private static readonly int RightMask = 0b0000000000000000001111111;
 
     private static readonly List<CrossyModelPart> LeftElements =
-        [CrossyModelPart.Tree1, CrossyModelPart.Tree2, CrossyModelPart.Tree3, CrossyModelPart.Tree4];
+        [CrossyModelPart.Tree1, CrossyModelPart.Tree2, CrossyModelPart.Tree3];
 
     private static readonly List<CrossyModelPart> MiddleElements =
     [
         CrossyModelPart.Stone0, CrossyModelPart.Stone1, CrossyModelPart.Tree0, CrossyModelPart.Tree1,
-        CrossyModelPart.Tree2, CrossyModelPart.Tree3, CrossyModelPart.Tree4
+        CrossyModelPart.Tree2, CrossyModelPart.Tree3
     ];
 
     private static readonly List<CrossyModelPart> RightElements =
-        [CrossyModelPart.Tree1, CrossyModelPart.Tree2, CrossyModelPart.Tree3, CrossyModelPart.Tree4];
+        [CrossyModelPart.Tree1, CrossyModelPart.Tree2, CrossyModelPart.Tree3];
 
     public override CrossyModelPart LaneType => CrossyModelPart.Plains;
 
@@ -54,9 +54,6 @@ public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, boo
                     break;
                 case CrossyModelPart.Tree3:
                     AddElement(new Tree3(this, mapX));
-                    break;
-                case CrossyModelPart.Tree4:
-                    AddElement(new Tree4(this, mapX));
                     break;
                 default:
                     continue;

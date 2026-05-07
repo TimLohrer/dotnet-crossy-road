@@ -19,7 +19,6 @@ public enum CrossyModelPart
     [EnumMember(Value = "tree_1")] Tree1,
     [EnumMember(Value = "tree_2")] Tree2,
     [EnumMember(Value = "tree_3")] Tree3,
-    [EnumMember(Value = "tree_4")] Tree4,
 
     [EnumMember(Value = "stone_0")] Stone0,
     [EnumMember(Value = "stone_1")] Stone1,
@@ -33,5 +32,7 @@ public enum CrossyModelPart
     [EnumMember(Value = "car_0")] Car0,
     [EnumMember(Value = "car_1")] Car1,
     [EnumMember(Value = "car_2")] Car2,
-    [EnumMember(Value = "car_3")] Car3
+    [EnumMember(Value = "car_3")] Car3,
+    
+    [EnumMember(Value = "train")] Train
 }
