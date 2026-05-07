@@ -199,14 +199,14 @@ export class GameRenderer {
 				false,
 				'lane_' + (lane.modelLocation.split('/').pop()?.split('.')[0] ?? lane.type)
 			);
-			if (lane.modelLocation == 'rail') {
+			if (lane.modelLocation.includes('rail')) {
 				const rail_signal = await this.loadModel(
-					lane.modelLocation + '_signal',
+					lane.modelLocation.replace('rail', 'rail_signal'),
 					lane.position.toVector3(),
 					0,
 					Direction.Right, // Lane models are always facing right
 					false,
-					'lane_' + ((lane.modelLocation + '_signal').split('/').pop()?.split('.')[0] ?? lane.type)
+					'lane_rail_signal'
 				);
 				rail_signal.visible = false;
 			}
@@ -666,18 +666,22 @@ export class GameRenderer {
 				obj.visible = true;
 			}
 
+			// Toggle rail light logic
 			if (element.modelLocation.includes('train')) {
-				const isCloseToLane = element.direction == Direction.Right && obj.position.x > -75 && oldPos.x < -75 || element.direction == Direction.Left && obj.position.x < 35 && oldPos.x > 35;
-				const hasLeftLane = element.direction == Direction.Left && obj.position.x > -75 && oldPos.x < -75 || element.direction == Direction.Right && obj.position.x < 35 && oldPos.x > 35;
-				const laneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rails');
-				const signalLaneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rails_signal');
-				if (!laneElement || !signalLaneElement) return;
-				if (isCloseToLane) {
-					signalLaneElement.visible = true;
-					laneElement.visible = false;
-				} else if (hasLeftLane) {
-					laneElement.visible = true;
-					signalLaneElement.visible = false;
+				const laneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rail');
+				const signalLaneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rail_signal');
+				
+				const isCloseToLane = element.direction === Direction.Left ? obj.position.x > min - 65 && obj.position.x < 0 && obj.position.x - 5 < min - 65 : obj.position.x < max + 65 && obj.position.x > 0 && obj.position.x + 5 > max + 65;
+				const hasLeftLane = element.direction === Direction.Left ? obj.position.x > 0 && obj.position.x - 5 < 0 : obj.position.x < 0 && obj.position.x + 5 > 0;
+
+				if (laneElement && signalLaneElement) {
+					if (isCloseToLane) {
+						signalLaneElement.visible = true;
+						laneElement.visible = false;
+					} else if (hasLeftLane) {
+						laneElement.visible = true;
+						signalLaneElement.visible = false;
+					}
 				}
 			}
 

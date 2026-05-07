@@ -8,8 +8,8 @@ public class RailLane(int zPosition, int seed) : CrossyMapLane(CrossyModelPart.R
 
     protected override void GenerateElements()
     {
-        var startX = new List<int> { 13, -13 }[Randomizer.Next(2)]; // Randomizes direction
-        var offset = Randomizer.Next(400, 1000);
+        var startX = new List<int> { 80, -80 }[Randomizer.Next(2)]; // Randomizes direction
+        var offset = Randomizer.Next(300, 600);
         Elements.Add(new Train(this, startX, offset));
     }
 }
