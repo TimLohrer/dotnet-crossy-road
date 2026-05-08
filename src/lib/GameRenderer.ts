@@ -871,6 +871,17 @@ export class GameRenderer {
 			isMovementKey
 		) {
 			await this.getSocket()?.startGame();
+			this.renderedObjects.forEach((obj) => {
+				if (obj.name === this.getUser()?.id && !obj.name.includes('lane') && !obj.name.includes('element')) {
+					// make other players slightly transparent to distinguish them from the active player
+					obj.traverse((child) => {
+						if (child instanceof THREE.Mesh) {
+							(child.material as THREE.Material).transparent = true;
+							(child.material as THREE.Material).opacity = 0.4;
+						}
+					});
+				}
+			});
 		}
 
 		const isXAxisKey = ['a', 'd', 'arrowleft', 'arrowright'].includes(pressedKey);
