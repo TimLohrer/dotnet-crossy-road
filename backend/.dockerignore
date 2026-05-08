@@ -23,3 +23,8 @@
 **/values.dev.yaml
 LICENSE
 README.md
+
+# never bake secrets into the image
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.local.json
