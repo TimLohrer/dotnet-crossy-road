@@ -180,6 +180,8 @@ export class GameSocket {
 		});
 
 		this.connection.on(WebsocketEvent.UpdateUser, (updatedUser: User) => userStore.update(() => updatedUser));
+
+		this.connection.on(WebsocketEvent.StartGame, () => this.getRenderer()?.makeOtherPlayersTransparent());
 	}
 
 	public async connect() {
