@@ -46,12 +46,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
     .AddCookie(IdentityConstants.ApplicationScheme, opt =>
     {
-        opt.Cookie.Name = "Manager.Auth";
+        opt.Cookie.Name = "CrossyRoad.Auth";
 
         opt.Cookie.IsEssential = true;
         opt.ExpireTimeSpan = TimeSpan.FromHours(10);
-
-        opt.Cookie.Domain = null;
 
         opt.Cookie.SameSite = SameSiteMode.None;
         opt.Cookie.Domain = appConfig.Domain;

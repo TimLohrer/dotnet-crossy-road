@@ -106,15 +106,7 @@ public class AuthController(
 
         // Check if we are already signed in (should never be the case)
         if (User.Identity is { IsAuthenticated: true })
-        {
-            var _user =  await userManager.GetUserAsync(User);
-            if (_user != null)
-            {
-                var _result = await userManager.RemoveLoginAsync(_user, info.LoginProvider, providerKey);
-                if (_result.Succeeded) return returnUrl != null ? Redirect(returnUrl) : NoContent();
-            }
             return BadRequest("You are already authenticated??");
-        };
 
         var user = new CrossyUser
         {
