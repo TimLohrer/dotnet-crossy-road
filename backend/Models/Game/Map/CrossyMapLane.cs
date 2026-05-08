@@ -43,7 +43,7 @@ public abstract class CrossyMapLane : CrossyModel
 
     public void GenerateTalers(float yPos)
     {
-        var hasTalers = Randomizer.NextDouble() < 0.15;
+        var hasTalers = Randomizer.NextDouble() < 0.05;
         if (!hasTalers) return;
         var talerCount = Randomizer.Next(1, 3);
         for (var i = 0; i < talerCount; i++)
