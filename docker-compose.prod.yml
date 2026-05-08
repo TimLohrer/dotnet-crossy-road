@@ -24,7 +24,7 @@ services:
       Database__Password: ${DB_PASSWORD}
       Database__Database: ${DB_NAME}
 
-      Domain: ${PUBLIC_ORIGIN}
+      Domain: ${BACKEND_DOMAIN}
 
       BoschOAuth__ClientId: ${BOSCH_CLIENT_ID}
       BoschOAuth__ClientSecret: ${BOSCH_CLIENT_SECRET}
