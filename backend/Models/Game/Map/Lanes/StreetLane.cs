@@ -16,6 +16,9 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
     }
 
     private static readonly int CarCount = 5;
+    private const int LaneLoopWidth = 30;
+    private const int MinGapBetweenCars = 2;
+    private const int MaxGapBetweenCars = 6;
 
     private static readonly List<CrossyModelPart> AvailableCars =
     [
@@ -31,13 +34,16 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
         var baseSpeed = Randomizer.Next(3, 10) / 5f; // Number between 1 and 3
         var zBasedSpeedMultiplyer = (float)Math.Min(1.5, zPosition / 900f + 1.0f);
         var speed = baseSpeed * zBasedSpeedMultiplyer;
+
+        int? firstOffset = null;
         for (var i = 0; i < CarCount; i++)
         {
             var type = AvailableCars[Randomizer.Next(AvailableCars.Count)];
-            var offset =
-                (Elements.Count > 0
-                    ? ((CrossyMovingMapElement)Elements.Last()).XOffset + Elements.Last().ModelWidth
-                    : 0) + Randomizer.Next(2, 6);
+            var modelWidth = GetModelWidth(type);
+            if (!TryGetNextOffset(modelWidth, firstOffset, out var offset))
+                break;
+
+            firstOffset ??= offset;
             switch (type)
             {
                 case CrossyModelPart.Car0:
@@ -55,5 +61,44 @@ public class StreetLane(StreetLane.StreetType type, int zPosition, int seed) : C
             }
         }
         GenerateTalers(0);
+    }
+
+    private bool TryGetNextOffset(int modelWidth, int? firstOffset, out int offset)
+    {
+        var previousEnd = Elements.Count > 0
+            ? ((CrossyMovingMapElement)Elements.Last()).XOffset + Elements.Last().ModelWidth
+            : 0;
+
+        var minOffset = (Elements.Count == 0 ? 0 : previousEnd) + MinGapBetweenCars;
+        var maxOffset = (Elements.Count == 0 ? 0 : previousEnd) + MaxGapBetweenCars;
+
+        if (firstOffset.HasValue)
+        {
+            // Keep a minimum wrap gap so the first and last car don't overlap
+            // when both are modulo-wrapped on the client.
+            var maxOffsetByWrap = LaneLoopWidth - modelWidth - MinGapBetweenCars + firstOffset.Value;
+            maxOffset = Math.Min(maxOffset, maxOffsetByWrap);
+        }
+
+        if (minOffset > maxOffset)
+        {
+            offset = 0;
+            return false;
+        }
+
+        offset = Randomizer.Next(minOffset, maxOffset + 1);
+        return true;
+    }
+
+    private static int GetModelWidth(CrossyModelPart type)
+    {
+        return type switch
+        {
+            CrossyModelPart.Car0 => 1,
+            CrossyModelPart.Car1 => 2,
+            CrossyModelPart.Car2 => 2,
+            CrossyModelPart.Car3 => 3,
+            _ => 1
+        };
     }
 }

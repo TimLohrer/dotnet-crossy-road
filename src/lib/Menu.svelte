@@ -13,7 +13,7 @@
 </script>
 
 <div class="logo_container">
-    <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
+    <img src="./assets/CrossyRoadLogo.png" alt="Game Logo" class="Logo">
 </div>
 
 {#if $wsGame?.hostId == $user?.id && $menuState == MenuState.Play}
@@ -28,12 +28,14 @@
     </div>
 {/if}
 
-<div class="top-bar">
-    {#if $wsGame?.hostId == $user?.id}
-        Game Code: <span>{$wsGame?.id.split("-")[0].toUpperCase()}</span>
-    {:else}
-        Waiting for host to start the game!
-    {/if}
+<div class="top-bar-wrapper">
+    <div class="top-bar">
+        {#if $wsGame?.hostId == $user?.id}
+            Game Code: <span>{$wsGame?.id.split("-")[0].toUpperCase()}</span>
+        {:else}
+            Waiting for host to start the game!
+        {/if}
+    </div>
 </div>
 
 <div class="menu_container">
@@ -86,11 +88,19 @@
         padding-bottom: 250px;
     }
 
-    .top-bar {
+    .top-bar-wrapper {
         position: absolute;
-        top: 1rem;
-        justify-self: center;
+        inset: 0;
+        display: flex;
+        width: 100%;
+        align-items: start;
+        justify-content: center;
         z-index: 100;
+        pointer-events: none;
+    }
+
+    .top-bar {
+        margin-top: 1rem;
         background-color: black;
         color: white;
         height: 4rem;
@@ -101,7 +111,6 @@
         padding: 0 1rem;
         display: flex;
         align-items: center;
-        pointer-events: none;
     }
 
     .seed-bar {
@@ -109,7 +118,7 @@
         top: 1rem;
         left: 1rem;
         justify-self: center;
-        z-index: 101;
+        z-index: 100;
         background-color: black;
         color: white;
         height: 4rem;
@@ -139,7 +148,7 @@
         top: 6rem;
         left: 1rem;
         justify-self: center;
-        z-index: 101;
+        z-index: 100;
         background-color: black;
         color: white;
         height: 4rem;

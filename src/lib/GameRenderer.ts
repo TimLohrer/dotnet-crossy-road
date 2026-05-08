@@ -23,6 +23,8 @@ export class GameRenderer {
 	private lastMoveTime: number = performance.now();
 	private highestReachedZ: number | null = null;
 	private hasSentDeath = false;
+	private animationFrameId: number | null = null;
+	private isDisposed = false;
 
 	window: Window;
 	container: HTMLDivElement;
@@ -623,10 +625,19 @@ export class GameRenderer {
 		this.dirLight.target.updateMatrix();
 	}
 
-	private sendPlayerDeathOnce() {
+	private sendPlayerDeathOnce(reason: 'collide' | 'time' | 'water') {
+		const game = this.getGame();
+		const user = this.getUser();
+		const socket = this.getSocket();
+		if (!game || !user || !socket || game.gamePhase !== GamePhase.Active) return;
+
+		const localPlayer = Game.getPlayer(game, user.id);
+		if (!localPlayer || !localPlayer.isAlive) return;
+
 		if (this.hasSentDeath) return;
+		console.log(`[death-trigger] reason=${reason} user=${user.id} score=${localPlayer.score} pos=(${localPlayer.position.x},${localPlayer.position.z})`);
 		this.hasSentDeath = true;
-		void this.getSocket()!
+		void socket
 			.sendPlayerDeath()
 			.catch(() => {
 				// Allow retry on a later frame if the send failed.
@@ -635,6 +646,8 @@ export class GameRenderer {
 	}
 
 	private handlePlayerPosition(player: Player, isOnLog: boolean = false) {
+		if (!player.isAlive) return;
+
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
 		if (!playerObj) return;
 
@@ -650,12 +663,12 @@ export class GameRenderer {
 		const elementAtPos = this.getElementAtPosition(currentPosition);
 
 		if (isActiveUser && collidableElementAtPos) {
-			this.sendPlayerDeathOnce();
+			this.sendPlayerDeathOnce('collide');
 			return;
 		}
 
 		if (isActiveUser && performance.now() - this.lastMoveTime >= GameRenderer.IDLE_DEATH_TIME_MS && player.score > 0) {
-			this.sendPlayerDeathOnce();
+			// this.sendPlayerDeathOnce('time');
 			return;
 		}
 
@@ -666,7 +679,7 @@ export class GameRenderer {
 				currentPosition.x > 6 ||
 				currentPosition.x < -6)
 		) {
-			this.sendPlayerDeathOnce();
+			this.sendPlayerDeathOnce('water');
 			return;
 		}
 	}
@@ -833,7 +846,8 @@ export class GameRenderer {
 	}
 
 	private animate() {
-		requestAnimationFrame(() => this.animate());
+		if (this.isDisposed) return;
+		this.animationFrameId = requestAnimationFrame(() => this.animate());
 		this.updateAnimations();
 		const game = this.getGame();
 		if (game?.gamePhase == GamePhase.Active) {
@@ -853,6 +867,19 @@ export class GameRenderer {
 			this.hasSentDeath = false;
 		}
 		this.render();
+	}
+
+	public dispose() {
+		this.isDisposed = true;
+		if (this.animationFrameId !== null) {
+			this.window.cancelAnimationFrame(this.animationFrameId);
+			this.animationFrameId = null;
+		}
+		this.mixers = [];
+		this.moveAnimations = {};
+		this.objectList = [];
+		this.renderedObjects = [];
+		this.elements = {};
 	}
 
 	public async onKeyDown(e: KeyboardEvent) {

@@ -1,10 +1,4 @@
 ﻿services:
-  #crossyroadapi:
-  #  image: crossyroadapi
-  #  build:
-  #    context: .
-  #    dockerfile: Dockerfile
-
   db:
     image: postgres:17
     container_name: crossy-road-db
