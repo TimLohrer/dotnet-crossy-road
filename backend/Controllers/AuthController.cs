@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CrossyRoadApi.Controllers;
 
@@ -101,7 +102,10 @@ public class AuthController(
 
         // Check if we are already signed in (should never be the case)
         if (User.Identity is { IsAuthenticated: true })
-            return BadRequest("You are already authenticated??");
+            return returnUrl != null
+                ? Redirect(
+                    $"/api/v1/signout?redirectUrl={Base64UrlEncoder.Encode($"/api/v1/signin/{info.ProviderKey}?returnUrl={returnUrl}")}")
+                : BadRequest("You are already authenticated??");
 
         var user = new CrossyUser
         {

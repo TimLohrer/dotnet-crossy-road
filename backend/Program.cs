@@ -89,7 +89,7 @@ var ib = builder.Services.AddIdentityCore<CrossyUser>(opt =>
         opt.SignIn.RequireConfirmedAccount = false;
         opt.User.RequireUniqueEmail = true;
         opt.User.AllowedUserNameCharacters =
-            "@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
+            " @abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
         opt.Password.RequireDigit = false;
         opt.Password.RequiredLength = 6;
         opt.Password.RequireNonAlphanumeric = false;
