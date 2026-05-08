@@ -26,7 +26,6 @@
         const newUser = await skinRes.json() as User;
         $user = newUser;
         $gameSocket?.syncPlayerModel();
-        $menuState = MenuState.Play;
     }
 
     async function buySkin(skin: Skin) {
@@ -49,7 +48,6 @@
         const newUser = await skinRes.json() as User;
         $user = newUser;
         $gameSocket?.syncPlayerModel();
-        $menuState = MenuState.Play;
     }
 
     let common = "#25D900"
