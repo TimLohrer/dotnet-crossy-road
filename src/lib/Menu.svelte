@@ -43,7 +43,7 @@
         <button class:active={$menuState == MenuState.Skins} onclick={() => $menuState = MenuState.Skins}>Skins</button>
     </div>
     <div class="menu_panel">
-        <button class:active={$menuState == MenuState.Play} onclick={() => $menuState = MenuState.Play}>Start</button>
+        <button class:active={$menuState == MenuState.Play} onclick={() => $menuState == MenuState.Play && $wsGame?.hostId == $user?.id ? $gameSocket?.startGame() : $menuState = MenuState.Play}>Start</button>
     </div>
     <div class="menu_panel">
         {#if $wsGame && $wsGame.players.length > 1}
