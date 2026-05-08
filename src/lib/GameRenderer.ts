@@ -655,11 +655,14 @@ export class GameRenderer {
 		// airborne over water / between tiles during the arc.
 		if (this.moveAnimations[player.user.id]) return;
 
-		const isActiveUser = player.user.id === this.getUser()?.id;
-		if (isActiveUser && isOnLog) return;
-		
-
 		const currentPosition = playerObj.position.clone();
+
+		const isActiveUser = player.user.id === this.getUser()?.id;
+		if (isActiveUser && isOnLog) {
+			if (currentPosition.x > 6.5 || currentPosition.x < -6.5) this.sendPlayerDeathOnce('boundary');
+			return;
+		}
+
 		const collidableElementAtPos = this.getCollidableElementAtPosition(playerObj);
 		const elementAtPos = this.getElementAtPosition(currentPosition);
 
@@ -675,10 +678,8 @@ export class GameRenderer {
 
 		if (
 			isActiveUser &&
-			(!elementAtPos ||
-				elementAtPos.name == 'lane_water' ||
-				currentPosition.x > 6 ||
-				currentPosition.x < -6)
+			(!elementAtPos || elementAtPos.name == 'lane_water') ||
+			currentPosition.x > 6 || currentPosition.x < -6
 		) {
 			this.sendPlayerDeathOnce(elementAtPos?.name == 'lane_water' ? 'water' : 'boundary');
 			return;
