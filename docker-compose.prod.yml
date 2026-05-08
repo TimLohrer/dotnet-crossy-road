@@ -45,6 +45,9 @@ services:
       - backend
     environment:
       PUBLIC_API_URL: ${PUBLIC_API_URL}
+      ORIGIN: ${PUBLIC_ORIGIN}
+      PROTOCOL_HEADER: x-forwarded-proto
+      HOST_HEADER: x-forwarded-host
       PORT: 3000
       HOST: 0.0.0.0
     ports:
