@@ -15,15 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers().AddJsonOptions(options => { options.JsonSerializerOptions.IncludeFields = true; });
 builder.Services.AddOpenApi();
 
-// Trust X-Forwarded-* headers when running behind a reverse proxy (NPM, etc.)
-// so HTTPS-aware features (cookies, redirects, OIDC callbacks) see the public scheme/host.
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
@@ -129,6 +120,7 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseForwardedHeaders();
+app.UseHttpsRedirection();
 
 app.UsePathBase("/api/v1");
 app.UseRouting();
