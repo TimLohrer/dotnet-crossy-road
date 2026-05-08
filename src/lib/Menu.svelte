@@ -1,78 +1,64 @@
 <script lang="ts">
-	import { GameState } from "./models/GameState";
-    import { gameState, isPlaying } from "./stores/gameStore";
-    import { onMount, type Snippet } from "svelte";
+	import { PUBLIC_API_URL } from "./environment";
+	import { MenuState } from "./models/MenuState";
+    import { gameSocket, menuState, user, wsGame } from "./stores/stateStore";
 
-    interface Props {
-        children?: Snippet;
+    function changeSeed() {
+        $menuState = MenuState.Seed;
     }
-
-    let { children }: Props = $props();
-
-    function startGame() {
-        isPlaying.set(true);
-    }
-
-    let activeButton = $state()
-
-    activeButton = "START"
-
 </script>
 
-{#if !$isPlaying}
-    <div class="logo_container">
-            {@render children?.()}
-            <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
-    </div>
+<div class="logo_container">
+    <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
+</div>
 
-    <div class="menu_container">
-        <nav class="menu">
-            <div class="menu_panel">
-                <button class:active={activeButton=="SKINS"} onclick={() => {
-                    activeButton = "SKINS";
-                    $gameState = GameState.Skins;
-                }}>Skins</button>
-            </div>
-            <div class="menu_panel">
-                <button class:active={activeButton=="START"} onclick={() => {
-                    activeButton = "START";
-                    $gameState = GameState.Singleplayer;
-                    
-                }}>Start</button>
-            </div>
-            <div class="menu_panel">
-                <button class:active={activeButton=="MULTIPLAYER"} onclick={() => {
-                    activeButton = "MULTIPLAYER";
-                    $gameState = GameState.Multiplayer;
-                }}>Multiplayer</button>
-            </div>
-        </nav>
+{#if $wsGame?.hostId == $user?.id && $menuState == MenuState.Play}
+    <div class="seed-bar">
+        <button id="seed" onclick={changeSeed}>Change Seed</button>
     </div>
-
 {/if}
 
-<style>
-    * {
-        padding: 0;
-        margin: 0;
-        box-sizing: border-box;
-    }
+<div class="top-bar">
+    {#if $wsGame?.hostId == $user?.id}
+        Game Code: <span>{$wsGame?.id.split("-")[0].toUpperCase()}</span>
+    {:else}
+        Waiting for host to start the game!
+    {/if}
+</div>
 
-    @font-face {
-        font-family: "PixelFont";
-        src: url("/game-over-fireball760-fonts/game-over.otf");
-        font-weight: normal;
-        font-style: normal;
-    }
-    
+<div class="menu_container">
+    <div class="menu_panel">
+        <button class:active={$menuState == MenuState.Skins} onclick={() => $menuState = MenuState.Skins}>Skins</button>
+    </div>
+    <div class="menu_panel">
+        <button class:active={$menuState == MenuState.Play} onclick={() => $menuState = MenuState.Play}>Start</button>
+    </div>
+    <div class="menu_panel">
+        {#if $wsGame && $wsGame.players.length > 1}
+            <button onclick={() => $gameSocket?.leaveGame()}>Leave Game</button>
+        {:else}
+            <button class:active={$menuState == MenuState.JoinGame} onclick={() => $menuState = MenuState.JoinGame}>Multiplayer</button>
+        {/if}
+    </div>
+</div>
+
+<div class="logout">
+    <a href={`${PUBLIC_API_URL}/auth/signout?returnUrl=${encodeURIComponent(`${window.location.origin}/signin`)}`}>Sign Out</a>
+</div>
+
+<style>
     .menu_container {
         position: absolute;
         inset: 0;
         display: flex;
         flex-direction: row;
-        align-items: end;
+        align-self: end;
+        align-items: center;
         justify-content: center;
-        z-index: 10;
+        z-index: 101;
+        height: 9rem;
+        gap: 1rem;
+        pointer-events: all;
     }
 
     .logo_container {
@@ -81,7 +67,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 10;
+        z-index: 100;
+        pointer-events: none;
     }
 
     img {
@@ -89,13 +76,58 @@
         padding-bottom: 250px;
     }
 
-    .menu {
+    .top-bar {
+        position: absolute;
+        top: 1rem;
+        justify-self: center;
+        z-index: 100;
+        background-color: black;
+        color: white;
+        height: 4rem;
+        font-size: 1.3rem;
+        border-style: solid;
+        border-width: 0.4rem;
+        border-color: white;
+        padding: 0 1rem;
         display: flex;
-        flex-direction: row;
         align-items: center;
-        justify-content: end;
-        height: 9rem;
-        gap: 1rem;
+        pointer-events: none;
+    }
+
+    .seed-bar {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        justify-self: center;
+        z-index: 101;
+        background-color: black;
+        color: white;
+        height: 4rem;
+        font-size: 1.3rem;
+        border-style: solid;
+        border-width: 0.4rem;
+        border-color: white;
+        display: flex;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    #seed {
+        pointer-events: all;
+        width: 100%;
+        height: 100%;
+        border-style: none;
+        padding: 0 1rem;
+    }
+
+    #seed:hover {
+        color: black;
+        background-color: white;
+    }
+
+    .top-bar span {
+        pointer-events: all;
+        margin-left: 0.5rem;
     }
 
     button {
@@ -104,20 +136,55 @@
         cursor: pointer;
         outline: none;
         border-style: none;
-        background-color: rgb(0, 0, 0);
+        background-color: black;
         color: white;
-        border-width: 0.4rem;
-        font-family: PixelFont;
-        font-size: 30;
+        font-size: 1.3rem;
         border-style: solid;
-        border-width: 7px;
+        border-width: 0.4rem;
         border-color: white;
+    }
+
+    button:hover {
+        background-color: white;
+        color: black;
     }
 
     button.active {
         height: 8rem;
     }
 
+    .logout {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 100;
+        width: max-content;
+        height: 4rem;
+        padding: 0 1rem;
+        cursor: pointer;
+        border-style: solid;
+        border-width: 0.4rem;
+        border-color: red;
+        backdrop-filter: blur(5px);
+        background-color: black;
+    }
+    
+    .logout a {
+        font-size: 1rem;
+        color: red;
+        text-decoration: none;
+    }
+
+    .logout:hover {
+        background-color: red;
+    }
+
+    .logout:hover a {
+        color: black;
+    }
 </style>
 
 

@@ -1,5 +1,6 @@
 using System.Numerics;
 using CrossyRoadApi.Dto;
+using CrossyRoadApi.Models.Game.Map.Elements;
 using CrossyRoadApi.Utils;
 
 namespace CrossyRoadApi.Models.Game.Map;
@@ -12,10 +13,12 @@ public abstract class CrossyMapLane : CrossyModel
     public CrossyMapLane(CrossyModelPart modelPart, int seed, int zPosition, bool empty = false) : base(modelPart,
         new Vector3(0, 0, zPosition))
     {
-        Randomizer = CrossyRandomizer.Get(seed, zPosition);
-
         // Generate Map
-        if (!empty) GenerateElements();
+        if (!empty)
+        {
+            Randomizer = CrossyRandomizer.Get(seed, zPosition);
+            GenerateElements();
+        }
     }
 
     protected Random Randomizer { get; }
@@ -28,9 +31,33 @@ public abstract class CrossyMapLane : CrossyModel
         return GetModelPath("lanes");
     }
 
-    public override void SetPosition(int zPosition)
+    public override void SetPosition(Vector3 newPosition)
     {
-        Position = Position with { Z = zPosition };
+        Position = newPosition;
+        foreach (var element in Elements)
+        {
+            var elementPos = element.Position;
+            element.SetPosition(new Vector3(elementPos.X, elementPos.Y, newPosition.Z));
+        }
+    }
+
+    public void GenerateTalers(float yPos)
+    {
+        var hasTalers = Randomizer.NextDouble() < 0.05;
+        if (!hasTalers) return;
+        var talerCount = Randomizer.Next(1, 3);
+        for (var i = 0; i < talerCount; i++)
+        {
+            int talerX;
+            do
+            {
+                talerX = Randomizer.Next(-6, 7);
+            } while(Elements.Any(e => e.Position.X == talerX));
+
+            var taler = new Taler(this, talerX);
+            taler.SetPosition(new Vector3(talerX, yPos, 0));
+            Elements.Add(taler);
+        }
     }
 
     // lane is 25 * 16 long, one field is 16x16 -> idk field now kinda cursed length? it works tough

@@ -1,48 +1,58 @@
+using CrossyRoadApi.Models.Game.Map.Elements;
 using CrossyRoadApi.Models.Game.Map.Lanes;
 using CrossyRoadApi.Utils;
 
 namespace CrossyRoadApi.Models.Game.Map;
 
-public static class CrossyMapGenerator
+public class CrossyMapGenerator(CrossyGame game)
 {
     private static readonly List<CrossyModelPart> AvailableLanes =
-        [CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Water];
+    [
+        CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Plains, CrossyModelPart.Street,
+        CrossyModelPart.Water, CrossyModelPart.Rail
+    ];
 
-    private static readonly int MaxPlainsLength = 3;
-    private static readonly int MaxStreetLength = 4;
-    private static readonly int MaxWaterLenth = 4;
+    private static readonly int MaxPlainsLength = 8;
+    private static readonly int MaxStreetLength = 6;
+    private static readonly int MaxWaterLength = 5;
+    private static readonly int MaxRailLenth = 4;
 
-    // TODO: Move this into game instance later
-    private static CrossyModelPart lastSectionType;
+    private readonly int _seed = game.Seed;
 
-    public static List<CrossyMapLane> GenerateMapSection(int seed, int zPosition)
+    public List<CrossyMapLane> GenerateMapSection(int zPosition, CrossyPlayer player)
     {
-        var randomizer = CrossyRandomizer.Get(seed, zPosition);
+        var randomizer = CrossyRandomizer.Get(_seed, zPosition);
 
         CrossyModelPart laneType;
         do
         {
             laneType = AvailableLanes[randomizer.Next(0, AvailableLanes.Count)];
-        } while (laneType == lastSectionType);
+        } while (laneType == player.LastGeneratedSectionType);
 
-        lastSectionType = laneType;
+        player.LastGeneratedSectionType = laneType;
 
         List<CrossyMapLane> lanes;
         switch (laneType)
         {
             case CrossyModelPart.Plains:
-                lanes = GeneratePlainsLanes(randomizer, seed, zPosition);
+                lanes = GeneratePlainsLanes(randomizer, _seed, zPosition);
                 break;
             case CrossyModelPart.Street:
-                lanes = GenerateStreetLanes(randomizer, seed, zPosition);
+                lanes = GenerateStreetLanes(randomizer, _seed, zPosition);
                 break;
             case CrossyModelPart.Water:
-                lanes = GenerateWaterLanes(randomizer, seed, zPosition);
+                lanes = GenerateWaterLanes(randomizer, _seed, zPosition);
+                break;
+            case CrossyModelPart.Rail:
+                lanes = GenerateRailLanes(randomizer, _seed, zPosition);
                 break;
             default:
-                lanes = GeneratePlainsLanes(randomizer, seed, zPosition);
+                lanes = GeneratePlainsLanes(randomizer, _seed, zPosition);
                 break;
         }
+
+        lanes.ForEach(l =>
+            l.Elements.Where(e => e is Taler).ToList().ForEach(e => game.TalerLocations.Add(e.Position)));
 
         return lanes;
     }
@@ -63,7 +73,7 @@ public static class CrossyMapGenerator
 
     private static List<CrossyMapLane> GenerateStreetLanes(Random randomizer, int seed, int zPosition)
     {
-        var streetLength = randomizer.Next(1, MaxStreetLength + 1);
+        var streetLength = GetLaneLength(randomizer, MaxStreetLength);
 
         List<CrossyMapLane> lanes = [];
         if (streetLength == 1)
@@ -80,27 +90,69 @@ public static class CrossyMapGenerator
         return lanes;
     }
 
+    private static int GetLaneLength(Random randomizer, int maxLength)
+    {
+        // Smaller lanes are more likely than wider lanes.
+        var totalWeight = 0;
+        for (var length = 1; length <= maxLength; length++)
+            totalWeight += maxLength - length + 1;
+
+        var roll = randomizer.Next(totalWeight);
+        for (var length = 1; length <= maxLength; length++)
+        {
+            roll -= maxLength - length + 1;
+            if (roll < 0) return length;
+        }
+
+        return 1;
+    }
+
     private static List<CrossyMapLane> GenerateWaterLanes(Random randomizer, int seed, int zPosition)
     {
-        var waterLength = randomizer.Next(1, MaxWaterLenth + 1);
+        var waterLength = GetLaneLength(randomizer, MaxWaterLength);
 
         List<CrossyMapLane> lanes = [];
-        for (var i = 0; i < waterLength; i++) lanes.Add(new WaterLane(zPosition + i, seed));
+        for (var i = 0; i < waterLength; i++)
+        {
+            var lastWasLillyLane =
+                lanes.Count > 0 && lanes.Last().Elements.Any(e => e.ModelPart == CrossyModelPart.Lillypad);
+            var direction = i == 0 || lastWasLillyLane ? new List<CrossyMovingMapElement.ModelDirection>(
+                    [CrossyMovingMapElement.ModelDirection.Right, CrossyMovingMapElement.ModelDirection.Left])[
+                    randomizer.Next(2)] :
+                (
+                    (CrossyMovingMapElement)((WaterLane)lanes.Last()).Elements.First()).Direction ==
+                CrossyMovingMapElement.ModelDirection.Left ? CrossyMovingMapElement.ModelDirection.Right :
+                CrossyMovingMapElement.ModelDirection.Left;
+            lanes.Add(new WaterLane(zPosition + i, seed, !lastWasLillyLane, direction));
+        }
+
+        ;
 
         return lanes;
     }
 
-    public static List<CrossyMapLane> GenerateMapStart(int seed)
+    private static List<CrossyMapLane> GenerateRailLanes(Random randomizer, int seed, int zPosition)
+    {
+        var railLength = GetLaneLength(randomizer, MaxRailLenth);
+
+        List<CrossyMapLane> lanes = [];
+        for (var i = 0; i < railLength; i++) lanes.Add(new RailLane(zPosition + i, seed));
+
+        return lanes;
+    }
+
+    public List<CrossyMapLane> GenerateMapStart(CrossyPlayer player)
     {
         List<CrossyMapLane> lanes = [];
-        for (var i = -1; i > -10; i--)
+        for (var i = -10; i < 0; i++)
             lanes.Add(new PlainsLane(i % 2 == 0 ? PlainsLane.PlainsType.Light : PlainsLane.PlainsType.Dark, i, 0,
                 true));
         for (var i = 0; i < 15;)
         {
-            var section = GenerateMapSection(seed, i);
+            var section = GenerateMapSection(i, player);
             lanes.AddRange(section);
             i += section.Count;
+            player.FurthestGeneratedZPosition += section.Count;
         }
 
         return lanes;

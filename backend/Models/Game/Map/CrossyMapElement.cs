@@ -3,53 +3,26 @@ using CrossyRoadApi.Dto;
 
 namespace CrossyRoadApi.Models.Game.Map;
 
-public abstract class CrossyMapElement(CrossyModelPart modelPart, CrossyMapLane lane, int xPosition, int modelWidth)
+public abstract class CrossyMapElement(
+    CrossyModelPart modelPart,
+    CrossyMapLane lane,
+    int xPosition,
+    int modelWidth,
+    bool hasCollision)
     : CrossyModel(modelPart, lane.Position with { X = xPosition })
 {
+    public bool HasCollision { get; } = hasCollision;
     public int ModelWidth { get; } = modelWidth;
-    public CrossyDirection Direction { get; protected set; } = CrossyDirection.Left;
 
     public override string GetModelPath()
     {
         return GetModelPath("elements");
     }
 
-    public override void SetPosition(int xPosition)
+    public override void SetPosition(Vector3 newPosition)
     {
-        Position = Position with { X = xPosition };
+        Position = Position with { X =  newPosition.X, Y = newPosition.Y };
     }
 
-    public void SetDirection(CrossyDirection direction)
-    {
-        Direction = direction;
-    }
-
-    public List<Vector3> GetPositions()
-    {
-        var positions = new List<Vector3>();
-        for (var x = 0; x < ModelWidth; x++)
-            switch (Direction)
-            {
-                case CrossyDirection.Left:
-                    positions.Add(Position - new Vector3(x, 0, 0));
-                    break;
-                case CrossyDirection.Right:
-                    positions.Add(Position + new Vector3(x, 0, 0));
-                    break;
-            }
-
-        return positions;
-    }
-
-    public CrossyMapElementDto ToDto()
-    {
-        return new CrossyMapElementDto
-        {
-            Id = Id,
-            Type = ModelPart,
-            BasePosition = Position,
-            Positions = GetPositions(),
-            ModelLocation = GetModelPath()
-        };
-    }
+    public abstract CrossyMapElementDto ToDto();
 }

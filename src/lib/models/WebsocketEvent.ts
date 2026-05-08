@@ -2,15 +2,19 @@ export class WebsocketEvent {
 	static Ready = 'Ready';
 	static Disconnect = 'Disconnect';
 	static CreateGame = 'CreateGame';
+	static LeaveGame = 'LeaveGame';
 	static JoinGame = 'JoinGame';
-	static GameJoined = 'GameJoined';
-	static GameLeft = 'GameLeft';
 	static StartGame = 'StartGame';
+	static GameJoined = 'GameJoined';
 	static PlayerJoined = 'PlayerJoined';
+	static UpdatePlayerModel = 'UpdatePlayerModel';
+    static PlayerDeath = 'PlayerDeath';
 	static PlayerLeft = 'PlayerLeft';
-
+	static UpdateUser = 'UpdateUser';
+    
 	static NewSection = 'NewSection';
 	static UpdatePlayerPosition = 'UpdatePlayerPosition';
+	static CollectTaler = 'CollectTaler';
 
 	static GameJoinError = 'GameJoinError';
 }
