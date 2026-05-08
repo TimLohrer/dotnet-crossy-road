@@ -872,7 +872,7 @@ export class GameRenderer {
 		) {
 			await this.getSocket()?.startGame();
 			this.renderedObjects.forEach((obj) => {
-				if (obj.name === this.getUser()?.id && !obj.name.includes('lane') && !obj.name.includes('element')) {
+				if (obj.name !== this.getUser()?.id && !obj.name.includes('lane') && !obj.name.includes('element')) {
 					// make other players slightly transparent to distinguish them from the active player
 					obj.traverse((child) => {
 						if (child instanceof THREE.Mesh) {
