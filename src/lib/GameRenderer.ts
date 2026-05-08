@@ -21,6 +21,8 @@ export class GameRenderer {
 	private static readonly IDLE_DEATH_TIME_MS = 8000;
 	private static readonly IDLE_CAMERA_PUSH_SPEED = 0.3;
 	private lastMoveTime: number = performance.now();
+	private highestReachedZ: number | null = null;
+	private hasSentDeath = false;
 
 	window: Window;
 	container: HTMLDivElement;
@@ -321,7 +323,14 @@ export class GameRenderer {
 		this.render();
 		this.getSocket()!.sendPlayerPositionUpdate();
 		this.cleanUpInvisibleWorldObjects(player.position.z);
-		if (originZ < targetXZ.z) this.lastMoveTime = performance.now();
+
+		if (player.user.id === this.getUser()?.id) {
+			const previousHighestZ = this.highestReachedZ ?? Math.round(originZ);
+			if (targetXZ.z >= previousHighestZ + 1) {
+				this.highestReachedZ = targetXZ.z;
+				this.lastMoveTime = performance.now();
+			}
+		}
 	}
 
 	public syncRemotePlayerPosition(player: Player) {
@@ -525,13 +534,17 @@ export class GameRenderer {
 	private isPlayerOnLog(player: Player): boolean {
 		const playerObj = this.renderedObjects.find((o) => o.name === player.user.id);
 		if (!playerObj) return false;
-		const playerBox = new THREE.Box3().setFromObject(playerObj);
-		return this.renderedObjects.some((obj) => {
-			const element = this.elements[obj.uuid];
-			if (!element || !element.modelLocation.includes('log')) return false;
-			const elementBox = new THREE.Box3().setFromObject(obj);
-			return playerBox.intersectsBox(elementBox);
-		});
+
+		// Use the surface directly beneath the player's feet to determine whether
+		// they are standing on a log. This is more stable than mesh-box
+		// intersection during movement and jump landing.
+		const feetPos = playerObj.position.clone();
+		feetPos.y = 0;
+		const elementUnderPlayer = this.getElementAtPosition(feetPos);
+		if (!elementUnderPlayer) return false;
+
+		const element = this.elements[elementUnderPlayer.uuid];
+		return !!element && element.modelLocation.includes('log');
 	}
 
 	private getAxisOverlap(minA: number, maxA: number, minB: number, maxB: number): number {
@@ -565,7 +578,9 @@ export class GameRenderer {
 		});
 	}
 
-	private cameraMovement(player: Player) {
+	private cameraMovement(player: Player, freeze: boolean = false) {
+		if (freeze) return;
+
 		const now = performance.now()
 		const idleMs = now - this.lastMoveTime;
 
@@ -594,7 +609,18 @@ export class GameRenderer {
 		this.dirLight.target.updateMatrix();
 	}
 
-	private handlePlayerPosition(player: Player) {
+	private sendPlayerDeathOnce() {
+		if (this.hasSentDeath) return;
+		this.hasSentDeath = true;
+		void this.getSocket()!
+			.sendPlayerDeath()
+			.catch(() => {
+				// Allow retry on a later frame if the send failed.
+				this.hasSentDeath = false;
+			});
+	}
+
+	private handlePlayerPosition(player: Player, isOnLog: boolean = false) {
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
 		if (!playerObj) return;
 
@@ -603,17 +629,24 @@ export class GameRenderer {
 		if (this.moveAnimations[player.user.id]) return;
 
 		const isActiveUser = player.user.id === this.getUser()?.id;
+		if (isActiveUser && isOnLog) return;
+
 		const currentPosition = playerObj.position.clone();
 		const collidableElementAtPos = this.getCollidableElementAtPosition(playerObj);
 		const elementAtPos = this.getElementAtPosition(currentPosition);
-		const socket = this.getSocket()!;
 
 		if (isActiveUser && collidableElementAtPos) {
-			return socket.sendPlayerDeath();
+			console.log("collide");
+			
+			this.sendPlayerDeathOnce();
+			return;
 		}
 
 		if (isActiveUser && performance.now() - this.lastMoveTime >= GameRenderer.IDLE_DEATH_TIME_MS && player.score > 0) {
-			return socket.sendPlayerDeath();
+			console.log("time");
+			
+			this.sendPlayerDeathOnce();
+			return;
 		}
 
 		if (
@@ -623,7 +656,10 @@ export class GameRenderer {
 				currentPosition.x > 6 ||
 				currentPosition.x < -6)
 		) {
-			return socket.sendPlayerDeath();
+			console.log("water");
+			
+			this.sendPlayerDeathOnce();
+			return;
 		}
 	}
 
@@ -791,17 +827,22 @@ export class GameRenderer {
 	private animate() {
 		requestAnimationFrame(() => this.animate());
 		this.updateAnimations();
-		if (this.getGame()?.gamePhase == GamePhase.Active) {
-			const player = Game.getPlayer(this.getGame()!, this.getUser()!.id)!;
-			this.cameraMovement(player);
-			this.updateLight(player);
-			this.handlePlayerPosition(player);
-			
+		const game = this.getGame();
+		if (game?.gamePhase == GamePhase.Active) {
+			const player = Game.getPlayer(game, this.getUser()!.id)!;
 			const isOnLog = this.isPlayerOnLog(player);
-			if (player.isAlive && isOnLog) {
-				// Dont kill the player due to inactivity as long as they are on a log
+			if (this.highestReachedZ === null) {
+				this.highestReachedZ = Math.round(player.position.z);
 				this.lastMoveTime = performance.now();
+				this.hasSentDeath = false;
 			}
+			this.cameraMovement(player, isOnLog);
+			this.updateLight(player);
+			this.handlePlayerPosition(player, isOnLog);
+		} else {
+			this.highestReachedZ = null;
+			this.lastMoveTime = performance.now();
+			this.hasSentDeath = false;
 		}
 		this.render();
 	}
