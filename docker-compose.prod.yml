@@ -10,7 +10,7 @@ services:
       - crossy_road_data:/var/lib/postgresql/data
 
   backend:
-    image: ${DOCKERHUB_USERNAME}/crossy-road-backend:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}-backend:latest
     restart: unless-stopped
     depends_on:
       - db
@@ -39,7 +39,7 @@ services:
       - "8080:8080"
 
   frontend:
-    image: ${DOCKERHUB_USERNAME}/crossy-road-frontend:latest
+    image: ghcr.io/${GITHUB_REPOSITORY}-frontend:latest
     restart: unless-stopped
     depends_on:
       - backend
