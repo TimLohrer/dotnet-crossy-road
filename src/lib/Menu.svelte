@@ -118,7 +118,7 @@
         top: 1rem;
         left: 1rem;
         justify-self: center;
-        z-index: 101;
+        z-index: 100;
         background-color: black;
         color: white;
         height: 4rem;
@@ -148,7 +148,7 @@
         top: 6rem;
         left: 1rem;
         justify-self: center;
-        z-index: 101;
+        z-index: 100;
         background-color: black;
         color: white;
         height: 4rem;
