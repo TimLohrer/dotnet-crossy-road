@@ -92,6 +92,7 @@
         position: absolute;
         inset: 0;
         display: flex;
+        width: 100%;
         align-items: start;
         justify-content: center;
         z-index: 100;
@@ -99,7 +100,7 @@
     }
 
     .top-bar {
-        top: 1rem;
+        margin-top: 1rem;
         background-color: black;
         color: white;
         height: 4rem;
