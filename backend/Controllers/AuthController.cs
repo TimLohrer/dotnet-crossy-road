@@ -105,7 +105,16 @@ public class AuthController(
         if (result.IsLockedOut) return BadRequest("Locked Out");
 
         // Check if we are already signed in (should never be the case)
-        if (User.Identity is { IsAuthenticated: true }) return BadRequest();
+        if (User.Identity is { IsAuthenticated: true })
+        {
+            var _user =  await userManager.GetUserAsync(User);
+            if (_user != null)
+            {
+                var _result = await userManager.RemoveLoginAsync(_user, info.LoginProvider, providerKey);
+                if (_result.Succeeded) return returnUrl != null ? Redirect(returnUrl) : NoContent();
+            }
+            return BadRequest("You are already authenticated??");
+        };
 
         var user = new CrossyUser
         {
@@ -114,11 +123,11 @@ public class AuthController(
         };
 
         var userCreateResult = await userManager.CreateAsync(user);
-        if (!userCreateResult.Succeeded) return BadRequest();
+        if (!userCreateResult.Succeeded) return BadRequest("Failed to create user :(");
 
         var addedLoginResult = await userManager.AddLoginAsync(user,
             new UserLoginInfo(info.LoginProvider, providerKey, info.ProviderDisplayName));
-        if (!addedLoginResult.Succeeded) return BadRequest();
+        if (!addedLoginResult.Succeeded) return BadRequest("Failed to create login credentials :(");
 
         await signInManager.SignInAsync(user, true, info.LoginProvider);
         return returnUrl != null ? Redirect(returnUrl) : NoContent();
