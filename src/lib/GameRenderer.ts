@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/Addons.js';
 import type { Lane } from './models/Lane';
 import type { Player } from './models/Player';
-import { gameSocket, menuState, user as userStore, wsGame } from './stores/stateStore';
+import { gameSocket, isDebugMode, menuState, user as userStore, wsGame } from './stores/stateStore';
 import { get } from 'svelte/store';
 import { MenuState } from './models/MenuState';
 import { Game } from './models/Game';
@@ -21,7 +21,7 @@ export class GameRenderer {
 	private static readonly IDLE_DEATH_TIME_MS = 8000;
 	private static readonly IDLE_CAMERA_PUSH_SPEED = 0.3;
 	private lastMoveTime: number = performance.now();
-	private highestReachedZ: number | null = null;
+	private highestReachedZ: number = 0;
 	private hasSentDeath = false;
 	private animationFrameId: number | null = null;
 	private isDisposed = false;
@@ -162,13 +162,15 @@ export class GameRenderer {
 		}
 
 		if (hasCollision) {
-			// debugging: show collision boxes
-			// (model as THREE.Group).children.forEach((child) => {
-			// 	(child as THREE.Mesh).material = new THREE.MeshBasicMaterial({
-			// 		color: 0xffffff,
-			// 		wireframe: true
-			// 	});
-			// });
+			if (get(isDebugMode)) {
+				// debugging: show collision boxes
+				(model as THREE.Group).children.forEach((child) => {
+					(child as THREE.Mesh).material = new THREE.MeshBasicMaterial({
+						color: 0xffffff,
+						wireframe: true
+					});
+				});
+			}
 			this.objectList.push(model);
 		}
 
@@ -327,8 +329,8 @@ export class GameRenderer {
 		this.cleanUpInvisibleWorldObjects(player.position.z);
 
 		if (player.user.id === this.getUser()?.id) {
-			const previousHighestZ = this.highestReachedZ ?? Math.round(originZ);
-			if (targetXZ.z >= previousHighestZ + 1) {
+			const previousHighestZ = this.highestReachedZ ?? Math.round(playerObj.position.z);
+			if (targetXZ.z > previousHighestZ) {
 				this.highestReachedZ = targetXZ.z;
 				this.lastMoveTime = performance.now();
 			}
@@ -596,9 +598,7 @@ export class GameRenderer {
 
 	private cameraMovement(player: Player, freeze: boolean = false) {
 		if (freeze) return;
-
-		const now = performance.now()
-		const idleMs = now - this.lastMoveTime;
+		const idleMs = performance.now() - this.lastMoveTime;
 
 		const baseTargetZ = player.position.z - 16 + GameRenderer.cameraOffsetZ;
 		let targetZ = baseTargetZ;
@@ -625,7 +625,7 @@ export class GameRenderer {
 		this.dirLight.target.updateMatrix();
 	}
 
-	private sendPlayerDeathOnce(reason: 'collide' | 'time' | 'water') {
+	private sendPlayerDeathOnce(reason: 'collide' | 'time' | 'water' | 'boundary') {
 		const game = this.getGame();
 		const user = this.getUser();
 		const socket = this.getSocket();
@@ -655,10 +655,14 @@ export class GameRenderer {
 		// airborne over water / between tiles during the arc.
 		if (this.moveAnimations[player.user.id]) return;
 
-		const isActiveUser = player.user.id === this.getUser()?.id;
-		if (isActiveUser && isOnLog) return;
-
 		const currentPosition = playerObj.position.clone();
+
+		const isActiveUser = player.user.id === this.getUser()?.id;
+		if (isActiveUser && isOnLog) {
+			if (currentPosition.x > 6.5 || currentPosition.x < -6.5) this.sendPlayerDeathOnce('boundary');
+			return;
+		}
+
 		const collidableElementAtPos = this.getCollidableElementAtPosition(playerObj);
 		const elementAtPos = this.getElementAtPosition(currentPosition);
 
@@ -668,18 +672,16 @@ export class GameRenderer {
 		}
 
 		if (isActiveUser && performance.now() - this.lastMoveTime >= GameRenderer.IDLE_DEATH_TIME_MS && player.score > 0) {
-			// this.sendPlayerDeathOnce('time');
+			this.sendPlayerDeathOnce('time');
 			return;
 		}
 
 		if (
 			isActiveUser &&
-			(!elementAtPos ||
-				elementAtPos.name == 'lane_water' ||
-				currentPosition.x > 6 ||
-				currentPosition.x < -6)
+			(!elementAtPos || elementAtPos.name == 'lane_water') ||
+			currentPosition.x > 6 || currentPosition.x < -6
 		) {
-			this.sendPlayerDeathOnce('water');
+			this.sendPlayerDeathOnce(elementAtPos?.name == 'lane_water' ? 'water' : 'boundary');
 			return;
 		}
 	}
@@ -853,18 +855,14 @@ export class GameRenderer {
 		if (game?.gamePhase == GamePhase.Active) {
 			const player = Game.getPlayer(game, this.getUser()!.id)!;
 			const isOnLog = this.isPlayerOnLog(player);
-			if (this.highestReachedZ === null) {
-				this.highestReachedZ = Math.round(player.position.z);
+			if (isOnLog) {
 				this.lastMoveTime = performance.now();
-				this.hasSentDeath = false;
 			}
 			this.cameraMovement(player, isOnLog);
 			this.updateLight(player);
 			this.handlePlayerPosition(player, isOnLog);
 		} else {
-			this.highestReachedZ = null;
 			this.lastMoveTime = performance.now();
-			this.hasSentDeath = false;
 		}
 		this.render();
 	}

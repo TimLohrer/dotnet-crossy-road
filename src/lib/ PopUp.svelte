@@ -18,7 +18,6 @@
             css: (t) => `
                 opacity: ${t};
                 backdrop-filter: blur(${t * blur}px);
-                -webkit-backdrop-filter: blur(${t * blur}px);
             `
         };
     }
@@ -51,11 +50,10 @@
         align-items: center;
         width: 100%;
         height: 100%;
-        z-index: 100;
+        z-index: 110;
         position: absolute;
         opacity: 1;
         backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
     }
 
     .popup {

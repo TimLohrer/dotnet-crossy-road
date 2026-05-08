@@ -36,7 +36,7 @@
     {#each leaderBoard as user, i}
         <div class="leaderboard">
             <span class="rank">#{i + 1}</span>
-            <span class="name">{user.username}</span>
+            <span class="name">{user.username.length > 20 ? user.username.substring(0, 17) + '...' : user.username}</span>
             <span class="score">{user.highScore}</span>
         </div>
     {/each}
@@ -46,7 +46,6 @@
     .container {
         padding: 1.5rem 2rem;
         z-index: 101;
-        width: 24rem;
     }
 
     .leaderboard {
@@ -75,5 +74,6 @@
 
     .score {
         font-weight: 700;
+        margin-left: 3rem;
     }
 </style>

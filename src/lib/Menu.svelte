@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { PUBLIC_API_URL } from "./environment";
+	import { GamePhase } from "./models/GamePhase";
 	import { MenuState } from "./models/MenuState";
     import { gameSocket, menuState, user, wsGame } from "./stores/stateStore";
 
@@ -16,13 +17,13 @@
     <img src="./assets/CrossyRoadLogo.png" alt="Game Logo" class="Logo">
 </div>
 
-{#if $wsGame?.hostId == $user?.id && $menuState == MenuState.Play}
+{#if $wsGame?.hostId == $user?.id && ($wsGame?.players?.length ?? 0) <= 1 && $wsGame?.gamePhase == GamePhase.Created}
     <div class="seed-bar">
         <button id="seed" onclick={changeSeed}>Change Seed</button>
     </div>
 {/if}
 
-{#if $wsGame?.hostId == $user?.id && $menuState == MenuState.Play}
+{#if $wsGame?.hostId == $user?.id && $wsGame?.gamePhase == GamePhase.Created}
     <div class="leaderboard-bar">
         <button id="leaderboard" onclick={lookupLeaderboard}>LeaderBoard</button>
     </div>
@@ -43,7 +44,7 @@
         <button class:active={$menuState == MenuState.Skins} onclick={() => $menuState = MenuState.Skins}>Skins</button>
     </div>
     <div class="menu_panel">
-        <button class:active={$menuState == MenuState.Play} onclick={() => $menuState = MenuState.Play}>Start</button>
+        <button class:active={$menuState == MenuState.Play} onclick={() => $menuState == MenuState.Play && $wsGame?.hostId == $user?.id ? $gameSocket?.startGame() : $menuState = MenuState.Play}>Start</button>
     </div>
     <div class="menu_panel">
         {#if $wsGame && $wsGame.players.length > 1}
@@ -67,7 +68,7 @@
         align-self: end;
         align-items: center;
         justify-content: center;
-        z-index: 101;
+        z-index: 150;
         height: 9rem;
         gap: 1rem;
         pointer-events: all;
