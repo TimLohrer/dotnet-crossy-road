@@ -449,7 +449,7 @@ export class GameRenderer {
 		const mapElement = this.renderedObjects.find(
 			(obj) => {
 				const element = this.elements[obj.uuid];
-				if (!element || element.hasCollision || obj.position.x > 8 || obj.position.x < -8) return false;
+				if (!element || element.hasCollision || obj.position.x > GameRenderer.LANE_MAX_X + element.modelWidth || obj.position.x < GameRenderer.LANE_MIN_X - element.modelWidth) return false;
 
 				// Moving elements (logs): use X/Z point-in-bounds check against the
 				// element's current world bounding box so sub-tile movement doesn't
@@ -555,12 +555,12 @@ export class GameRenderer {
 
 	private getCollidableElementAtPosition(playerObj: THREE.Object3D): THREE.Object3D | undefined {
 		const playerBox = new THREE.Box3().setFromObject(playerObj);
-		const minOverlapX = (playerBox.max.x - playerBox.min.x) * 0.25;
-		const minOverlapZ = (playerBox.max.z - playerBox.min.z) * 0.25;
+		const minOverlapX = (playerBox.max.x - playerBox.min.x) * 0.35;
+		const minOverlapZ = (playerBox.max.z - playerBox.min.z) * 0.35;
 
 		return this.renderedObjects.find((obj) => {
 			const element = this.elements[obj.uuid];
-			if (!element || !element.hasCollision || obj.position.x > 6 || obj.position.x < -6) return false;
+			if (!element || !element.hasCollision || obj.position.x > GameRenderer.LANE_MAX_X + element.modelWidth || obj.position.x < GameRenderer.LANE_MIN_X - element.modelWidth) return false;
 
 			const elementBox = new THREE.Box3().setFromObject(obj);
 			const overlapX = this.getAxisOverlap(
@@ -898,6 +898,17 @@ export class GameRenderer {
 			isMovementKey
 		) {
 			await this.getSocket()?.startGame();
+			this.renderedObjects.forEach((obj) => {
+				if (obj.name !== this.getUser()?.id && !obj.name.includes('lane') && !obj.name.includes('element')) {
+					// make other players slightly transparent to distinguish them from the active player
+					obj.traverse((child) => {
+						if (child instanceof THREE.Mesh) {
+							(child.material as THREE.Material).transparent = true;
+							(child.material as THREE.Material).opacity = 0.4;
+						}
+					});
+				}
+			});
 		}
 
 		const isXAxisKey = ['a', 'd', 'arrowleft', 'arrowright'].includes(pressedKey);
