@@ -17,7 +17,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto |
+                               ForwardedHeaders.XForwardedHost;
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
@@ -51,9 +52,8 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.ExpireTimeSpan = TimeSpan.FromHours(10);
 
         opt.Cookie.Domain = null;
-        
-        opt.Cookie.SameSite = SameSiteMode.None;
-        opt.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+
+        opt.Cookie.Domain = appConfig.Domain;
 
         opt.Events.OnRedirectToLogin = context =>
         {
