@@ -179,9 +179,11 @@
     }
 
     .logout:hover {
-        background-color: white;
-        border-color: black;
-        color: black
+        background-color: red;
+    }
+
+    .logout:hover a {
+        color: black;
     }
 </style>
 
