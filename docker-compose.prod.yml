@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - crossy_road_data:/var/lib/postgresql/data
+
+  backend:
+    image: ${DOCKERHUB_USERNAME}/crossy-road-backend:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+
+      Database__Host: db
+      Database__Port: 5432
+      Database__Username: ${DB_USER}
+      Database__Password: ${DB_PASSWORD}
+      Database__Database: ${DB_NAME}
+
+      BoschOAuth__ClientId: ${BOSCH_CLIENT_ID}
+      BoschOAuth__ClientSecret: ${BOSCH_CLIENT_SECRET}
+      BoschOAuth__TenantId: ${BOSCH_TENANT_ID}
+      BoschOAuth__MetadataAddress: ${BOSCH_METADATA_ADDRESS}
+      BoschOAuth__Scopes: ${BOSCH_SCOPES:-profile,openid,email}
+
+      MicrosoftOAuth__ClientId: ${MS_CLIENT_ID}
+      MicrosoftOAuth__ClientSecret: ${MS_CLIENT_SECRET}
+      MicrosoftOAuth__TenantId: ${MS_TENANT_ID}
+      MicrosoftOAuth__MetadataAddress: ${MS_METADATA_ADDRESS}
+      MicrosoftOAuth__Scopes: ${MS_SCOPES:-profile,openid}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/crossy-road-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      PUBLIC_API_URL: ${PUBLIC_API_URL}
+      PORT: 3000
+      HOST: 0.0.0.0
+    ports:
+      - "3000:3000"
+
+volumes:
+  crossy_road_data:
