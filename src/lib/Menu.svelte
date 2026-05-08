@@ -28,12 +28,14 @@
     </div>
 {/if}
 
-<div class="top-bar">
-    {#if $wsGame?.hostId == $user?.id}
-        Game Code: <span>{$wsGame?.id.split("-")[0].toUpperCase()}</span>
-    {:else}
-        Waiting for host to start the game!
-    {/if}
+<div class="top-bar-wrapper">
+    <div class="top-bar">
+        {#if $wsGame?.hostId == $user?.id}
+            Game Code: <span>{$wsGame?.id.split("-")[0].toUpperCase()}</span>
+        {:else}
+            Waiting for host to start the game!
+        {/if}
+    </div>
 </div>
 
 <div class="menu_container">
@@ -86,11 +88,18 @@
         padding-bottom: 250px;
     }
 
-    .top-bar {
+    .top-bar-wrapper {
         position: absolute;
-        top: 1rem;
-        justify-self: center;
+        inset: 0;
+        display: flex;
+        align-items: start;
+        justify-content: center;
         z-index: 100;
+        pointer-events: none;
+    }
+
+    .top-bar {
+        top: 1rem;
         background-color: black;
         color: white;
         height: 4rem;
@@ -101,7 +110,6 @@
         padding: 0 1rem;
         display: flex;
         align-items: center;
-        pointer-events: none;
     }
 
     .seed-bar {
