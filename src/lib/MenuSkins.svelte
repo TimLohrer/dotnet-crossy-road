@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { PUBLIC_API_URL } from "./environment";
 	import SkinPreview from "./SkinPreview.svelte";
-	import { gameSocket, menuState, skinList, user } from "./stores/stateStore";
+	import { gameSocket, skinList, user } from "./stores/stateStore";
 	import type { User } from "./models/User";
 	import { SkinRarity, type Skin } from "./models/Skin";
-	import { MenuState } from "./models/MenuState";
 
     async function selectSkin(skin: Skin) {
         const isOwned = $user?.ownedSkins?.some((ownedSkin) => ownedSkin.id === skin.id);

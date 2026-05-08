@@ -636,11 +636,15 @@ export class GameRenderer {
 		const elementAtPos = this.getElementAtPosition(currentPosition);
 
 		if (isActiveUser && collidableElementAtPos) {
+			console.log("collide");
+			
 			this.sendPlayerDeathOnce();
 			return;
 		}
 
 		if (isActiveUser && performance.now() - this.lastMoveTime >= GameRenderer.IDLE_DEATH_TIME_MS && player.score > 0) {
+			console.log("time");
+			
 			this.sendPlayerDeathOnce();
 			return;
 		}
@@ -652,6 +656,8 @@ export class GameRenderer {
 				currentPosition.x > 6 ||
 				currentPosition.x < -6)
 		) {
+			console.log("water");
+			
 			this.sendPlayerDeathOnce();
 			return;
 		}
