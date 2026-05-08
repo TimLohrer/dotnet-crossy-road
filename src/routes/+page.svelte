@@ -14,6 +14,7 @@
 	import { onMount } from 'svelte';
 	import type { Skin } from '$lib/models/Skin';
 	import MenuSeed from '$lib/MenuSeed.svelte';
+	import MenuLeaderBoard from '$lib/MenuLeaderBoard.svelte';
 
 	onMount(async () => {
 		const res = await fetch(`${PUBLIC_API_URL}/user/@me`, {
@@ -69,5 +70,9 @@
 {:else if $menuState == MenuState.Seed}
 	<PopUp params={{ canEscapeToClose: true, onClose: () => $menuState = MenuState.Play }}>
 		<MenuSeed />
+	</PopUp>
+{:else if $menuState == MenuState.LeaderBoard}
+	<PopUp params={{ canEscapeToClose: true, onClose: () => $menuState = MenuState.Play }}>
+		<MenuLeaderBoard />
 	</PopUp>
 {/if}

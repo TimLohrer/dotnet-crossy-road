@@ -6,6 +6,10 @@
     function changeSeed() {
         $menuState = MenuState.Seed;
     }
+
+    function lookupLeaderboard() {
+        $menuState = MenuState.LeaderBoard;
+    }
 </script>
 
 <div class="logo_container">
@@ -15,6 +19,12 @@
 {#if $wsGame?.hostId == $user?.id && $menuState == MenuState.Play}
     <div class="seed-bar">
         <button id="seed" onclick={changeSeed}>Change Seed</button>
+    </div>
+{/if}
+
+{#if $wsGame?.hostId == $user?.id && $menuState == MenuState.Play}
+    <div class="leaderboard-bar">
+        <button id="leaderboard" onclick={lookupLeaderboard}>LeaderBoard</button>
     </div>
 {/if}
 
@@ -121,6 +131,36 @@
     }
 
     #seed:hover {
+        color: black;
+        background-color: white;
+    }
+    .leaderboard-bar {
+        position: absolute;
+        top: 6rem;
+        left: 1rem;
+        justify-self: center;
+        z-index: 101;
+        background-color: black;
+        color: white;
+        height: 4rem;
+        font-size: 1.3rem;
+        border-style: solid;
+        border-width: 0.4rem;
+        border-color: white;
+        display: flex;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    #leaderboard {
+        pointer-events: all;
+        width: 100%;
+        height: 100%;
+        border-style: none;
+        padding: 0 1rem;
+    }
+
+    #leaderboard:hover {
         color: black;
         background-color: white;
     }
