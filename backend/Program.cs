@@ -53,6 +53,7 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
 
         opt.Cookie.Domain = null;
 
+        opt.Cookie.SameSite = SameSiteMode.None;
         opt.Cookie.Domain = appConfig.Domain;
 
         opt.Events.OnRedirectToLogin = context =>
