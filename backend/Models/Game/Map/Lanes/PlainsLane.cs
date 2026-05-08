@@ -3,7 +3,7 @@ using CrossyRoadApi.Models.Game.Map.Elements;
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
 
 public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, bool empty = false) : CrossyMapLane(
-    type == PlainsType.Light ? CrossyModelPart.Plains : CrossyModelPart.PlainsDark, seed, zPosition, empty)
+    type == PlainsType.Light ? CrossyModelPart.Plains : CrossyModelPart.PlainsDark, seed, zPosition)
 {
     public enum PlainsType
     {
@@ -31,7 +31,8 @@ public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, boo
 
     protected override void GenerateElements()
     {
-        var blockedSlots = GenerateBlockedSlots();
+        var blockedSlots = empty ? GenerateForestSlots() : GenerateBlockedSlots();
+
         for (var i = 0; i < blockedSlots.Count; i++)
         {
             var mapX = GetMapPositionFromLanePositionIndex(i);
@@ -59,7 +60,24 @@ public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, boo
                     continue;
             }
         }
-        GenerateTalers(0.05f);
+
+        if (!empty)
+            GenerateTalers(0.05f);
+    }
+
+    private List<CrossyModelPart> GenerateForestSlots()
+    {
+        var left = GenerateBlockedSlotsWithConstraints(LeftMask, 5, 7, LeftElements);
+        var middle = Enumerable.Repeat(CrossyModelPart.Empty, LaneLength).ToList();
+        var right = GenerateBlockedSlotsWithConstraints(RightMask, 5, 6, RightElements);
+
+        List<CrossyModelPart> blockedSlots = [];
+        for (var i = 0; i < LaneLength; i++)
+            blockedSlots.Add(left[i] != CrossyModelPart.Empty ? left[i] :
+                middle[i] != CrossyModelPart.Empty ? middle[i] : right[i]);
+
+
+        return blockedSlots;
     }
 
     private List<CrossyModelPart> GenerateBlockedSlots()
