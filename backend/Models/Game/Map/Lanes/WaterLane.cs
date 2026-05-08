@@ -2,7 +2,7 @@ using CrossyRoadApi.Models.Game.Map.Elements;
 
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
 
-public class WaterLane(int zPosition, int seed, bool canBeLillyLane)
+public class WaterLane(int zPosition, int seed, bool canBeLillyLane, CrossyMovingMapElement.ModelDirection direction)
     : CrossyMapLane(CrossyModelPart.Water, seed, zPosition)
 {
     private static readonly int LogCount = 5;
@@ -21,7 +21,7 @@ public class WaterLane(int zPosition, int seed, bool canBeLillyLane)
         var isLillypadLane = Randomizer.Next(LillypadChance) == 0;
         if (canBeLillyLane && isLillypadLane)
         {
-            var lillypadCount = Randomizer.Next(1, MaxLillypads + 1);
+            var lillypadCount = Randomizer.Next(2, MaxLillypads + 1);
             for (var i = 0; i < lillypadCount; i++)
             {
                 int xPos;
@@ -37,7 +37,9 @@ public class WaterLane(int zPosition, int seed, bool canBeLillyLane)
         }
         else
         {
-            var startX = new List<int> { 13, -13 }[Randomizer.Next(2)]; // Randomizes direction
+            var startX =
+                new List<int> { 13, -13 }[
+                    direction == CrossyMovingMapElement.ModelDirection.Right ? 0 : 1]; // Randomizes direction
             var baseSpeed = Randomizer.Next(3, 5) / 5f; // Number between 0.6 and 1.0
             var zBasedSpeedMultiplyer = (float)Math.Min(1.5, zPosition / 900f + 1.0f);
             var speed = baseSpeed * zBasedSpeedMultiplyer;

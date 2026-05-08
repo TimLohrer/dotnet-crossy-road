@@ -7,7 +7,10 @@ namespace CrossyRoadApi.Models.Game.Map;
 public class CrossyMapGenerator(CrossyGame game)
 {
     private static readonly List<CrossyModelPart> AvailableLanes =
-        [CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Water, CrossyModelPart.Rail];
+    [
+        CrossyModelPart.Plains, CrossyModelPart.Street, CrossyModelPart.Plains, CrossyModelPart.Street,
+        CrossyModelPart.Water, CrossyModelPart.Rail
+    ];
 
     private static readonly int MaxPlainsLength = 8;
     private static readonly int MaxStreetLength = 6;
@@ -47,8 +50,9 @@ public class CrossyMapGenerator(CrossyGame game)
                 lanes = GeneratePlainsLanes(randomizer, _seed, zPosition);
                 break;
         }
-        
-        lanes.ForEach(l => l.Elements.Where(e => e is Taler).ToList().ForEach(e => game.TalerLocations.Add(e.Position)));
+
+        lanes.ForEach(l =>
+            l.Elements.Where(e => e is Taler).ToList().ForEach(e => game.TalerLocations.Add(e.Position)));
 
         return lanes;
     }
@@ -56,7 +60,7 @@ public class CrossyMapGenerator(CrossyGame game)
     private static List<CrossyMapLane> GeneratePlainsLanes(Random randomizer, int seed, int zPosition)
     {
         var plainsLength = randomizer.Next(1, MaxPlainsLength + 1);
-        
+
         List<CrossyMapLane> lanes = [];
         for (var i = 0; i < plainsLength; i++)
         {
@@ -108,7 +112,21 @@ public class CrossyMapGenerator(CrossyGame game)
         var waterLength = GetLaneLength(randomizer, MaxWaterLength);
 
         List<CrossyMapLane> lanes = [];
-        for (var i = 0; i < waterLength; i++) lanes.Add(new WaterLane(zPosition + i, seed, lanes.Count <= 0 || lanes.Last().Elements.All(e => e.ModelPart != CrossyModelPart.Lillypad)));
+        for (var i = 0; i < waterLength; i++)
+        {
+            var lastWasLillyLane =
+                lanes.Count > 0 && lanes.Last().Elements.Any(e => e.ModelPart == CrossyModelPart.Lillypad);
+            var direction = i == 0 || lastWasLillyLane ? new List<CrossyMovingMapElement.ModelDirection>(
+                    [CrossyMovingMapElement.ModelDirection.Right, CrossyMovingMapElement.ModelDirection.Left])[
+                    randomizer.Next(2)] :
+                (
+                    (CrossyMovingMapElement)((WaterLane)lanes.Last()).Elements.First()).Direction ==
+                CrossyMovingMapElement.ModelDirection.Left ? CrossyMovingMapElement.ModelDirection.Right :
+                CrossyMovingMapElement.ModelDirection.Left;
+            lanes.Add(new WaterLane(zPosition + i, seed, !lastWasLillyLane, direction));
+        }
+
+        ;
 
         return lanes;
     }
