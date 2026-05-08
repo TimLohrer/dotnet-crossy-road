@@ -15,9 +15,14 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOST=0.0.0.0
 
-# Only ship what the bun adapter needs at runtime.
+# svelte-adapter-bun keeps several packages external (cookie, @sveltejs/kit, ...).
+# Install the full dependency tree in the runtime image so they resolve.
+COPY package.json bun.lockb* bun.lock* ./
+RUN bun install --frozen-lockfile || bun install
+
+RUN bun add cookie devalue set-cookie-parser @sveltejs/kit
+
 COPY --from=build /app/build ./build
-COPY --from=build /app/package.json ./package.json
 
 EXPOSE 3000
 CMD ["bun", "run", "build/index.js"]
