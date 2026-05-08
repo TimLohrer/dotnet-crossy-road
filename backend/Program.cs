@@ -127,7 +127,6 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseForwardedHeaders();
-app.UseHttpsRedirection();
 
 app.UsePathBase("/api/v1");
 app.UseRouting();
