@@ -8,10 +8,13 @@ public class WaterLane(int zPosition, int seed, bool canBeLillyLane, CrossyMovin
     private static readonly int LogCount = 5;
     private static readonly int LillypadChance = 3; // 33% chance for a lillypad lane
     private static readonly int MaxLillypads = 3;
+    private const int LaneLoopWidth = 30;
+    private const int MinGapBetweenLogs = 2;
+    private const int MaxGapBetweenLogs = 5;
 
     private static readonly List<CrossyModelPart> AvailableLogs =
     [
-        CrossyModelPart.Log0, CrossyModelPart.Log1, CrossyModelPart.Log1, CrossyModelPart.Car2
+        CrossyModelPart.Log0, CrossyModelPart.Log1, CrossyModelPart.Log1, CrossyModelPart.Log2
     ];
 
     public override CrossyModelPart LaneType => CrossyModelPart.Water;
@@ -43,13 +46,16 @@ public class WaterLane(int zPosition, int seed, bool canBeLillyLane, CrossyMovin
             var baseSpeed = Randomizer.Next(3, 5) / 5f; // Number between 0.6 and 1.0
             var zBasedSpeedMultiplyer = (float)Math.Min(1.5, zPosition / 900f + 1.0f);
             var speed = baseSpeed * zBasedSpeedMultiplyer;
+
+            int? firstOffset = null;
             for (var i = 0; i < LogCount; i++)
             {
                 var type = AvailableLogs[Randomizer.Next(AvailableLogs.Count)];
-                var offset =
-                    (Elements.Count > 0
-                        ? ((CrossyMovingMapElement)Elements.Last()).XOffset + Elements.Last().ModelWidth
-                        : 0) + Randomizer.Next(2, 5) + 1;
+                var modelWidth = GetModelWidth(type);
+                if (!TryGetNextOffset(modelWidth, firstOffset, out var offset))
+                    break;
+
+                firstOffset ??= offset;
                 switch (type)
                 {
                     case CrossyModelPart.Log0:
@@ -64,5 +70,43 @@ public class WaterLane(int zPosition, int seed, bool canBeLillyLane, CrossyMovin
                 }
             }
         }
+    }
+
+    private bool TryGetNextOffset(int modelWidth, int? firstOffset, out int offset)
+    {
+        var previousEnd = Elements.Count > 0
+            ? ((CrossyMovingMapElement)Elements.Last()).XOffset + Elements.Last().ModelWidth
+            : 0;
+
+        var minOffset = (Elements.Count == 0 ? 0 : previousEnd) + MinGapBetweenLogs;
+        var maxOffset = (Elements.Count == 0 ? 0 : previousEnd) + MaxGapBetweenLogs;
+
+        if (firstOffset.HasValue)
+        {
+            // Keep a minimum wrap gap so the first and last log don't overlap
+            // when both are modulo-wrapped on the client.
+            var maxOffsetByWrap = LaneLoopWidth - modelWidth - MinGapBetweenLogs + firstOffset.Value;
+            maxOffset = Math.Min(maxOffset, maxOffsetByWrap);
+        }
+
+        if (minOffset > maxOffset)
+        {
+            offset = 0;
+            return false;
+        }
+
+        offset = Randomizer.Next(minOffset, maxOffset + 1);
+        return true;
+    }
+
+    private static int GetModelWidth(CrossyModelPart type)
+    {
+        return type switch
+        {
+            CrossyModelPart.Log0 => 1,
+            CrossyModelPart.Log1 => 2,
+            CrossyModelPart.Log2 => 3,
+            _ => 1
+        };
     }
 }
