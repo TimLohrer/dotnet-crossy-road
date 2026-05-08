@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,15 +71,17 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
     }).AddOpenIdConnect("microsoft", "Microsoft", opt =>
     {
         opt.MetadataAddress = appConfig.MicrosoftOAuth.MetaDataAddress;
-        opt.GetClaimsFromUserInfoEndpoint = true;
         opt.ClientId = appConfig.MicrosoftOAuth.ClientId;
         opt.ClientSecret = appConfig.MicrosoftOAuth.ClientSecret;
         opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
         opt.SignInScheme = IdentityConstants.ExternalScheme;
         opt.CallbackPath = "/api/v1/auth/signin-oidc-microsoft";
-        opt.ResponseType = OpenIdConnectResponseType.Code;
-        opt.UsePkce = true;
         opt.SaveTokens = true;
+        opt.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = false
+            };
         foreach (var scope in appConfig.MicrosoftOAuth.Scopes.Split(",").Select(x => x.Trim()))
             opt.Scope.Add(scope);
     }).AddCookie(IdentityConstants.ExternalScheme, opt => { opt.Cookie.Name = "Manager.External"; });
