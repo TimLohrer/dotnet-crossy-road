@@ -51,6 +51,9 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.ExpireTimeSpan = TimeSpan.FromHours(10);
 
         opt.Cookie.Domain = null;
+        
+        opt.Cookie.SameSite = SameSiteMode.None;
+        opt.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
         opt.Events.OnRedirectToLogin = context =>
         {
