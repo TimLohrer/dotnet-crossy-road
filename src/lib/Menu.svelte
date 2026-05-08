@@ -144,6 +144,11 @@
         border-color: white;
     }
 
+    button:hover {
+        background-color: white;
+        color: black;
+    }
+
     button.active {
         height: 8rem;
     }
@@ -164,12 +169,19 @@
         border-width: 0.4rem;
         border-color: red;
         backdrop-filter: blur(5px);
+        background-color: black;
     }
     
     .logout a {
         font-size: 1rem;
         color: red;
         text-decoration: none;
+    }
+
+    .logout:hover {
+        background-color: white;
+        border-color: black;
+        color: black
     }
 </style>
 
