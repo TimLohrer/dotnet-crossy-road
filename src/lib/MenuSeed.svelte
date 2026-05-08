@@ -1,19 +1,29 @@
 <script lang="ts">
 	import { MenuState } from "./models/MenuState";
-	import { gameSocket, menuState, wsGame } from "./stores/stateStore";
+	import { gameSocket, menuState, wsGame, isDebugMode } from "./stores/stateStore";
 
-    let seed: number | undefined = $state();
+    let seed: string | undefined = $state();
 
     async function changeSeed() {
         if (seed === undefined) return $menuState = MenuState.Play;
         
-        await $gameSocket?.createGame(seed);
-    }
+        if (seed == 'DEBUG') {
+            $isDebugMode = !$isDebugMode;
+            $gameSocket?.createGame();
+            return $menuState = MenuState.Play;
+        }
 
+        if (isNaN(Number(seed))) {
+            return;
+        }
+
+        await $gameSocket?.createGame(Number(seed));
+    }
 </script>
+
 <div class="seed-container">
     <div class="seed-form">
-        Seed: <input type="number" name="seed" id="seed" placeholder={$wsGame?.seed.toString()} bind:value={seed}>
+        Seed: <input type="text" name="seed" id="seed" placeholder={$wsGame?.seed.toString()} bind:value={seed}>
         <button type="button" id="submit" onclick={changeSeed}>Submit</button>
     </div>
 </div>
@@ -27,11 +37,6 @@
         padding: 0 0.5rem;
         outline: none;
         border: none;
-    }
-
-    input::-webkit-inner-spin-button, input::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
     }
 
     .seed-form {

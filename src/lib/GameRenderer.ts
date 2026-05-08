@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/Addons.js';
 import type { Lane } from './models/Lane';
 import type { Player } from './models/Player';
-import { gameSocket, menuState, user as userStore, wsGame } from './stores/stateStore';
+import { gameSocket, isDebugMode, menuState, user as userStore, wsGame } from './stores/stateStore';
 import { get } from 'svelte/store';
 import { MenuState } from './models/MenuState';
 import { Game } from './models/Game';
@@ -162,13 +162,15 @@ export class GameRenderer {
 		}
 
 		if (hasCollision) {
-			// debugging: show collision boxes
-			// (model as THREE.Group).children.forEach((child) => {
-			// 	(child as THREE.Mesh).material = new THREE.MeshBasicMaterial({
-			// 		color: 0xffffff,
-			// 		wireframe: true
-			// 	});
-			// });
+			if (get(isDebugMode)) {
+				// debugging: show collision boxes
+				(model as THREE.Group).children.forEach((child) => {
+					(child as THREE.Mesh).material = new THREE.MeshBasicMaterial({
+						color: 0xffffff,
+						wireframe: true
+					});
+				});
+			}
 			this.objectList.push(model);
 		}
 
@@ -623,7 +625,7 @@ export class GameRenderer {
 		this.dirLight.target.updateMatrix();
 	}
 
-	private sendPlayerDeathOnce(reason: 'collide' | 'time' | 'water') {
+	private sendPlayerDeathOnce(reason: 'collide' | 'time' | 'water' | 'boundary') {
 		const game = this.getGame();
 		const user = this.getUser();
 		const socket = this.getSocket();
@@ -678,7 +680,7 @@ export class GameRenderer {
 				currentPosition.x > 6 ||
 				currentPosition.x < -6)
 		) {
-			this.sendPlayerDeathOnce('water');
+			this.sendPlayerDeathOnce(elementAtPos?.name == 'lane_water' ? 'water' : 'boundary');
 			return;
 		}
 	}

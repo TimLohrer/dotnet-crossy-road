@@ -16,7 +16,7 @@
     <img src="./assets/CrossyRoadLogo.png" alt="Game Logo" class="Logo">
 </div>
 
-{#if $wsGame?.hostId == $user?.id && $menuState == MenuState.Play}
+{#if $wsGame?.hostId == $user?.id && ($wsGame?.players?.length ?? 0) <= 1 && $menuState == MenuState.Play}
     <div class="seed-bar">
         <button id="seed" onclick={changeSeed}>Change Seed</button>
     </div>

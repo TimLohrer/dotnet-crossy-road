@@ -6,6 +6,8 @@ import type { GameRenderer } from '$lib/GameRenderer';
 import type { GameSocket } from '$lib/GameSocket';
 import type { Skin } from '$lib/models/Skin';
 
+export const isDebugMode = writable(false);
+
 export const user = writable<User | null>(null);
 
 export const menuState: Writable<MenuState> = writable(MenuState.Play);
