@@ -702,38 +702,38 @@ export class GameRenderer {
 				dx *= 2; // speed up logs when they are outside the main area
 			}
 
-			const oldPos = obj.position.clone();
 			obj.position.x += dx;
 
-			// culling
-			if (obj.position.x < min - 5 || obj.position.x > max + 5) {
+			// culling — wide elements (e.g. trains) need a buffer based on modelWidth
+			// so they don't disappear while they are still partially on-screen.
+			const cullBuffer = (element.modelWidth ?? 1) / 2 + 5;
+			if (obj.position.x < min - cullBuffer || obj.position.x > max + cullBuffer) {
 				obj.visible = false;
 			} else {
 				obj.visible = true;
 			}
 
-			// Toggle rail light logic
+			// Rail signal: light up well before the train reaches the lane and
+			// keep it lit until the train has fully left.
 			if (element.modelLocation.includes('train')) {
 				const laneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rail');
 				const signalLaneElement = this.renderedObjects.find((e) => e.position.z == obj.position.z && e.name == 'lane_rail_signal');
 
-				const REQUIRED_DISTANCE = 100;
-				const movingRight = dx > 0;
-				const frontX = obj.position.x;
-				const approachBoundary = movingRight ? min - REQUIRED_DISTANCE : max + REQUIRED_DISTANCE;
-				const isApproachingLane = movingRight
-					? frontX >= approachBoundary && frontX < 0
-					: frontX <= approachBoundary && frontX > 0;
-				const hasPassedLaneCenter = movingRight ? frontX >= 0 : frontX <= 0;
-
 				if (laneElement && signalLaneElement) {
-					if (isApproachingLane) {
-						signalLaneElement.visible = true;
-						laneElement.visible = false;
-					} else if (hasPassedLaneCenter) {
-						laneElement.visible = true;
-						signalLaneElement.visible = false;
-					}
+					const APPROACH_DISTANCE = 100;
+					const halfWidth = (element.modelWidth ?? 1) / 2;
+					const movingRight = dx > 0;
+					// Signal is on while the train is approaching from the incoming
+					// side, while it is in the lane, and until it has fully cleared
+					// the outgoing side.
+					const signalOn = movingRight
+						? obj.position.x >= min - APPROACH_DISTANCE - halfWidth
+							&& obj.position.x <= max + halfWidth
+						: obj.position.x <= max + APPROACH_DISTANCE + halfWidth
+							&& obj.position.x >= min - halfWidth;
+
+					signalLaneElement.visible = signalOn;
+					laneElement.visible = !signalOn;
 				}
 			}
 
