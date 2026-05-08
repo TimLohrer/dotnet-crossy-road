@@ -21,7 +21,7 @@ export class GameRenderer {
 	private static readonly IDLE_DEATH_TIME_MS = 8000;
 	private static readonly IDLE_CAMERA_PUSH_SPEED = 0.3;
 	private lastMoveTime: number = performance.now();
-	private highestReachedZ: number | null = null;
+	private highestReachedZ: number = 0;
 	private hasSentDeath = false;
 	private animationFrameId: number | null = null;
 	private isDisposed = false;
@@ -327,8 +327,8 @@ export class GameRenderer {
 		this.cleanUpInvisibleWorldObjects(player.position.z);
 
 		if (player.user.id === this.getUser()?.id) {
-			const previousHighestZ = this.highestReachedZ ?? Math.round(originZ);
-			if (targetXZ.z >= previousHighestZ + 1) {
+			const previousHighestZ = this.highestReachedZ ?? Math.round(playerObj.position.z);
+			if (targetXZ.z > previousHighestZ) {
 				this.highestReachedZ = targetXZ.z;
 				this.lastMoveTime = performance.now();
 			}
@@ -596,9 +596,7 @@ export class GameRenderer {
 
 	private cameraMovement(player: Player, freeze: boolean = false) {
 		if (freeze) return;
-
-		const now = performance.now()
-		const idleMs = now - this.lastMoveTime;
+		const idleMs = performance.now() - this.lastMoveTime;
 
 		const baseTargetZ = player.position.z - 16 + GameRenderer.cameraOffsetZ;
 		let targetZ = baseTargetZ;
@@ -657,6 +655,7 @@ export class GameRenderer {
 
 		const isActiveUser = player.user.id === this.getUser()?.id;
 		if (isActiveUser && isOnLog) return;
+		
 
 		const currentPosition = playerObj.position.clone();
 		const collidableElementAtPos = this.getCollidableElementAtPosition(playerObj);
@@ -668,7 +667,7 @@ export class GameRenderer {
 		}
 
 		if (isActiveUser && performance.now() - this.lastMoveTime >= GameRenderer.IDLE_DEATH_TIME_MS && player.score > 0) {
-			// this.sendPlayerDeathOnce('time');
+			this.sendPlayerDeathOnce('time');
 			return;
 		}
 
@@ -853,18 +852,14 @@ export class GameRenderer {
 		if (game?.gamePhase == GamePhase.Active) {
 			const player = Game.getPlayer(game, this.getUser()!.id)!;
 			const isOnLog = this.isPlayerOnLog(player);
-			if (this.highestReachedZ === null) {
-				this.highestReachedZ = Math.round(player.position.z);
+			if (isOnLog) {
 				this.lastMoveTime = performance.now();
-				this.hasSentDeath = false;
 			}
 			this.cameraMovement(player, isOnLog);
 			this.updateLight(player);
 			this.handlePlayerPosition(player, isOnLog);
 		} else {
-			this.highestReachedZ = null;
 			this.lastMoveTime = performance.now();
-			this.hasSentDeath = false;
 		}
 		this.render();
 	}
