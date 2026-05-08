@@ -4,6 +4,7 @@ using CrossyRoadApi.Controllers;
 using CrossyRoadApi.Database;
 using CrossyRoadApi.Models.Database;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(options => { options.JsonSerializerOptions.IncludeFields = true; });
 builder.Services.AddOpenApi();
+
+// Trust X-Forwarded-* headers when running behind a reverse proxy (NPM, etc.)
+// so HTTPS-aware features (cookies, redirects, OIDC callbacks) see the public scheme/host.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
@@ -108,20 +119,23 @@ builder.Services.AddScoped<IUserStore<CrossyUser>, UserStore<CrossyUser, UserRol
 var app = builder.Build();
 
 // Apply migrations automatically
-// using (var scope = app.Services.CreateScope())
-// {
-//     var db = scope.ServiceProvider.GetRequiredService<CrossyDbContext>();
-//     db.Database.Migrate();
-// }
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CrossyDbContext>();
+    Console.WriteLine("Applying database migrations...");
+    db.Database.Migrate();
+}
 
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
-app.UseHttpsRedirection();
+app.UseForwardedHeaders();
 
 app.UsePathBase("/api/v1");
 app.UseRouting();
 
-app.UseCors("AllowFrontend");
+// CORS only matters cross-origin (the dev frontend on :5173). In production the
+// frontend is served on the same origin via the reverse proxy, so it's a no-op there.
+if (app.Environment.IsDevelopment()) app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
