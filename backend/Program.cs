@@ -64,7 +64,7 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.ClientSecret = appConfig.BoschOAuth.ClientSecret;
         opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
         opt.SignInScheme = IdentityConstants.ExternalScheme;
-        opt.CallbackPath = "/auth/signin-oidc-bosch";
+        opt.CallbackPath = "/api/v1/auth/signin-oidc-bosch";
         opt.SaveTokens = true;
         foreach (var scope in appConfig.BoschOAuth.Scopes.Split(",").Select(x => x.Trim()))
             opt.Scope.Add(scope);
@@ -76,7 +76,7 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.ClientSecret = appConfig.MicrosoftOAuth.ClientSecret;
         opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
         opt.SignInScheme = IdentityConstants.ExternalScheme;
-        opt.CallbackPath = "/auth/signin-oidc-microsoft";
+        opt.CallbackPath = "/api/v1/auth/signin-oidc-microsoft";
         opt.ResponseType = OpenIdConnectResponseType.Code;
         opt.UsePkce = true;
         opt.SaveTokens = true;
@@ -116,6 +116,9 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+app.UsePathBase("/api/v1");
+app.UseRouting();
+
 var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor |
@@ -129,9 +132,6 @@ app.UseForwardedHeaders(forwardedHeadersOptions);
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseForwardedHeaders();
-
-app.UsePathBase("/api/v1");
-app.UseRouting();
 
 // CORS only matters cross-origin (the dev frontend on :5173). In production the
 // frontend is served on the same origin via the reverse proxy, so it's a no-op there.
