@@ -39,6 +39,7 @@ export class GameSocket {
 			// Create fresh renderer to clear old game state
 			const oldRenderer = this.getRenderer();
 			if (oldRenderer) {
+				oldRenderer.dispose();
 				oldRenderer.container.children.item(0)?.remove();
 				gameRenderer.update(() => new GameRenderer(oldRenderer.window, oldRenderer.container));
 			}
@@ -125,18 +126,29 @@ export class GameSocket {
 		});
 
 		this.connection.on(WebsocketEvent.PlayerDeath, (newGame: Game) => {
-			const deadPlayer = this.getGame()?.players.find((p) => p.user.id == newGame.players.find((np) => np.isAlive !== p.isAlive && np.user.id == p.user.id)?.user.id);
-			if (deadPlayer) {
-				this.getRenderer()!.removePlayer(deadPlayer.user.id);
+			const previousGame = this.getGame();
+			const newlyDeadPlayerIds = (previousGame?.players ?? [])
+				.filter((prevPlayer) =>
+					prevPlayer.isAlive &&
+					newGame.players.some(
+						(nextPlayer) => nextPlayer.user.id === prevPlayer.user.id && !nextPlayer.isAlive
+					)
+				)
+				.map((player) => player.user.id);
 
-			}
+			newlyDeadPlayerIds.forEach((playerId) => {
+				this.getRenderer()!.removePlayer(playerId);
+			});
+
+			const localUserId = this.getUser()?.id;
+			const localPlayer = newGame.players.find((p) => p.user.id === localUserId);
 
 			wsGame.update((game) => {
 				game = newGame;
 				game?.players.forEach((p) => {
 					p.position = Vec3.fromObject(p.position);
 				});
-				if (deadPlayer?.user.id === this.getUser()!.id) {
+				if (localPlayer && !localPlayer.isAlive) {
 					game.gamePhase = GamePhase.Ended;
 				}
 				return game;
