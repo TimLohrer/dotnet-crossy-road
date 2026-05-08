@@ -15,14 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers().AddJsonOptions(options => { options.JsonSerializerOptions.IncludeFields = true; });
 builder.Services.AddOpenApi();
 
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto |
-                               ForwardedHeaders.XForwardedHost;
-    options.KnownIPNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
@@ -51,7 +43,6 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.Cookie.IsEssential = true;
         opt.ExpireTimeSpan = TimeSpan.FromHours(10);
 
-        opt.Cookie.SameSite = SameSiteMode.None;
         opt.Cookie.Domain = appConfig.Domain;
 
         opt.Events.OnRedirectToLogin = context =>
@@ -74,7 +65,6 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
         opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
         opt.SignInScheme = IdentityConstants.ExternalScheme;
         opt.CallbackPath = "/auth/signin-oidc-bosch";
-        opt.ResponseType = "id_token token";
         opt.SaveTokens = true;
         foreach (var scope in appConfig.BoschOAuth.Scopes.Split(",").Select(x => x.Trim()))
             opt.Scope.Add(scope);
@@ -126,6 +116,16 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                       ForwardedHeaders.XForwardedProto |
+                       ForwardedHeaders.XForwardedHost
+};
+forwardedHeadersOptions.KnownIPNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
+
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseForwardedHeaders();
@@ -137,7 +137,6 @@ app.UseRouting();
 // frontend is served on the same origin via the reverse proxy, so it's a no-op there.
 if (app.Environment.IsDevelopment()) app.UseCors("AllowFrontend");
 
-app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseWebSockets();

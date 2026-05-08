@@ -63,14 +63,9 @@ public class AuthController(
         if (info.LoginProvider == "bosch" || info.LoginProvider == "microsoft")
             providerKey = claims.FirstOrDefault(x => x.Type == ClaimConstants.ObjectId)?.Value;
 
-        var emailClaim = claims.SingleOrDefault(x => x.Type == ClaimConstants.PreferredUserName)?.Value;
-        // TODO: Fix this for normal ms auth (?)
-        var displayNameClaim = claims.SingleOrDefault(x => x.Type == ClaimTypes.GivenName)?.Value;
-        if (info.LoginProvider == "microsoft")
-            displayNameClaim = claims.SingleOrDefault(x => x.Type == "given_name")?.Value;
+        var userNameClaim = claims.SingleOrDefault(x => x.Type == ClaimConstants.Name)?.Value;
 
-        if (string.IsNullOrEmpty(providerKey) || string.IsNullOrEmpty(emailClaim) ||
-            string.IsNullOrEmpty(displayNameClaim)) return UnprocessableEntity();
+        if (string.IsNullOrEmpty(providerKey) || string.IsNullOrEmpty(userNameClaim)) return UnprocessableEntity();
 
         var result = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, providerKey, true, true);
         if (result.Succeeded)
@@ -91,7 +86,7 @@ public class AuthController(
                 logger.LogInformation("Access token not set");
             }
 
-            externalUser.UserName = displayNameClaim;
+            externalUser.UserName = userNameClaim;
 
             await userManager.UpdateAsync(externalUser);
 
@@ -110,8 +105,8 @@ public class AuthController(
 
         var user = new CrossyUser
         {
-            Email = emailClaim,
-            UserName = displayNameClaim
+            Email = claims.Single(x => x.Type == ClaimTypes.Email).Value,
+            UserName = userNameClaim
         };
 
         var userCreateResult = await userManager.CreateAsync(user);
