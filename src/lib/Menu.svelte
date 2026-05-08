@@ -13,7 +13,7 @@
 </script>
 
 <div class="logo_container">
-    <img src="./assets/CrossyRoadLogo.webp" alt="Game Logo" class="Logo">
+    <img src="./assets/CrossyRoadLogo.png" alt="Game Logo" class="Logo">
 </div>
 
 {#if $wsGame?.hostId == $user?.id && $menuState == MenuState.Play}
