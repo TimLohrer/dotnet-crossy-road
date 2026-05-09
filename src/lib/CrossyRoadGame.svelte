@@ -38,5 +38,6 @@
 		position: absolute;
 		inset: 0;
 		z-index: 0; /* background */
+		pointer-events: none;
 	}
 </style>
