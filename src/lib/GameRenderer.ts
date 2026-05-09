@@ -338,6 +338,7 @@ export class GameRenderer {
 	}
 
 	public syncRemotePlayerPosition(player: Player) {
+		if (player.user.id === this.getUser()?.id) return;
 		const playerObj = this.renderedObjects.find((obj) => obj.name === player.user.id);
 		if (!playerObj) return;
 		const snappedTargetZ = Math.round(player.position.z);
@@ -745,12 +746,12 @@ export class GameRenderer {
 				if (laneElement && signalLaneElement) {
 					const APPROACH_DISTANCE = 100;
 					const halfWidth = (element.modelWidth ?? 1) / 2;
-					const movingRight = dx > 0;
+					const movingLeft = dx > 0;
 					// Signal is on while the train is approaching from the incoming
 					// side, while it is in the lane, and until it has fully cleared
 					// the outgoing side.
-					const signalOn = movingRight
-						? obj.position.x >= min - APPROACH_DISTANCE - halfWidth
+					const signalOn = movingLeft
+						? obj.position.x >= max - APPROACH_DISTANCE - halfWidth
 							&& obj.position.x <= max + halfWidth
 						: obj.position.x <= max + APPROACH_DISTANCE + halfWidth
 							&& obj.position.x >= min - halfWidth;
