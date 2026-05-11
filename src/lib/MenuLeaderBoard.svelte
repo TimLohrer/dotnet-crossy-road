@@ -3,6 +3,7 @@
 	import { PUBLIC_API_URL } from "./environment";
 	import type { UserMinimal } from "./models/UserMinimal";
 	import { SkinRarity } from "./models/Skin";
+	import { user } from "./stores/stateStore";
 
     let leaderBoard: UserMinimal[] = $state([]);
 
@@ -27,6 +28,8 @@
         }
     }
 
+    let userId = $user?.id;
+
     onMount(() => {
         void getLeaderBoard();
     });
@@ -36,7 +39,7 @@
     {#each leaderBoard as user, i}
         <div class="leaderboard">
             <span class="rank">#{i + 1}</span>
-            <span class="name">{user.username.length > 20 ? user.username.substring(0, 17) + '...' : user.username}</span>
+            <span class="name">{user.id == userId ? 'You' : user.username.length > 20 ? user.username.substring(0, 17) + '...' : user.username}</span>
             <span class="score">{user.highScore}</span>
         </div>
     {/each}
