@@ -55,6 +55,18 @@ builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme)
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             return Task.CompletedTask;
         };
+    }).AddOpenIdConnect("bosch", "Bosch", opt =>
+    {
+        opt.MetadataAddress = appConfig.BoschOAuth.MetaDataAddress;
+        opt.GetClaimsFromUserInfoEndpoint = true;
+        opt.ClientId = appConfig.BoschOAuth.ClientId;
+        opt.ClientSecret = appConfig.BoschOAuth.ClientSecret;
+        opt.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
+        opt.SignInScheme = IdentityConstants.ExternalScheme;
+        opt.CallbackPath = "/api/v1/auth/signin-oidc-bosch";
+        opt.SaveTokens = true;
+        foreach (var scope in appConfig.BoschOAuth.Scopes.Split(",").Select(x => x.Trim()))
+            opt.Scope.Add(scope);
     }).AddOpenIdConnect("microsoft", "Microsoft", opt =>
     {
         opt.MetadataAddress = appConfig.MicrosoftOAuth.MetaDataAddress;
