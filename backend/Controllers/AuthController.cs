@@ -115,7 +115,8 @@ public class AuthController(
         };
 
         var userCreateResult = await userManager.CreateAsync(user);
-        if (!userCreateResult.Succeeded) return BadRequest("Failed to create user :(");
+        if (!userCreateResult.Succeeded)
+            return BadRequest(userCreateResult.Errors.Select(e => e.Description).Aggregate((a, b) => a + "; " + b));
 
         var addedLoginResult = await userManager.AddLoginAsync(user,
             new UserLoginInfo(info.LoginProvider, providerKey, info.ProviderDisplayName));
