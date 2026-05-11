@@ -61,7 +61,7 @@ public class AuthController(
         var claims = info.Principal.Claims.ToList();
 
         var providerKey = info.ProviderKey;
-        if (info.LoginProvider == "bosch" || info.LoginProvider == "microsoft")
+        if (info.LoginProvider == "microsoft")
             providerKey = claims.FirstOrDefault(x => x.Type == ClaimConstants.ObjectId)?.Value;
 
         var userNameClaim = claims.SingleOrDefault(x => x.Type == ClaimConstants.Name)?.Value;

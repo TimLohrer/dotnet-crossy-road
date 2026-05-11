@@ -3,13 +3,6 @@
 
     const methods = [
         {
-            name: 'Bosch SSO',
-            image: '/assets/bosch.png',
-            method: 'bosch',
-            fontColor: '#FFFFFF',
-            color: '#FF0000'
-        },
-        {
             name: 'Microsoft',
             image: '/assets/microsoft.webp',
             method: 'microsoft',
