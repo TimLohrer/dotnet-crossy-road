@@ -17,17 +17,20 @@
     <img src="./assets/CrossyRoadLogo.png" alt="Game Logo" class="Logo">
 </div>
 
-{#if $wsGame?.hostId == $user?.id && ($wsGame?.players?.length ?? 0) <= 1 && $wsGame?.gamePhase == GamePhase.Created}
-    <div class="seed-bar">
-        <button id="seed" onclick={changeSeed}>Change Seed</button>
-    </div>
-{/if}
+<div class="top-left">
+    {#if $wsGame?.hostId == $user?.id && ($wsGame?.players?.length ?? 0) <= 1 && $wsGame?.gamePhase == GamePhase.Created}
+        <div class="seed-bar">
+            <button id="seed" onclick={changeSeed}>Change Seed</button>
+        </div>
+    {/if}
+    
+    {#if $wsGame?.hostId == $user?.id && $wsGame?.gamePhase == GamePhase.Created}
+        <div class="leaderboard-bar">
+            <button id="leaderboard" onclick={lookupLeaderboard}>LeaderBoard</button>
+        </div>
+    {/if}
+</div>
 
-{#if $wsGame?.hostId == $user?.id && $wsGame?.gamePhase == GamePhase.Created}
-    <div class="leaderboard-bar">
-        <button id="leaderboard" onclick={lookupLeaderboard}>LeaderBoard</button>
-    </div>
-{/if}
 
 <div class="top-bar-wrapper">
     <div class="top-bar">
@@ -114,10 +117,20 @@
         align-items: center;
     }
 
-    .seed-bar {
+    .top-left {
         position: absolute;
         top: 1rem;
         left: 1rem;
+        gap: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    .seed-bar {
         justify-self: center;
         z-index: 100;
         background-color: black;
@@ -145,10 +158,6 @@
         background-color: white;
     }
     .leaderboard-bar {
-        position: absolute;
-        top: 6rem;
-        left: 1rem;
-        justify-self: center;
         z-index: 100;
         background-color: black;
         color: white;
