@@ -35,8 +35,8 @@ public class UserController(UserManager<CrossyUser> userContext) : ControllerBas
         if (patchedUser.Username == null || user.UserName! == patchedUser.Username.ToLower()) return Ok(user.ToDto());
 
         var allowedChars = "@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
-        user.UserName = new string(patchedUser.Username.ToLower().Where(x => allowedChars.Contains(x)).ToArray())
-            .Substring(0, 50);
+        user.UserName = new string(patchedUser.Username.ToLower().Where(x => allowedChars.Contains(x)).ToArray());
+        user.UserName = user.UserName.Length > 50 ? user.UserName.Substring(0, 50) : user.UserName;
 
         var existingUser = await userContext.FindByNameAsync(user.UserName.ToLower());
         if (existingUser != null && existingUser.Id != user.Id) return BadRequest("Username is already taken!");
