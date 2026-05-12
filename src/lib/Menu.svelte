@@ -9,7 +9,7 @@
     }
 
     function lookupLeaderboard() {
-        $menuState = MenuState.LeaderBoard;
+        $menuState = MenuState.Leaderboard;
     }
 </script>
 

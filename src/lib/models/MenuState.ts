@@ -3,5 +3,5 @@ export enum MenuState {
     Play,
     JoinGame,
     Seed,
-    LeaderBoard,
+    Leaderboard,
 }
