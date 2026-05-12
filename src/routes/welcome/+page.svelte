@@ -11,14 +11,13 @@
         newUsername = input.value
             .split("")
             .filter(char => allowedChars.includes(char))
-            .join("");
+            .join("")
+            .substring(0, 50);
     }
 
     async function updateUesrname(e: SubmitEvent) {
         e.preventDefault();
         if (newUsername.length < 1) return;
-        console.log(JSON.stringify({ username: newUsername }));
-        
 
         const res = await fetch(`${PUBLIC_API_URL}/user/@me`, {
             method: "PATCH",
