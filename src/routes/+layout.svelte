@@ -8,7 +8,7 @@
 	const { children } = $props();
 
 	onMount(async () => {
-		if (window.location.pathname === '/signin') {
+		if (window.location.pathname === '/signin' || window.location.pathname === '/welcome') {
 			return;
 		}
 		
