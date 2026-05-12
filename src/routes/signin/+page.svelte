@@ -20,7 +20,7 @@
 
     let returnUrl: string | null = $state(null);
 
-     $effect(() => { returnUrl = window.location.origin; });
+     $effect(() => { returnUrl = (new URLSearchParams(window.location.search)).get("returnUrl") ?? window.location.origin });
 </script>
 
 <img src="/assets/bg.webp" alt="background" class="background" />

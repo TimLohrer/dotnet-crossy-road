@@ -87,8 +87,6 @@ public class AuthController(
                 logger.LogInformation("Access token not set");
             }
 
-            // externalUser.UserName = userNameClaim;
-
             await userManager.UpdateAsync(externalUser);
 
             await signInManager.SignOutAsync();
@@ -110,8 +108,7 @@ public class AuthController(
         var user = new CrossyUser
         {
             Email = claims.Single(x => x.Type == ClaimTypes.Email).Value,
-            // UserName = userNameClaim
-            UserName = $"Player_{new Random().Next(100000, 999999)}"
+            UserName = $"Player_{new Random().Next(100000, 999999)}-CHANGE_ME" // Set default username
         };
 
         var userCreateResult = await userManager.CreateAsync(user);
