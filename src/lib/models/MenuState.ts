@@ -1,5 +1,5 @@
 export enum MenuState {
-    Skins,
+    Shop,
     Play,
     JoinGame,
     Seed,

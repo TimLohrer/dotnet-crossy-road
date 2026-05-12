@@ -41,7 +41,7 @@
 
 <div class="menu_container">
     <div class="menu_panel">
-        <button class:active={$menuState == MenuState.Skins} onclick={() => $menuState = MenuState.Skins}>Skins</button>
+        <button class:active={$menuState == MenuState.Shop} onclick={() => $menuState = MenuState.Shop}>Shop</button>
     </div>
     <div class="menu_panel">
         <button class:active={$menuState == MenuState.Play} onclick={() => $menuState == MenuState.Play && $wsGame?.hostId == $user?.id ? $gameSocket?.startGame() : $menuState = MenuState.Play}>Start</button>

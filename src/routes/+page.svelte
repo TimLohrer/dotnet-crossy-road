@@ -6,7 +6,7 @@
 	import { MenuState } from "$lib/models/MenuState";
 	import { menuState, wsGame, user as userStore, skinList } from "$lib/stores/stateStore";
 	import PopUp from "$lib/ PopUp.svelte";
-	import MenuSkins from "$lib/MenuSkins.svelte";
+	import MenuSkins from "$lib/MenuShop.svelte";
 	import MenuMultiplayer from "$lib/MenuMultiplayer.svelte";
 	import { GamePhase } from "$lib/models/GamePhase";
 	import type { User } from '$lib/models/User';
@@ -59,7 +59,7 @@
 
 <CrossyRoadGame />
 
-{#if $menuState === MenuState.Skins}
+{#if $menuState === MenuState.Shop}
 	<PopUp params={{ canEscapeToClose: true, onClose: () => $menuState = MenuState.Play }}>
 		<MenuSkins />
 	</PopUp>
