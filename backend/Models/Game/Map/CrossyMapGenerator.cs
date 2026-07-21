@@ -35,19 +35,19 @@ public class CrossyMapGenerator(CrossyGame game)
         switch (laneType)
         {
             case CrossyModelPart.Plains:
-                lanes = GeneratePlainsLanes(randomizer, _seed, zPosition);
+                lanes = GeneratePlainsLanes(randomizer, _seed, zPosition, player);
                 break;
             case CrossyModelPart.Street:
                 lanes = GenerateStreetLanes(randomizer, _seed, zPosition);
                 break;
             case CrossyModelPart.Water:
-                lanes = GenerateWaterLanes(randomizer, _seed, zPosition);
+                lanes = GenerateWaterLanes(randomizer, _seed, zPosition, player);
                 break;
             case CrossyModelPart.Rail:
                 lanes = GenerateRailLanes(randomizer, _seed, zPosition);
                 break;
             default:
-                lanes = GeneratePlainsLanes(randomizer, _seed, zPosition);
+                lanes = GeneratePlainsLanes(randomizer, _seed, zPosition, player);
                 break;
         }
 
@@ -57,7 +57,8 @@ public class CrossyMapGenerator(CrossyGame game)
         return lanes;
     }
 
-    private static List<CrossyMapLane> GeneratePlainsLanes(Random randomizer, int seed, int zPosition)
+    private static List<CrossyMapLane> GeneratePlainsLanes(Random randomizer, int seed, int zPosition,
+        CrossyPlayer player)
     {
         var plainsLength = randomizer.Next(1, MaxPlainsLength + 1);
 
@@ -65,7 +66,8 @@ public class CrossyMapGenerator(CrossyGame game)
         for (var i = 0; i < plainsLength; i++)
         {
             var type = i % 2 == 0 ? PlainsLane.PlainsType.Light : PlainsLane.PlainsType.Dark;
-            lanes.Add(new PlainsLane(type, zPosition + i, seed));
+            lanes.Add(new PlainsLane(type, zPosition + i, seed, player.ForcedOpenSpotsNextLane));
+            if (i == 0) player.ForcedOpenSpotsNextLane = [];
         }
 
         return lanes;
@@ -107,7 +109,8 @@ public class CrossyMapGenerator(CrossyGame game)
         return 1;
     }
 
-    private static List<CrossyMapLane> GenerateWaterLanes(Random randomizer, int seed, int zPosition)
+    private static List<CrossyMapLane> GenerateWaterLanes(Random randomizer, int seed, int zPosition,
+        CrossyPlayer player)
     {
         var waterLength = GetLaneLength(randomizer, MaxWaterLength);
 
@@ -123,10 +126,12 @@ public class CrossyMapGenerator(CrossyGame game)
                     (CrossyMovingMapElement)((WaterLane)lanes.Last()).Elements.First()).Direction ==
                 CrossyMovingMapElement.ModelDirection.Left ? CrossyMovingMapElement.ModelDirection.Right :
                 CrossyMovingMapElement.ModelDirection.Left;
-            lanes.Add(new WaterLane(zPosition + i, seed, !lastWasLillyLane, direction));
+            var lane = new WaterLane(zPosition + i, seed, !lastWasLillyLane, direction);
+            lanes.Add(lane);
+            if (lane.Elements.Any(e => e.ModelPart == CrossyModelPart.Lillypad))
+                player.ForcedOpenSpotsNextLane = lane.Elements.Where(e => e.ModelPart == CrossyModelPart.Lillypad)
+                    .Select(e => (int)e.Position.X).ToList();
         }
-
-        ;
 
         return lanes;
     }
@@ -146,7 +151,7 @@ public class CrossyMapGenerator(CrossyGame game)
         List<CrossyMapLane> lanes = [];
         for (var i = -10; i < 0; i++)
             lanes.Add(new PlainsLane(i % 2 == 0 ? PlainsLane.PlainsType.Light : PlainsLane.PlainsType.Dark, i, 0,
-                true));
+                [], true));
         for (var i = 0; i < 15;)
         {
             var section = GenerateMapSection(i, player);

@@ -2,7 +2,12 @@ using CrossyRoadApi.Models.Game.Map.Elements;
 
 namespace CrossyRoadApi.Models.Game.Map.Lanes;
 
-public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, bool empty = false) : CrossyMapLane(
+public class PlainsLane(
+    PlainsLane.PlainsType type,
+    int zPosition,
+    int seed,
+    List<int> forcedOpenSpots,
+    bool empty = false) : CrossyMapLane(
     type == PlainsType.Light ? CrossyModelPart.Plains : CrossyModelPart.PlainsDark, seed, zPosition)
 {
     public enum PlainsType
@@ -116,8 +121,9 @@ public class PlainsLane(PlainsLane.PlainsType type, int zPosition, int seed, boo
             var flagsRegion = string.Join("", binary.Where(c => c == '1').ToList());
             var hasMinFlags = flagsRegion.Length >= minFlags;
             var hasMaxFlags = flagsRegion.Length <= maxFlags;
+            var respectsForceOpenSpots = forcedOpenSpots.Count == 0 || forcedOpenSpots.All(spot => binary[spot] == '0');
 
-            return hasMinFlags && hasMaxFlags;
+            return hasMinFlags && hasMaxFlags && respectsForceOpenSpots;
         }
 
         string binary;
